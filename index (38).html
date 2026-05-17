@@ -112,6 +112,22 @@ h1{margin:0;font-size:52px !important;line-height:.92 !important;font-weight:900
 .comment-name{font-size:12px;font-weight:900;color:var(--navy);margin-bottom:3px}
 .empty{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;color:var(--muted);box-shadow:var(--shadow)}
 .bottom{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(100vw,460px);max-width:460px;background:rgba(247,242,232,.98);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 12px calc(10px + env(safe-area-inset-bottom));z-index:200}
+.onboarding-overlay{position:fixed;inset:0;z-index:260;display:none;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at top,rgba(201,162,87,.22),transparent 34%),rgba(10,18,32,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.onboarding-overlay.visible{display:flex}
+.onboarding-modal{width:min(100%,390px);max-height:calc(100dvh - 44px);overflow:auto;background:linear-gradient(145deg,#10213a 0%,#14385a 54%,#0d1728 100%);border:1px solid rgba(232,194,106,.28);border-radius:28px;box-shadow:0 28px 70px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.12);padding:24px;color:#fff}
+.onboarding-eyebrow{color:#e8c26a;font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
+.onboarding-title{margin:0;color:#fff;font-size:32px;line-height:1.02;letter-spacing:-.04em;font-weight:900}
+.onboarding-subtitle{margin:8px 0 0;color:#f1d990;font-size:15px;font-weight:800}
+.onboarding-body{margin:12px 0 18px;color:rgba(255,255,255,.76);font-size:14px;line-height:1.55}
+.onboarding-form{display:grid;gap:13px}
+.onboarding-field{display:grid;gap:7px}
+.onboarding-field label{color:rgba(255,255,255,.86);font-size:12px;font-weight:900;letter-spacing:.03em}
+.onboarding-field input{width:100%;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.09);color:#fff;border-radius:16px;padding:13px 14px;outline:none;font-size:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.onboarding-field input::placeholder{color:rgba(255,255,255,.36)}
+.onboarding-field input:focus{border-color:rgba(232,194,106,.75);box-shadow:0 0 0 3px rgba(232,194,106,.14)}
+.onboarding-error{min-height:18px;color:#ffd6c9;font-size:12px;font-weight:800;line-height:1.4}
+.onboarding-submit{width:100%;border:0;border-radius:16px;background:linear-gradient(135deg,#e8c26a,#c9993a);color:#0d1728;font-size:15px;font-weight:900;padding:14px 16px;cursor:pointer;box-shadow:0 14px 28px rgba(201,153,58,.24)}
+.onboarding-note{margin:1px 0 0;text-align:center;color:rgba(255,255,255,.58);font-size:12px;font-weight:700}
 .tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
 .tab{display:grid;justify-items:center;gap:4px;color:var(--muted);font-size:11px;font-weight:800;text-align:center;min-width:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .tab .icon{width:36px;height:36px;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:17px;box-shadow:0 5px 15px rgba(0,0,0,.04)}
@@ -551,7 +567,7 @@ h1{margin:0;font-size:52px !important;line-height:.92 !important;font-weight:900
 .tonight-chip{display:inline-flex;align-items:center;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.7);font-size:12px;font-weight:800;color:#173c62}
 
 
-.bottom .tabs{display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:3px !important;padding-left:4px;padding-right:4px;}
+.bottom .tabs{display:grid !important;grid-template-columns:repeat(5,minmax(0,1fr)) !important;gap:3px !important;padding-left:4px;padding-right:4px;}
 .bottom .tabs .tab{width:100% !important;justify-self:center;}
 
 .pending-request-card{background:#f7fbff;border:1px solid #dbe8fb;border-radius:18px;padding:14px 14px 12px;margin-bottom:14px}
@@ -1429,157 +1445,137 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
   font-weight: 600 !important;
 }
 
-/* ═══ EVENT CARDS — full dark redesign ═══ */
+/* ═══ EVENT CARDS — match Tonight tab card visual system ═══ */
 #feedView .feed { gap: 12px !important; }
-#feedView .card {
-  background: var(--lajt-card) !important;
-  border: 1px solid rgba(255,255,255,.08) !important;
-  border-radius: 20px !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,.3), 0 1px 4px rgba(0,0,0,.4) !important;
+#feedView .feed .card {
+  background: linear-gradient(135deg,#f8f4ec 0%,#eef5ff 55%,#f6efe3 100%) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--shadow) !important;
   overflow: hidden !important;
-  transition: transform .18s var(--lajt-spring), box-shadow .18s !important;
+  color: var(--navy) !important;
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease !important;
 }
+#feedView .feed .card:nth-child(3n+1){ background:linear-gradient(135deg,#fff8ec 0%,#f4efe6 42%,#efe6d7 100%) !important; }
+#feedView .feed .card:nth-child(3n+2){ background:linear-gradient(135deg,#eef6ff 0%,#f7f2ea 55%,#e9f1ff 100%) !important; }
+#feedView .feed .card:nth-child(3n+3){ background:linear-gradient(135deg,#f4f8ff 0%,#edf3ff 45%,#f7f2ea 100%) !important; }
 @media (hover:hover) {
-  #feedView .card:hover {
-    transform: translateY(-2px) !important;
-    background: #1c2030 !important;
-    box-shadow: 0 8px 28px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.5) !important;
+  #feedView .feed .card:hover {
+    background: linear-gradient(135deg,#fffaf1 0%,#eef6ff 55%,#f7efe1 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 14px 34px rgba(16,50,82,.12) !important;
   }
 }
-/* Card head */
-#feedView .card-head { padding: 13px 14px 8px !important; }
-#feedView .org { color: rgba(255,255,255,.9) !important; font-size: 13px !important; font-family: 'Plus Jakarta Sans', sans-serif !important; }
-#feedView .meta { color: rgba(255,255,255,.45) !important; font-size: 11px !important; }
-#feedView .ai-badge {
-  background: rgba(212,168,67,.12) !important;
-  color: var(--lajt-gold2) !important;
-  border-color: rgba(212,168,67,.22) !important;
+#feedView .feed .card-head { padding: 14px 14px 10px !important; }
+#feedView .feed .avatar { background: linear-gradient(135deg,#14385a,#254f7d 72%,#a58240 150%) !important; border: 1px solid rgba(255,255,255,.75) !important; }
+#feedView .feed .org { color: var(--navy) !important; font-size: 14px !important; font-weight: 900 !important; font-family: 'Plus Jakarta Sans', sans-serif !important; }
+#feedView .feed .meta { color: var(--muted) !important; font-size: 12px !important; font-weight: 700 !important; }
+#feedView .feed .ai-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: rgba(255,255,255,.72) !important;
+  color: #173c62 !important;
+  border: 1px solid rgba(20,56,90,.08) !important;
+  border-radius: 999px !important;
+  backdrop-filter: blur(6px) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;
 }
-/* Card copy */
-#feedView .card-copy { padding: 0 14px 10px !important; }
-#feedView .title {
-  color: #fff !important;
-  font-size: 19px !important;
-  font-weight: 800 !important;
+#feedView .feed .card-copy { padding: 0 14px 10px !important; }
+#feedView .feed .title {
+  color: var(--navy) !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;
   letter-spacing: -.02em !important;
-  line-height: 1.15 !important;
-  margin-bottom: 5px !important;
+  line-height: 1.12 !important;
+  margin: 0 0 8px !important;
 }
-#feedView .desc { color: rgba(255,255,255,.55) !important; font-size: 13px !important; line-height: 1.5 !important; }
-/* Image */
-#feedView .image { height: 190px !important; }
-/* Details row */
-#feedView .details {
-  padding: 9px 14px 0 !important;
-  color: rgba(255,255,255,.6) !important;
+#feedView .feed .desc { color: var(--muted) !important; font-size: 13px !important; line-height: 1.45 !important; margin: 8px 0 0 !important; }
+#feedView .feed .image {
+  height: 190px !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: #ddd !important;
+}
+#feedView .feed .details {
+  padding: 12px 14px 0 !important;
+  color: var(--muted) !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  border-top: 0 !important;
+  font-weight: 700 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+#feedView .feed .card-map-preview-wrap {
+  margin: 10px 14px 0 !important;
+  border: 1px solid rgba(255,255,255,.72) !important;
+  border-radius: 14px !important;
+  background: rgba(255,255,255,.38) !important;
+}
+#feedView .feed .card-map-preview-bg { background: linear-gradient(135deg,rgba(255,248,236,.92),rgba(238,246,255,.94)) !important; }
+#feedView .feed .card-map-preview-overlay { background: linear-gradient(180deg,rgba(16,50,82,0) 0%, rgba(16,50,82,.18) 100%) !important; }
+#feedView .feed .card-map-preview-pill { background: rgba(255,255,255,.92) !important; color: var(--navy) !important; }
+#feedView .feed .card-map-preview-open { background: rgba(16,50,82,.92) !important; color: #fff !important; }
+#feedView .feed .vibe-row { padding: 10px 14px 0 !important; }
+#feedView .feed .vibe-chip,
+#feedView .feed .urgency-pill,
+#feedView .feed .countdown-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.65) !important;
+  border: 1px solid rgba(255,255,255,.7) !important;
+  color: #173c62 !important;
   font-size: 12px !important;
-  border-top: 1px solid rgba(255,255,255,.07) !important;
-  font-weight: 500 !important;
-  font-family: 'Plus Jakarta Sans', sans-serif !important;
-}
-/* Vibe chips */
-#feedView .vibe-row { padding: 8px 14px 0 !important; }
-#feedView .vibe-chip {
-  background: rgba(59,130,246,.1) !important;
-  border: 1px solid rgba(59,130,246,.2) !important;
-  color: #93c5fd !important;
-  border-radius: 8px !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  padding: 5px 9px !important;
-  font-family: 'Plus Jakarta Sans', sans-serif !important;
-}
-/* Social bar */
-#feedView .socialbar { padding: 0 14px 12px !important; gap: 7px !important; }
-#feedView .stat { color: rgba(255,255,255,.7) !important; font-size: 12px !important; font-family: 'Plus Jakarta Sans', sans-serif !important; }
-/* Buttons on cards */
-#feedView .going-btn {
-  background: var(--lajt-green) !important;
-  color: #000 !important;
-  border-radius: 11px !important;
-  font-size: 13px !important;
   font-weight: 800 !important;
-  padding: 9px 14px !important;
+  padding: 8px 10px !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;
-  border: none !important;
 }
-#feedView .going-btn.active {
-  background: rgba(34,197,94,.15) !important;
-  color: var(--lajt-green) !important;
-  border: 1px solid rgba(34,197,94,.25) !important;
+#feedView .feed .urgency-row { padding: 10px 14px 0 !important; gap: 8px !important; }
+#feedView .feed .countdown-wrap { padding: 10px 14px 0 !important; }
+#feedView .feed .cd-dot { background: var(--gold) !important; }
+#feedView .feed .sp-banner {
+  margin: 10px 14px 0 !important;
+  background: rgba(255,255,255,.62) !important;
+  border: 1px solid rgba(255,255,255,.72) !important;
+  color: #173c62 !important;
+  border-radius: 14px !important;
 }
-#feedView .like-btn {
-  background: rgba(255,255,255,.07) !important;
-  color: rgba(255,255,255,.7) !important;
-  border: 1px solid rgba(255,255,255,.1) !important;
-  border-radius: 11px !important;
+#feedView .feed .socialbar { padding: 10px 14px 14px !important; gap: 8px !important; }
+#feedView .feed .stat { color: #173c62 !important; font-size: 12px !important; font-weight: 800 !important; font-family: 'Plus Jakarta Sans', sans-serif !important; }
+#feedView .feed .going-btn,
+#feedView .feed .like-btn,
+#feedView .feed .open-btn,
+#feedView .feed .saved-btn,
+#feedView .feed .share-btn {
+  border-radius: 14px !important;
+  padding: 10px 12px !important;
   font-size: 13px !important;
-  font-weight: 700 !important;
-  padding: 9px 14px !important;
+  font-weight: 900 !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;
 }
-#feedView .like-btn.active { background: rgba(239,68,68,.12) !important; color: #f87171 !important; border-color: rgba(239,68,68,.22) !important; }
-#feedView .open-btn {
-  background: rgba(255,255,255,.09) !important;
-  color: rgba(255,255,255,.8) !important;
-  border-radius: 11px !important;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  padding: 9px 14px !important;
-  font-family: 'Plus Jakarta Sans', sans-serif !important;
-}
-#feedView .share-btn {
-  background: rgba(37,211,102,.15) !important;
-  color: #4ade80 !important;
-  border-radius: 11px !important;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  padding: 9px 14px !important;
-  border: 1px solid rgba(37,211,102,.2) !important;
-  font-family: 'Plus Jakarta Sans', sans-serif !important;
-}
-/* Saved btn */
-#feedView .saved-btn {
-  background: rgba(212,168,67,.1) !important;
-  color: var(--lajt-gold2) !important;
-  border-color: rgba(212,168,67,.2) !important;
-  border-radius: 11px !important;
-  font-size: 13px !important; font-weight: 700 !important;
-  padding: 9px 14px !important;
-  font-family: 'Plus Jakarta Sans', sans-serif !important;
-}
-#feedView .saved-btn.active {
-  background: rgba(212,168,67,.2) !important;
-  color: var(--lajt-gold) !important;
-  border-color: rgba(212,168,67,.35) !important;
-}
-/* Attendees */
-#feedView .attendees { padding: 8px 14px 10px !important; }
-#feedView .attend-text { color: rgba(255,255,255,.45) !important; font-size: 12px !important; font-weight: 600 !important; }
-#feedView .face { border-color: var(--lajt-card) !important; }
-/* Social proof line */
-#feedView .social-proof { color: rgba(255,255,255,.5) !important; font-size: 11px !important; padding: 0 14px 8px !important; font-weight: 700 !important; }
-/* Avatar */
-#feedView .avatar { background: linear-gradient(135deg,#1e3a5a,#2d5f8a) !important; }
-/* Comments */
-#feedView .comments { padding: 0 14px 14px !important; }
-#feedView .comment-title { color: rgba(255,255,255,.5) !important; }
-#feedView .comment { background: rgba(255,255,255,.05) !important; border-color: rgba(255,255,255,.08) !important; color: rgba(255,255,255,.65) !important; font-size: 13px !important; }
-#feedView .comment-name { color: rgba(255,255,255,.75) !important; }
-#feedView .comment-disabled-badge { background: rgba(255,255,255,.15) !important; color: #fff !important; }
-#feedView .comment-disabled-note { color: rgba(255,255,255,.55) !important; background: linear-gradient(180deg,rgba(22,25,38,.05),rgba(22,25,38,.25)) !important; }
-/* Countdown pill */
-#feedView .countdown-pill {
-  background: rgba(212,168,67,.12) !important;
-  border-color: rgba(212,168,67,.22) !important;
-  color: var(--lajt-gold2) !important;
-}
-#feedView .cd-dot { background: var(--lajt-gold) !important; }
-/* Map link */
-#feedView .card-map-link { border-top-color: rgba(255,255,255,.07) !important; color: #93c5fd !important; }
-/* Empty state */
+#feedView .feed .going-btn { background: var(--green) !important; color: #fff !important; border: 0 !important; }
+#feedView .feed .going-btn.active { background: #eaf8ee !important; color: var(--green) !important; border: 1px solid rgba(47,123,66,.18) !important; }
+#feedView .feed .like-btn,
+#feedView .feed .open-btn,
+#feedView .feed .saved-btn { background: rgba(255,255,255,.65) !important; color: #173c62 !important; border: 1px solid rgba(255,255,255,.7) !important; }
+#feedView .feed .like-btn.active { background: #fff0f3 !important; color: #b4234d !important; border-color: rgba(180,35,77,.14) !important; }
+#feedView .feed .saved-btn.active { background: #fff1c7 !important; color: #7c5600 !important; border-color: rgba(124,86,0,.18) !important; }
+#feedView .feed .share-btn { background: #25D366 !important; color: #fff !important; border: 0 !important; }
+#feedView .feed .attendees { padding: 10px 14px 12px !important; }
+#feedView .feed .attend-text { color: var(--muted) !important; font-size: 13px !important; font-weight: 700 !important; }
+#feedView .feed .face { border-color: rgba(255,255,255,.9) !important; }
+#feedView .feed .social-proof { color: var(--muted) !important; font-size: 12px !important; padding: 0 14px 8px !important; font-weight: 800 !important; }
+#feedView .feed .comments { padding: 0 14px 16px !important; }
+#feedView .feed .comment-title { color: #173c62 !important; font-weight: 900 !important; }
+#feedView .feed .comment { background: rgba(255,255,255,.58) !important; border-color: rgba(255,255,255,.72) !important; color: var(--muted) !important; font-size: 13px !important; }
+#feedView .feed .comment-name { color: var(--navy) !important; }
+#feedView .feed .comment-disabled-badge { background: #14385a !important; color: #fff !important; }
+#feedView .feed .comment-disabled-note { color: #14385a !important; background: linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.38)) !important; }
+#feedView .feed .card-map-link { border-top-color: rgba(255,255,255,.55) !important; color: #173c62 !important; background: rgba(255,255,255,.22) !important; }
 #feedView .empty {
   background: rgba(255,255,255,.05) !important;
   border-color: rgba(255,255,255,.08) !important;
@@ -1786,10 +1782,13 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
 .skeleton-image { height: 200px; width: 100%; margin: 10px 0; }
 
 
-.card-map-preview-wrap{position:relative;margin:10px 14px 0;border:1px solid #e8dcc8;border-radius:16px;overflow:hidden;background:#f4eee4}
-.card-map-preview-frame{display:block;width:100%;height:116px;border:0;pointer-events:none;background:#efe6d7}
-.card-map-preview-overlay{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-between;padding:10px 12px;background:linear-gradient(180deg,rgba(16,50,82,0) 0%, rgba(16,50,82,.18) 100%);text-decoration:none}
-.card-map-preview-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);color:var(--navy);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800;max-width:78%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-map-preview-wrap{position:relative;display:block;margin:10px 14px 0;border:1px solid #e8dcc8;border-radius:16px;overflow:hidden;background:#f4eee4;text-decoration:none;min-height:116px}
+.card-map-preview-bg{position:absolute;inset:0;background:linear-gradient(135deg,#efe6d7 0%,#f8f2e8 48%,#e6eef7 100%)}
+.card-map-preview-bg::before{content:"";position:absolute;inset:-30%;background:linear-gradient(30deg,transparent 0 43%,rgba(16,50,82,.08) 44% 46%,transparent 47% 100%),linear-gradient(115deg,transparent 0 48%,rgba(201,162,87,.16) 49% 51%,transparent 52% 100%);background-size:72px 72px,92px 92px;opacity:.9}
+.card-map-pin{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);display:grid;place-items:center;width:34px;height:34px;border-radius:50% 50% 50% 0;background:#c9993a;color:#0d1728;font-size:18px;font-weight:900;box-shadow:0 10px 24px rgba(16,50,82,.22);rotate:-45deg}
+.card-map-pin span{rotate:45deg}
+.card-map-preview-overlay{position:relative;min-height:116px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding:10px 12px;background:linear-gradient(180deg,rgba(16,50,82,0) 0%, rgba(16,50,82,.22) 100%);text-decoration:none}
+.card-map-preview-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);color:var(--navy);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800;max-width:68%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-map-preview-open{display:inline-flex;align-items:center;justify-content:center;background:rgba(16,50,82,.92);color:#fff;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800;flex-shrink:0}
 
 
@@ -1833,6 +1832,28 @@ header h1{
 </head>
 <body>
 <div class="toast" id="toast"></div>
+
+<div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" aria-describedby="onboardingBody">
+  <div class="onboarding-modal">
+    <div class="onboarding-eyebrow">Jewish LA · Personalized</div>
+    <h2 class="onboarding-title" id="onboardingTitle">Welcome to LA Jewish Tonight</h2>
+    <div class="onboarding-subtitle">Let’s personalize your Jewish LA feed.</div>
+    <p class="onboarding-body" id="onboardingBody">Enter your name and ZIP code so we can tailor nearby events, community suggestions, and your profile.</p>
+    <form class="onboarding-form" id="onboardingForm" novalidate>
+      <div class="onboarding-field">
+        <label for="onboardingNameInput">Name</label>
+        <input id="onboardingNameInput" name="name" autocomplete="name" placeholder="Your name" required />
+      </div>
+      <div class="onboarding-field">
+        <label for="onboardingZipInput">ZIP code</label>
+        <input id="onboardingZipInput" name="zip" inputmode="numeric" autocomplete="postal-code" maxlength="5" placeholder="90024" required />
+      </div>
+      <div class="onboarding-error" id="onboardingError" aria-live="polite"></div>
+      <button class="onboarding-submit" type="submit">Enter LA Jewish Tonight</button>
+      <div class="onboarding-note">You can edit this later in your Profile.</div>
+    </form>
+  </div>
+</div>
 
 <div class="app" id="feedView">
 
@@ -1972,14 +1993,14 @@ header h1{
       <div class="orgs-popular-scroll" id="popularOrganizationsList" tabindex="0" aria-label="Popular organizations"></div>
     </section>
 
-    <section class="orgs-section" aria-labelledby="upcomingFromOrgsTitle">
-      <div class="orgs-section-title"><h2 id="upcomingFromOrgsTitle">Upcoming from your orgs</h2><button class="orgs-section-link" type="button" onclick="focusUpcomingOrganizations()">View all</button></div>
-      <div class="orgs-card orgs-upcoming-list" id="orgUpcomingList" tabindex="0"></div>
-    </section>
-
     <section class="orgs-section" aria-labelledby="featuredOrganizationTitle">
       <div class="orgs-section-title"><h2 id="featuredOrganizationTitle">Featured organization card</h2><span>From loaded events</span></div>
       <div id="featuredOrganizationCard"></div>
+    </section>
+
+    <section class="orgs-section" aria-labelledby="upcomingFromOrgsTitle">
+      <div class="orgs-section-title"><h2 id="upcomingFromOrgsTitle">Upcoming from your orgs</h2><button class="orgs-section-link" type="button" onclick="focusUpcomingOrganizations()">View all</button></div>
+      <div class="orgs-card orgs-upcoming-list" id="orgUpcomingList" tabindex="0"></div>
     </section>
   </div>
 </div>
@@ -2452,6 +2473,7 @@ async function ensureSupabaseClient(){
   return null;
 }
 const PROFILE_STORAGE_KEY = "livefeed_profile_v1";
+const ONBOARDING_PROFILE_STORAGE_KEY = "lajt_onboarding_profile_v1";
 const PROFILE_BUCKET = "profile-photos";
 const ACTIONS_STORAGE_KEY = "livefeed_actions_v1";
 const COMMENTS_STORAGE_KEY = "livefeed_comments_v1";
@@ -2460,12 +2482,20 @@ const NOTIFICATIONS_STORAGE_KEY = "livefeed_notifications_v1";
 const PENDING_INVITE_STORAGE_KEY = "livefeed_pending_invite_v1";
 const ORG_FOLLOWS_STORAGE_KEY = "lajt_followed_org_ids";
 const ORG_SEEN_EVENTS_STORAGE_KEY = "lajt_seen_org_event_ids";
+const ORG_SYNC_HASH_STORAGE_KEY = "lajt_last_org_sync_hash";
+const ORG_SYNC_AT_STORAGE_KEY = "lajt_last_org_sync_at";
 
 let allEvents = [];
 let activeQuickFilter = 'all';
 let activeOrgFilter = 'all';
 let selectedOrganizationId = '';
 let expandedOrgId = '';
+let allOrganizationsCache = [];
+let backendOrganizationSearchResults = [];
+let backendOrganizationSearchQuery = '';
+let backendOrganizationSearchPromise = null;
+let orgSyncTimer = null;
+let orgSyncInFlight = false;
 let orgFollowsLoadedFromSupabase = false;
 let orgFollowsLoadedProfileId = '';
 let orgFollowsLoadPromise = null;
@@ -2599,6 +2629,126 @@ function loadLocalProfile(){
     const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
     currentProfile = raw ? JSON.parse(raw) : null;
   }catch(e){ currentProfile = null; }
+}
+function getOnboardingProfile(){
+  try{
+    const raw = localStorage.getItem(ONBOARDING_PROFILE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(err){ return null; }
+}
+function saveOnboardingProfile(profile){
+  const safe = {
+    name: String(profile?.name || "").trim(),
+    zip: String(profile?.zip || "").trim(),
+    created_at: profile?.created_at || new Date().toISOString()
+  };
+  localStorage.setItem(ONBOARDING_PROFILE_STORAGE_KEY, JSON.stringify(safe));
+  return safe;
+}
+function getUserZip(){
+  return String(currentProfile?.zip_code || currentProfile?.zip || getOnboardingProfile()?.zip || "").trim();
+}
+function inferNeighborhoodFromZip(zip){
+  const key = String(zip || "").trim();
+  const known = {
+    "90024":"Westwood", "90025":"West LA", "90034":"Palms", "90035":"Pico-Robertson",
+    "90036":"Fairfax", "90046":"Hollywood Hills", "90048":"Beverly Grove", "90049":"Brentwood",
+    "90064":"Westside", "90066":"Mar Vista", "90067":"Century City", "90069":"West Hollywood",
+    "90210":"Beverly Hills", "90211":"Beverly Hills", "90212":"Beverly Hills", "90230":"Culver City",
+    "90232":"Culver City", "90272":"Pacific Palisades", "90401":"Santa Monica", "90402":"Santa Monica",
+    "90403":"Santa Monica", "90404":"Santa Monica", "90405":"Santa Monica", "91604":"Studio City"
+  };
+  return known[key] || `Near ${key}`;
+}
+function setOnboardingError(message){
+  const el = document.getElementById("onboardingError");
+  if (el) el.textContent = message || "";
+}
+function hideOnboardingModal(){
+  const overlay = document.getElementById("onboardingOverlay");
+  if (overlay) overlay.classList.remove("visible");
+}
+async function syncOnboardingProfileToSupabase(profile){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates,return=representation"
+      },
+      body: JSON.stringify({
+        id: profile.id,
+        name: profile.name,
+        neighborhood: profile.neighborhood || null,
+        photo_url: profile.photo_url || null,
+        bio: profile.bio || null
+      })
+    });
+    if (!res.ok) throw new Error("Onboarding profile sync failed");
+    profile.synced = true;
+    saveLocalProfile(profile);
+    refreshProfileUI();
+    loadMemberCount();
+  }catch(err){
+    console.warn("Onboarding profile sync failed; keeping local profile", err);
+  }
+}
+async function submitOnboardingProfile(){
+  const nameEl = document.getElementById("onboardingNameInput");
+  const zipEl = document.getElementById("onboardingZipInput");
+  const name = String(nameEl?.value || "").trim();
+  const zip = String(zipEl?.value || "").trim();
+  if (!name){
+    setOnboardingError("Please enter your name to personalize your profile.");
+    nameEl?.focus();
+    return false;
+  }
+  if (!/^\d{5}$/.test(zip)){
+    setOnboardingError("Please enter a valid 5-digit ZIP code.");
+    zipEl?.focus();
+    return false;
+  }
+  setOnboardingError("");
+  const onboarding = saveOnboardingProfile({ name, zip });
+  const profile = {
+    ...(currentProfile || {}),
+    id: currentProfile?.id || randomId(),
+    name: onboarding.name,
+    neighborhood: currentProfile?.neighborhood || inferNeighborhoodFromZip(onboarding.zip),
+    zip_code: onboarding.zip,
+    photo_url: currentProfile?.photo_url || "",
+    bio: currentProfile?.bio || "",
+    synced: false
+  };
+  saveLocalProfile(profile);
+  refreshProfileUI();
+  hideOnboardingModal();
+  showToast("Welcome — your profile is ready");
+  syncOnboardingProfileToSupabase(profile);
+  if (typeof loadFriendBackendData === "function") loadFriendBackendData().then(() => renderNetworkTab()).catch(()=>{});
+  if (typeof processPendingInviteFlow === "function") processPendingInviteFlow();
+  return false;
+}
+function maybeShowOnboardingModal(){
+  try{
+    if (localStorage.getItem(ONBOARDING_PROFILE_STORAGE_KEY)) return;
+    const overlay = document.getElementById("onboardingOverlay");
+    const form = document.getElementById("onboardingForm");
+    const nameEl = document.getElementById("onboardingNameInput");
+    if (!overlay || !form) return;
+    overlay.classList.add("visible");
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      submitOnboardingProfile();
+    }, { once:false });
+    overlay.addEventListener("keydown", event => {
+      if (event.key === "Escape") event.preventDefault();
+    });
+    setTimeout(() => nameEl?.focus(), 80);
+  }catch(err){
+    console.warn("Onboarding modal failed safely", err);
+  }
 }
 function setBigAvatar(photoUrl, name){
   const big = document.getElementById("bigAvatar");
@@ -3589,6 +3739,7 @@ async function upsertProfileFromGoogleUser(user){
     id: user.id,
     name: metadata.full_name || metadata.name || metadata.user_name || currentProfile?.name || 'Google User',
     neighborhood: currentProfile?.neighborhood || '',
+    zip_code: currentProfile?.zip_code || getUserZip() || '',
     photo_url: metadata.avatar_url || metadata.picture || currentProfile?.photo_url || '',
     bio: currentProfile?.bio || '',
     synced: false,
@@ -3739,6 +3890,7 @@ async function handleSaveProfile(){
     id: currentProfile?.id || randomId(),
     name,
     neighborhood,
+    zip_code: currentProfile?.zip_code || getUserZip() || "",
     photo_url: currentProfile?.photo_url || "",
     bio,
     synced: false
@@ -3977,7 +4129,7 @@ var ORG_LOGO_URLS = {
   'hillel at ucla':       'https://hillelucla.org/wp-content/uploads/2020/05/hillel-logo.png',
   'aish':                 'https://aish.com/wp-content/uploads/2020/07/Aish-Logo.png',
   'sinai temple':         'https://www.sinaitemple.org/wp-content/uploads/2019/01/sinai-logo.png',
-  'beit t'shuvah':       'https://beittshuvah.org/wp-content/uploads/2020/01/BT-logo.png',
+  "beit t'shuvah":       'https://beittshuvah.org/wp-content/uploads/2020/01/BT-logo.png',
   'young israel':         'https://youngisrael.org/wp-content/uploads/2019/07/young-israel-logo.png',
   'jcc':                  'https://www.jccla.org/wp-content/uploads/2020/01/jcc-logo.png',
   'jcc of greater la':    'https://www.jccla.org/wp-content/uploads/2020/01/jcc-logo.png',
@@ -4017,7 +4169,7 @@ function renderOrgLogoHtml(org, width, height) {
   if (url) {
     return '<div class="orgs-logo" style="' + style + 'background:#fff;">'
       + '<img src="' + url + '" alt="' + (org.name || '') + '" style="width:100%;height:100%;object-fit:contain;display:block;padding:6px;" '
-      + 'onerror="this.parentNode.innerHTML='' + (org.logoText || 'LA').replace(/'/g, '') + '';this.parentNode.style.background='linear-gradient(135deg,#c9993a,#e8c26a)';this.parentNode.style.color='#0d1117';this.parentNode.style.fontSize='14px';this.parentNode.style.fontWeight='900';" '
+      + 'onerror="this.parentNode.textContent=' + JSON.stringify(String(org.logoText || 'LA').replace(/'/g, '')) + ';this.parentNode.style.background=\'linear-gradient(135deg,#c9993a,#e8c26a)\';this.parentNode.style.color=\'#0d1117\';this.parentNode.style.fontSize=\'14px\';this.parentNode.style.fontWeight=\'900\';" '
       + 'loading="lazy" referrerpolicy="no-referrer">'
       + '</div>';
   }
@@ -4049,23 +4201,21 @@ function orgCategoryTagsForEvent(event){
   if (/westside|west side|santa monica|venice|brentwood|west la|westwood|beverly hills|pico|fairfax/.test(hay)) tags.push("Westside");
   return tags;
 }
+function orgSlugFromName(name){
+  return normalizeOrgId(name);
+}
 function buildOrganizationsFromEvents(events){
   const groups = new Map();
   (events || []).forEach(event => {
     if (!event) return;
-    const explicitName = [event?.organization, event?.org, event?.organizer, event?.source, event?.calendar_name, event?.calendarName]
-      .map(value => String(value || "").trim())
-      .find(Boolean);
-    const parsedName = parseEventTitleParts(event).organizationName;
-    const name = (explicitName && !isGenericOrganizationName(explicitName)) ? explicitName : parsedName || explicitName;
-    if (!name) return;
+    const name = getEventOrganizationName(event);
     const id = normalizeOrgId(name);
-    if (!groups.has(id)) groups.set(id, { id, name, events: [] });
+    if (!groups.has(id)) groups.set(id, { id, normalizedName: String(name || "Community").trim().toLowerCase(), slug: orgSlugFromName(name), name: String(name || "Community").trim() || "Community", events: [] });
     groups.get(id).events.push(event);
   });
 
   const now = Date.now();
-  return Array.from(groups.values()).map(group => {
+  const organizations = Array.from(groups.values()).map(group => {
     const datedEvents = group.events.filter(event => safeDateValue(event?.start_time));
     const upcomingEvents = (datedEvents.length ? datedEvents.filter(event => safeTimeMs(event?.start_time, -1) >= now) : group.events.slice())
       .sort((a,b) => safeTimeMs(a?.start_time, Number.MAX_SAFE_INTEGER) - safeTimeMs(b?.start_time, Number.MAX_SAFE_INTEGER));
@@ -4075,8 +4225,14 @@ function buildOrganizationsFromEvents(events){
     const region = deriveOrgRegion(group.events);
     const followersEstimate = Math.max(18, group.events.length * 14 + (group.id.split("").reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % 90));
     const tagText = categoryTags.length ? categoryTags.join(", ").toLowerCase() : "community";
+    const lastSeenAt = group.events
+      .map(event => safeTimeMs(event?.start_time, 0))
+      .filter(Boolean)
+      .sort((a,b) => b - a)[0] || now;
     return {
       id: group.id,
+      normalizedName: group.normalizedName,
+      slug: group.slug,
       name: group.name,
       region,
       categoryTags,
@@ -4084,10 +4240,150 @@ function buildOrganizationsFromEvents(events){
       eventCount: group.events.length,
       events: group.events.slice().sort((a,b) => safeTimeMs(a?.start_time, Number.MAX_SAFE_INTEGER) - safeTimeMs(b?.start_time, Number.MAX_SAFE_INTEGER)),
       upcomingEvents,
+      lastSeenAt: new Date(lastSeenAt).toISOString(),
       followersEstimate,
       description: `${group.name} hosts ${tagText} events across ${region}.`
     };
   }).sort((a,b) => b.upcomingEvents.length - a.upcomingEvents.length || b.eventCount - a.eventCount || a.name.localeCompare(b.name));
+  allOrganizationsCache = organizations;
+  return organizations;
+}
+function orgSearchHaystack(org){
+  return [org?.name, org?.normalizedName, org?.slug, org?.region, org?.description, ...(org?.categoryTags || []), ...(org?.events || []).map(event => event?.title || event?.name || "")]
+    .join(" ")
+    .toLowerCase();
+}
+function selectFeaturedOrganizations(organizations){
+  const followed = new Set(getFollowedOrgIds());
+  return (organizations || []).slice().sort((a,b) => {
+    const af = followed.has(String(a.id));
+    const bf = followed.has(String(b.id));
+    if (af !== bf) return af ? -1 : 1;
+    if ((b.upcomingEvents?.length || 0) !== (a.upcomingEvents?.length || 0)) return (b.upcomingEvents?.length || 0) - (a.upcomingEvents?.length || 0);
+    const aSoon = safeTimeMs(a.upcomingEvents?.[0]?.start_time, Number.MAX_SAFE_INTEGER);
+    const bSoon = safeTimeMs(b.upcomingEvents?.[0]?.start_time, Number.MAX_SAFE_INTEGER);
+    if (aSoon !== bSoon) return aSoon - bSoon;
+    if ((b.eventCount || 0) !== (a.eventCount || 0)) return (b.eventCount || 0) - (a.eventCount || 0);
+    return String(a.name || "").localeCompare(String(b.name || ""));
+  }).slice(0, 7);
+}
+function mergeOrganizations(primary, secondary){
+  const merged = new Map();
+  (primary || []).concat(secondary || []).forEach(org => {
+    const key = String(org?.id || normalizeOrgId(org?.name || "")).trim();
+    if (!key) return;
+    if (!merged.has(key)) merged.set(key, { ...org, id: key, logoText: org?.logoText || orgLogoText(org?.name), events: org?.events || [], upcomingEvents: org?.upcomingEvents || [] });
+  });
+  return Array.from(merged.values());
+}
+function backendOrganizationToLocal(row){
+  const name = row?.name || row?.normalized_name || row?.slug || "Organization";
+  const id = normalizeOrgId(name);
+  const categoryTags = Array.isArray(row?.category_tags) ? row.category_tags : [];
+  return {
+    id,
+    normalizedName: row?.normalized_name || String(name).toLowerCase(),
+    slug: row?.slug || id,
+    name,
+    region: row?.region || "LA Wide",
+    categoryTags,
+    logoText: orgLogoText(name),
+    eventCount: Number(row?.event_count || 0),
+    events: [],
+    upcomingEvents: [],
+    lastSeenAt: row?.last_seen_at || row?.updated_at || new Date().toISOString(),
+    followersEstimate: Math.max(18, Number(row?.event_count || 0) * 14),
+    description: row?.description || `${name} hosts Jewish community events across ${row?.region || "LA"}.`
+  };
+}
+function scheduleBackendOrganizationSearch(query){
+  const q = String(query || "").trim();
+  if (!q || q === backendOrganizationSearchQuery) return;
+  backendOrganizationSearchQuery = q;
+  backendOrganizationSearchPromise = (async () => {
+    try{
+      const client = await ensureSupabaseClient();
+      let rows = [];
+      if (client?.rpc){
+        const { data, error } = await client.rpc("search_organizations", { p_query: q, p_limit: 30 });
+        if (error) throw error;
+        rows = Array.isArray(data) ? data : [];
+      } else {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/search_organizations`, {
+          method:"POST",
+          headers:{ apikey: SUPABASE_KEY, "Content-Type":"application/json" },
+          body: JSON.stringify({ p_query: q, p_limit: 30 })
+        });
+        if (!resp.ok) throw new Error(await resp.text().catch(() => "search_organizations failed"));
+        rows = await resp.json().catch(() => []);
+      }
+      backendOrganizationSearchResults = (Array.isArray(rows) ? rows : []).map(backendOrganizationToLocal);
+      if ((document.getElementById("organizationsSearchInput")?.value || "").trim() === q) renderOrganizationsView();
+    }catch(err){
+      console.warn("Backend organization search unavailable", err);
+      backendOrganizationSearchResults = [];
+    }finally{
+      if (backendOrganizationSearchQuery === q) backendOrganizationSearchPromise = null;
+    }
+  })();
+}
+function organizationSyncHash(organizations){
+  const text = (organizations || []).map(org => `${org.id}:${org.eventCount}:${org.lastSeenAt}`).join("|");
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+  return String(hash);
+}
+function rpcPost(functionName, payload){
+  return ensureSupabaseClient().then(client => {
+    if (client?.rpc) return client.rpc(functionName, payload).then(({ error }) => { if (error) throw error; return true; });
+    return fetch(`${SUPABASE_URL}/rest/v1/rpc/${functionName}`, {
+      method:"POST",
+      headers:{ apikey: SUPABASE_KEY, "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    }).then(async resp => { if (!resp.ok) throw new Error(await resp.text().catch(() => `${functionName} failed`)); return true; });
+  });
+}
+function scheduleOrganizationSync(events){
+  const organizations = buildOrganizationsFromEvents(events || []);
+  if (!organizations.length || orgSyncInFlight) return;
+  const hash = organizationSyncHash(organizations);
+  if (localStorage.getItem(ORG_SYNC_HASH_STORAGE_KEY) === hash) return;
+  clearTimeout(orgSyncTimer);
+  orgSyncTimer = setTimeout(() => syncOrganizationsToSupabase(organizations, hash), 900);
+}
+async function syncOrganizationsToSupabase(organizations, hash){
+  if (orgSyncInFlight) return;
+  orgSyncInFlight = true;
+  try{
+    localStorage.setItem(ORG_SYNC_HASH_STORAGE_KEY, hash);
+    localStorage.setItem(ORG_SYNC_AT_STORAGE_KEY, new Date().toISOString());
+    for (const org of organizations){
+      await rpcPost("upsert_organization_from_event", {
+        p_org_name: org.name,
+        p_region: org.region || null,
+        p_category_tags: org.categoryTags || [],
+        p_event_count: org.eventCount || 0
+      });
+      for (const event of (org.events || [])){
+        const eventId = String(event?.id || "");
+        if (!eventId) continue;
+        await rpcPost("upsert_organization_event", {
+          p_org_name: org.name,
+          p_event_id: eventId,
+          p_event_title: getOrganizationEventDisplayTitle(event),
+          p_event_start: event?.start_time || null,
+          p_event_location: event?.location || event?.venue || event?.address || null,
+          p_event_url: event?.rsvp_link || event?.public_event_url || event?.event_url || event?.url || null,
+          p_region: org.region || null,
+          p_category_tags: org.categoryTags || []
+        });
+      }
+    }
+  }catch(err){
+    console.warn("Organization backend sync unavailable; using local organizations", err);
+  }finally{
+    orgSyncInFlight = false;
+  }
 }
 function orgFollowKey(orgOrId){
   if (orgOrId && typeof orgOrId === "object") return String(orgOrId.id || normalizeOrgId(orgOrId.name || "")).trim();
@@ -4103,6 +4399,7 @@ function saveFollowedOrgIds(ids){
   try{ localStorage.setItem(ORG_FOLLOWS_STORAGE_KEY, JSON.stringify(Array.from(new Set((ids || []).map(String).filter(Boolean))))); }catch(err){}
 }
 function sourceOrganizationsForFollowLookup(){
+  if (Array.isArray(allOrganizationsCache) && allOrganizationsCache.length) return allOrganizationsCache;
   const source = (allEvents && allEvents.length) ? allEvents : readEventsSnapshot();
   return buildOrganizationsFromEvents(source);
 }
@@ -4330,7 +4627,7 @@ function renderFeaturedOrganizationCard(org){
   const nextEvents = (org.upcomingEvents || []).slice(0, 3);
   const eventsHtml = nextEvents.length
     ? nextEvents.map(featuredOrgEventHtml).join("")
-    : `<div class="orgs-empty"><strong>No upcoming events loaded yet.</strong></div>`;
+    : `<div class="orgs-empty"><strong>No upcoming events loaded for this organization yet.</strong></div>`;
   const logoHtml = renderOrgLogoHtml(org, 72, 72);
   const upcomingCount = org.upcomingEvents.length;
   const followersK = org.followersEstimate >= 1000
@@ -4359,19 +4656,24 @@ function renderFeaturedOrganizationCard(org){
     ${renderOrganizationEventDropdown(org)}
   </div>`;
 }
-function renderOrganizationsView(){
+function renderOrganizationsViewUnsafe(){
   const source = (allEvents && allEvents.length) ? allEvents : readEventsSnapshot();
   const popularEl = document.getElementById("popularOrganizationsList");
   const upcomingEl = document.getElementById("orgUpcomingList");
   const featuredEl = document.getElementById("featuredOrganizationCard");
   if (!popularEl || !upcomingEl || !featuredEl) return;
   const query = (document.getElementById("organizationsSearchInput")?.value || "").trim().toLowerCase();
-  const eventOrganizations = buildOrganizationsFromEvents(source);
-  const allOrganizations = eventOrganizations;
-  let organizations = allOrganizations.filter(org => {
-    const text = [org.name, org.region, org.description, ...(org.categoryTags || [])].join(" ").toLowerCase();
-    return (!query || text.includes(query)) && orgMatchesActiveFilter(org);
-  });
+  const allOrganizations = buildOrganizationsFromEvents(source);
+  let filterBase = allOrganizations.filter(org => orgMatchesActiveFilter(org));
+  let organizations = [];
+  if (query){
+    scheduleBackendOrganizationSearch(query);
+    const localMatches = filterBase.filter(org => orgSearchHaystack(org).includes(query));
+    const remoteMatches = backendOrganizationSearchQuery === query ? backendOrganizationSearchResults.filter(org => orgMatchesActiveFilter(org)) : [];
+    organizations = mergeOrganizations(localMatches, remoteMatches);
+  } else {
+    organizations = selectFeaturedOrganizations(filterBase);
+  }
 
   const followedOrganizations = allOrganizations.filter(org => isOrgFollowed(org));
   const upcomingPairs = [];
@@ -4386,29 +4688,48 @@ function renderOrganizationsView(){
     : `<div class="orgs-empty"><strong>Follow organizations to see their latest events here.</strong></div>`;
 
   const countEl = document.getElementById("popularOrganizationsCount");
-  const visibleOrgCount = Math.min(organizations.length, 7);
-  if (countEl) countEl.textContent = visibleOrgCount ? `${visibleOrgCount} org${visibleOrgCount === 1 ? "" : "s"}` : ((Array.isArray(source) && source.length) ? "No matches" : "Loading");
+  const visibleOrgCount = organizations.length;
+  if (countEl) countEl.textContent = query
+    ? (visibleOrgCount ? `${visibleOrgCount} result${visibleOrgCount === 1 ? "" : "s"}` : "No matches")
+    : (visibleOrgCount ? `${visibleOrgCount} featured org${visibleOrgCount === 1 ? "" : "s"}` : ((Array.isArray(source) && source.length) ? "No matches" : "Loading"));
 
   if (!organizations.length){
     const hasSourceEvents = Array.isArray(source) && source.length > 0;
-    const message = !hasSourceEvents
-      ? "Organizations will appear here once events finish loading."
-      : (activeOrgFilter === "subscribed"
-        ? "Follow organizations to see them here."
-        : "Organizations will appear here once events finish loading.");
-    popularEl.innerHTML = `<div class="orgs-empty"><strong>No organizations found.</strong>${escapeHtml(message)}</div>`;
+    const message = query
+      ? "No organizations match this search yet."
+      : (!hasSourceEvents
+        ? "Organizations will appear here once events finish loading."
+        : (activeOrgFilter === "subscribed"
+          ? "Follow organizations to see them here."
+          : "Organizations will appear here once events finish loading."));
+    popularEl.innerHTML = `<div class="orgs-empty"><strong>${query ? "No organizations found." : "No organizations found."}</strong>${escapeHtml(message)}</div>`;
     featuredEl.innerHTML = `<div class="orgs-empty"><strong>No featured organization yet.</strong>Featured cards are derived from loaded events.</div>`;
     return;
   }
 
-  const selectedStillExists = allOrganizations.some(org => String(org.id) === String(selectedOrganizationId));
-  if (!selectedOrganizationId || !selectedStillExists) {
-    selectedOrganizationId = followedOrganizations[0]?.id || organizations[0]?.id || "";
+  const selectedStillVisible = organizations.some(org => String(org.id) === String(selectedOrganizationId));
+  const visibleFollowedOrg = followedOrganizations.find(followedOrg => organizations.some(org => String(org.id) === String(followedOrg.id)));
+  if (!selectedOrganizationId) {
+    selectedOrganizationId = visibleFollowedOrg?.id || organizations[0]?.id || followedOrganizations[0]?.id || allOrganizations[0]?.id || "";
+  } else if (!selectedStillVisible) {
+    selectedOrganizationId = organizations[0]?.id || followedOrganizations[0]?.id || allOrganizations[0]?.id || "";
   }
-  popularEl.innerHTML = organizations.slice(0, 7).map(organizationCardHtml).join("");
+  popularEl.innerHTML = organizations.map(organizationCardHtml).join("");
 
-  const featured = allOrganizations.find(org => String(org.id) === String(selectedOrganizationId)) || organizations[0];
+  const featured = organizations.find(org => String(org.id) === String(selectedOrganizationId)) || allOrganizations.find(org => String(org.id) === String(selectedOrganizationId)) || organizations[0];
   featuredEl.innerHTML = featured ? renderFeaturedOrganizationCard(featured) : `<div class="orgs-empty"><strong>No featured organization yet.</strong></div>`;
+}
+function renderOrganizationsView(){
+  try{
+    return renderOrganizationsViewUnsafe();
+  }catch(err){
+    console.warn("Organizations render failed", err);
+    const targets = ["popularOrganizationsList", "orgUpcomingList", "featuredOrganizationCard"];
+    targets.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = `<div class="orgs-empty"><strong>Organizations are temporarily unavailable.</strong>The rest of LA Jewish Tonight is still working.</div>`;
+    });
+  }
 }
 
 function socialProofLine(event, info){
@@ -4469,9 +4790,44 @@ function getSocialProofBanner(event, info){
   }
   return '';
 }
+function getEventLatLng(event){
+  const pickNumber = values => {
+    const raw = values.find(value => value !== undefined && value !== null && String(value).trim() !== "");
+    const num = Number(raw);
+    return Number.isFinite(num) ? num : null;
+  };
+  const lat = pickNumber([event?.lat, event?.latitude, event?.location_lat]);
+  const lng = pickNumber([event?.lng, event?.longitude, event?.location_lng]);
+  if (lat !== null && lng !== null) return { lat, lng };
+  return null;
+}
+function getEventLocationText(event){
+  return String(event?.address || event?.full_address || event?.venue || event?.location || "").trim();
+}
+function getGoogleMapsUrl(event){
+  const coords = getEventLatLng(event);
+  if (coords) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${coords.lat},${coords.lng}`)}`;
+  const locationText = getEventLocationText(event);
+  return locationText ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}` : "";
+}
+function renderEventMapPreview(event){
+  const mapsUrl = getGoogleMapsUrl(event);
+  const locationText = getEventLocationText(event);
+  if (!mapsUrl || !locationText) return "";
+  return `<a class="card-map-preview-wrap" href="${escapeHtml(mapsUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" aria-label="Open ${escapeHtml(locationText)} in Google Maps">
+    <div class="card-map-preview-bg" aria-hidden="true"></div>
+    <div class="card-map-pin" aria-hidden="true"><span>📍</span></div>
+    <div class="card-map-preview-overlay">
+      <span class="card-map-preview-pill">📍 ${escapeHtml(locationText)}</span>
+      <span class="card-map-preview-open">Open in Google Maps</span>
+    </div>
+  </a>`;
+}
 function eventCard(event){
-  const org = ((event.organization || "").trim().toLowerCase() === "la jewish events") ? "" : (event.organization || "Community Event");
-  const desc = event.description || "Details coming soon.";
+  event = event || {};
+  const organizationName = String(event.organization || "");
+  const org = (organizationName.trim().toLowerCase() === "la jewish events") ? "" : (organizationName || "Community Event");
+  const desc = String(event.description || "Details coming soon.");
   const rsvp = event.rsvp_link || "#";
   const info = attendeeInfo(event.id);
   const vibeChips = vibeChipsForEvent(event);
@@ -4479,7 +4835,6 @@ function eventCard(event){
   const avatarHtml = currentProfile?.photo_url
     ? `<div class="avatar"><img src="${escapeHtml(currentProfile.photo_url)}" alt=""></div>`
     : `<div class="avatar">${escapeHtml((org || "LA").slice(0,2).toUpperCase())}</div>`;
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location || "Los Angeles")}`;
   const gatedClass = currentProfile ? "" : " gated";
   const gatedClick = currentProfile ? "" : ' onclick="event.stopPropagation(); showGatePop()" ';
   return `
@@ -4498,13 +4853,7 @@ function eventCard(event){
     </div>
     ${renderEventImageTag(event, "image", "", rsvp, `data-event-image-link="true" onclick="event.stopPropagation()"`)}
     <div class="details">${formatDate(event.start_time)} · ${escapeHtml(event.location || "Location TBA")}</div>
-    <div class="card-map-preview-wrap" onclick="event.stopPropagation()">
-      <iframe class="card-map-preview-frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?hl=en&q=${encodeURIComponent(event.location || 'Los Angeles')}&z=14&output=embed"></iframe>
-      <a class="card-map-preview-overlay" href="${mapsUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Open map preview in Google Maps">
-        <span class="card-map-preview-pill">📍 ${escapeHtml(event.location || "Los Angeles")}</span>
-        <span class="card-map-preview-open">Open →</span>
-      </a>
-    </div>
+    ${renderEventMapPreview(event)}
     ${urgencySignals.length ? `<div class="urgency-row">${urgencySignals.map(s=>`<span class="urgency-pill ${s.cls}">${s.icon} ${escapeHtml(s.text)}</span>`).join('')}</div>` : ''}
     <div class="vibe-row">${vibeChips.map(chip => `<div class="vibe-chip">${escapeHtml(chip)}</div>`).join("")}</div>
     ${getSocialProofBanner(event, info)}
@@ -4517,26 +4866,22 @@ function eventCard(event){
       <button class="like-btn ${info.state.liked ? "active" : ""}" onclick="event.stopPropagation(); return handleLike('${escapeHtml(String(event.id || ""))}', this)" aria-label="${info.state.liked ? 'Unlike' : 'Like this event'}">${info.state.liked ? "Liked" : "Like"}</button>
       <button class="open-btn" onclick="event.stopPropagation(); openEventModal('${escapeHtml(String(event.id || ""))}'); return false;" aria-label="Open full event details">Details</button>
     </div>
-    <a class="card-map-link" href="${mapsUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Open in Google Maps">
-      <span class="card-map-icon">📍</span>
-      <span class="card-map-text">${escapeHtml(event.location || "Los Angeles")}</span>
-      <span class="card-map-arrow">→</span>
-    </a>
-    <div class="comments${gatedClass}"${gatedClick}>
-      <div class="comment-title" onclick="event.stopPropagation(); openEventModal('${escapeHtml(String(event.id || ""))}')">Conversation preview</div>
-      <div class="comment-disabled-wrap"><div class="comment-disabled-badge">Comments soon</div><div class="comment-disabled-inner">${commentSnippet(event)}</div><div class="comment-disabled-note">Create a profile to unlock the social layer. Open the event for directions, shares, and calendar tools.</div></div>
-    </div>
   </div>`;
 }
 
 function renderFeed(events){
   const feed = document.getElementById("feed");
   if (!feed) return;
-  if (!events.length){
+  const safeEvents = Array.isArray(events) ? events.filter(Boolean) : [];
+  if (!safeEvents.length){
     feed.innerHTML = `<div class="empty">No events were returned yet. Once your feed has current or recent rows, the premium social layer will appear automatically.</div>`;
     return;
   }
-  feed.innerHTML = events.slice(0,24).map(eventCard).join("");
+  const cards = safeEvents.slice(0,24).map(event => {
+    try{ return eventCard(event); }
+    catch(err){ console.warn("Skipping event card render failure", event?.id || event?.title, err); return ""; }
+  }).filter(Boolean).join("");
+  feed.innerHTML = cards || `<div class="empty">Events loaded, but no cards could be rendered yet.</div>`;
 }
 function filterEvents(query){
   const q = query.trim().toLowerCase();
@@ -4683,6 +5028,7 @@ async function loadEvents(){
       ...windows.future
     ]).slice(0, 120);
     thisWeekEventsCache = dedupeEvents([...windows.thisWeek, ...windows.future, ...windows.nextTwoWeeks, ...windows.allSorted]).slice(0, 220);
+    scheduleOrganizationSync(allEvents);
   }
 
   if (statusText) statusText.textContent = "Loading…";
@@ -5230,6 +5576,7 @@ function showProfileView(){
   hideMainViews();
   document.getElementById("profileView").classList.remove("hidden");
   setActiveTab("profile");
+  updateTabAria("tabProfile");
   refreshProfileUI();
 }
 
@@ -5508,11 +5855,9 @@ function openEventModal(eventId){
   const event = _src.find(e => e && String(e.id) === String(eventId));
   if (!event){ showToast("Event details not available"); return; }
   const info = attendeeInfo(event.id);
-  const map = `https://maps.google.com/maps?q=${encodeURIComponent(event.location || "Los Angeles")}&output=embed`;
   const rsvp = event.rsvp_link || "#";
   const cal = buildCalendarLink(event);
   const wa = whatsAppShareUrl(event);
-  const comments = localCommentList(event.id);
   document.getElementById("eventModalContent").innerHTML = `
     <div class="card" style="box-shadow:none;border:none;margin:0;">
       <div class="card-copy" style="padding:0 0 12px;">
@@ -5539,16 +5884,7 @@ function openEventModal(eventId){
         <a class="modal-cal" href="${escapeHtml(cal)}" target="_blank" rel="noopener">Add to Calendar</a>
         <a class="modal-rsvp" href="${escapeHtml(rsvp)}" target="_blank" rel="noopener">Open Event Link</a>
       </div>
-      <div class="comments${currentProfile ? "" : " gated"}" ${currentProfile ? "" : 'onclick="showGatePop()"'} style="padding-top:0;">
-        <div class="comment-title">Comment thread</div>
-        <div style="display:grid;gap:10px;">${comments.length ? comments.map(renderCommentHtml).join("") : commentSnippet(event)}</div>
-        ${disabledCommentComposer()}
-      </div>
-      <a class="card-map-link" style="margin:0 0 4px;border-top:1px solid #f0e8d8;border-radius:0 0 18px 18px" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location||'Los Angeles')}" target="_blank" rel="noopener">
-        <span class="card-map-icon">📍</span>
-        <span class="card-map-text">${escapeHtml(event.location||'Location TBA')}</span>
-        <span class="card-map-arrow">Open in Maps →</span>
-      </a>
+      ${renderEventMapPreview(event)}
     </div>`;
   document.getElementById("eventModalOverlay").style.display = "flex";
   document.body.classList.add('modal-open');
@@ -7694,6 +8030,7 @@ window.addEventListener("DOMContentLoaded", () => {
     processPendingInviteFlow();
   }
   refreshProfileUI();
+  setTimeout(maybeShowOnboardingModal, 120);
   startTicker();
   // Defer Shabbat timing until after initial render
   setTimeout(refreshShabbatTiming, 2000);
