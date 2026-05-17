@@ -112,11 +112,21 @@ h1{margin:0;font-size:52px !important;line-height:.92 !important;font-weight:900
 .comment-name{font-size:12px;font-weight:900;color:var(--navy);margin-bottom:3px}
 .empty{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;color:var(--muted);box-shadow:var(--shadow)}
 .bottom{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(100vw,460px);max-width:460px;background:rgba(247,242,232,.98);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 12px calc(10px + env(safe-area-inset-bottom));z-index:200}
-.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
 .tab{display:grid;justify-items:center;gap:4px;color:var(--muted);font-size:11px;font-weight:800;text-align:center;min-width:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .tab .icon{width:36px;height:36px;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:17px;box-shadow:0 5px 15px rgba(0,0,0,.04)}
 .tab span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .tab.active{color:var(--navy)} .tab.active .icon{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+.orgs-view{background:linear-gradient(180deg,#08192c 0%,#0d2741 46%,#091a2d 100%);color:#fff;min-height:100vh}.orgs-view .orgs-top{position:sticky;top:0;z-index:40;padding:18px;background:rgba(8,25,44,.94);backdrop-filter:blur(10px);border-bottom:1px solid rgba(199,162,87,.18)}.orgs-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.orgs-eyebrow{color:var(--gold);font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}.orgs-title{margin:0;font-size:44px;line-height:.95;font-weight:900;letter-spacing:-.05em;color:#fff}.orgs-sub{margin:8px 0 0;color:rgba(255,255,255,.68);font-size:15px;line-height:1.45}.orgs-bell{width:42px;height:42px;border-radius:14px;border:1px solid rgba(199,162,87,.24);background:rgba(255,255,255,.06);color:#fff;display:grid;place-items:center;font-size:18px;position:relative;flex:0 0 auto}.orgs-search{margin-top:16px;background:rgba(255,255,255,.08);border:1px solid rgba(199,162,87,.22);border-radius:18px;display:flex;align-items:center;gap:10px;padding:13px 14px;box-shadow:0 16px 34px rgba(0,0,0,.18)}.orgs-search input{border:0;background:transparent;outline:none;width:100%;font-size:15px;color:#fff;min-width:0}.orgs-search input::placeholder{color:rgba(255,255,255,.45)}.orgs-chips{display:flex;gap:10px;overflow:auto;padding:13px 0 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.orgs-chips::-webkit-scrollbar{display:none}.orgs-chip{flex:0 0 auto;border:1px solid rgba(199,162,87,.22);background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);border-radius:999px;padding:9px 12px;font-size:12px;font-weight:900;white-space:nowrap}.orgs-chip.active{background:var(--gold);border-color:var(--gold);color:#08192c}.orgs-shell{padding:18px 18px 112px}.orgs-section{margin-bottom:18px}.orgs-section-title{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}.orgs-section-title h2{margin:0;color:#fff;font-size:21px;font-weight:900;letter-spacing:-.03em}.orgs-section-title span{color:rgba(255,255,255,.48);font-size:12px;font-weight:800}.orgs-card{border:1px solid rgba(199,162,87,.18);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.045));border-radius:24px;box-shadow:0 18px 40px rgba(0,0,0,.22);padding:16px;overflow:hidden}.orgs-empty{border:1px dashed rgba(199,162,87,.24);background:rgba(255,255,255,.045);border-radius:20px;padding:20px;text-align:center;color:rgba(255,255,255,.7);font-size:14px;line-height:1.45}.orgs-empty strong{display:block;color:#fff;font-size:16px;margin-bottom:5px}.orgs-feature{position:relative;padding:18px;background:linear-gradient(135deg,rgba(199,162,87,.22),rgba(45,93,159,.13) 56%,rgba(255,255,255,.055));min-height:172px}.orgs-feature-kicker{color:var(--gold);font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}.orgs-feature h3{margin:0 0 8px;color:#fff;font-size:24px;line-height:1.05;letter-spacing:-.04em}.orgs-feature p{margin:0;color:rgba(255,255,255,.7);font-size:14px;line-height:1.45;max-width:300px}.orgs-feature-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.orgs-pill{border:1px solid rgba(199,162,87,.24);background:rgba(8,25,44,.45);color:rgba(255,255,255,.82);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900}.orgs-static-list{display:grid;gap:10px}.orgs-static-item{display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05);border-radius:18px;padding:12px}.orgs-static-avatar{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--gold),#f0d58e);color:#08192c;display:grid;place-items:center;font-weight:900;flex:0 0 auto}.orgs-static-copy{min-width:0;flex:1}.orgs-static-copy strong{display:block;color:#fff;font-size:14px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.orgs-static-copy span{display:block;color:rgba(255,255,255,.56);font-size:12px;font-weight:700}.orgs-static-status{color:var(--gold);font-size:11px;font-weight:900;white-space:nowrap}.orgs-card-row{display:flex;align-items:center;gap:13px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05);border-radius:18px;padding:13px;margin-bottom:10px}.orgs-card-row:last-child{margin-bottom:0}.orgs-logo{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,var(--gold),#f1d58d);color:#08192c;display:grid;place-items:center;font-size:15px;font-weight:900;letter-spacing:-.03em;flex:0 0 auto}.orgs-card-main{min-width:0;flex:1}.orgs-card-main h3{margin:0 0 4px;color:#fff;font-size:16px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.orgs-card-main p{margin:0;color:rgba(255,255,255,.58);font-size:12px;line-height:1.35}.orgs-card-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.orgs-mini-chip{border:1px solid rgba(199,162,87,.2);background:rgba(199,162,87,.1);color:rgba(255,255,255,.82);border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900}.orgs-count{color:var(--gold);font-size:12px;font-weight:900;white-space:nowrap}.orgs-event-row{display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.08);padding:11px 0;cursor:pointer}.orgs-event-row:first-child{border-top:0;padding-top:0}.orgs-event-copy{min-width:0;flex:1}.orgs-event-copy strong{display:block;color:#fff;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.orgs-event-copy span{display:block;color:rgba(255,255,255,.56);font-size:11px;margin-top:3px}.orgs-event-date{color:var(--gold);font-size:11px;font-weight:900;white-space:nowrap}.orgs-feature .orgs-logo{margin-bottom:14px}.orgs-feature-count{color:var(--gold);font-size:12px;font-weight:900;margin-top:12px}.orgs-card-side{display:grid;justify-items:end;gap:8px;flex:0 0 auto}.orgs-follow-btn{border:1px solid var(--gold);background:rgba(199,162,87,.08);color:var(--gold);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;cursor:pointer;white-space:nowrap}.orgs-follow-btn.following{background:var(--gold);color:#08192c}
+
+.orgs-section-link{border:0;background:none;color:var(--gold);font-size:12px;font-weight:900;padding:4px 0;cursor:pointer}.orgs-popular-scroll{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;padding:2px 2px 6px}.orgs-popular-scroll::-webkit-scrollbar{display:none}.orgs-popular-card{flex:0 0 188px;min-height:210px;border:1px solid rgba(199,162,87,.28);background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.045));border-radius:24px;padding:15px;display:flex;flex-direction:column;gap:10px;scroll-snap-align:start;box-shadow:0 18px 38px rgba(0,0,0,.2);cursor:pointer;-webkit-tap-highlight-color:transparent}.orgs-popular-card.selected{border-color:var(--gold);box-shadow:0 0 0 1px rgba(199,162,87,.4),0 18px 38px rgba(0,0,0,.24)}.orgs-popular-card .orgs-logo{width:56px;height:56px;border-radius:50%;font-size:16px}.orgs-popular-name{color:#fff;font-size:17px;font-weight:900;line-height:1.08;letter-spacing:-.03em;min-height:38px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.orgs-popular-meta{color:rgba(255,255,255,.62);font-size:12px;font-weight:800;line-height:1.35;min-height:32px}.orgs-popular-card .orgs-follow-btn{width:100%;min-height:40px;margin-top:auto;font-size:12px}.orgs-popular-count{color:var(--gold);font-size:11px;font-weight:900}.orgs-upcoming-list{display:grid;gap:12px}.orgs-upcoming-row{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);border-radius:18px;padding:12px}.orgs-upcoming-row.no-image{grid-template-columns:1fr}.orgs-event-image{width:76px;height:76px;border-radius:14px;overflow:hidden;flex:0 0 auto;background:rgba(255,255,255,.04)}.orgs-event-image img{width:100%;height:100%;object-fit:cover;display:block}.orgs-upcoming-main{min-width:0}.orgs-from{color:var(--gold);font-size:11px;font-weight:900;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.orgs-upcoming-title{color:#fff;font-size:15px;font-weight:900;line-height:1.16;margin-bottom:5px}.orgs-upcoming-meta{color:rgba(255,255,255,.58);font-size:12px;font-weight:700;line-height:1.35}.orgs-upcoming-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.orgs-event-btn{border:1px solid rgba(199,162,87,.3);background:rgba(255,255,255,.06);color:#fff;border-radius:999px;padding:8px 11px;font-size:12px;font-weight:900;cursor:pointer}.orgs-event-btn.primary{background:var(--gold);border-color:var(--gold);color:#08192c}.orgs-event-btn.active{background:var(--green);border-color:var(--green);color:#fff}.orgs-feature-head{display:flex;align-items:flex-start;gap:14px}.orgs-feature-head .orgs-logo{width:62px;height:62px;border-radius:50%;font-size:18px;margin-bottom:0}.orgs-feature-main{min-width:0;flex:1}.orgs-feature-main h3{margin:0 0 6px;color:#fff;font-size:24px;line-height:1.05;letter-spacing:-.04em}.orgs-feature-stats{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.orgs-stat-pill{border:1px solid rgba(199,162,87,.22);background:rgba(8,25,44,.35);color:rgba(255,255,255,.86);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900}.orgs-feature-events-title{color:var(--gold);font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-top:14px}.orgs-feature-events{display:grid;gap:9px;margin-top:8px}.orgs-feature-event{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);border-radius:16px;padding:9px;cursor:pointer}.orgs-feature-event.no-image{grid-template-columns:1fr auto}.orgs-feature-thumb{width:44px;height:44px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.04)}.orgs-feature-thumb img{width:100%;height:100%;object-fit:cover;display:block}.orgs-feature-event-title{color:#fff;font-size:13px;font-weight:900;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.orgs-feature-event-meta{color:rgba(255,255,255,.56);font-size:11px;font-weight:700;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.orgs-feature-chevron{color:var(--gold);font-size:18px;font-weight:900}.orgs-view-all-events{margin-top:12px;width:100%;min-height:42px;border:1px solid var(--gold);background:rgba(199,162,87,.1);color:var(--gold);border-radius:999px;font-size:13px;font-weight:900;cursor:pointer}
+
+
+/* Organizations screen polish */
+.orgs-view{overflow-x:hidden}.orgs-view .orgs-top{padding:22px 18px 16px}.orgs-head-row{align-items:flex-start}.orgs-title{font-size:clamp(42px,13vw,56px);line-height:.9}.orgs-sub{max-width:310px}.orgs-search{margin-top:18px;border-radius:20px;padding:14px 15px}.orgs-chips{padding:14px 0 3px;margin:0 -2px}.orgs-chip{padding:10px 13px;min-height:38px}.orgs-shell{padding:16px 16px calc(124px + env(safe-area-inset-bottom))}.orgs-section{margin-bottom:20px}.orgs-section-title{align-items:center;margin-bottom:12px}.orgs-section-title h2{font-size:20px}.orgs-section-link{min-height:32px;padding:6px 2px}.orgs-popular-scroll{gap:12px;margin:0 -16px;padding:2px 16px 8px}.orgs-popular-card{flex-basis:166px;min-height:188px;padding:14px;border-radius:22px}.orgs-popular-card .orgs-logo{width:52px;height:52px}.orgs-popular-name{font-size:16px;min-height:36px}.orgs-popular-meta{font-size:11px;min-height:30px}.orgs-popular-card .orgs-follow-btn{min-height:42px}.orgs-card{border-radius:22px;padding:14px}.orgs-upcoming-list{gap:10px}.orgs-upcoming-row{gap:10px;padding:10px;border-radius:16px}.orgs-event-image{width:62px;height:62px;border-radius:13px}.orgs-upcoming-title{font-size:14px}.orgs-upcoming-meta{font-size:11px}.orgs-upcoming-actions{margin-top:8px}.orgs-event-btn{min-height:36px;padding:8px 12px}.orgs-feature{padding:16px}.orgs-feature-head{gap:12px}.orgs-feature-head .orgs-logo{width:58px;height:58px}.orgs-feature-main h3{font-size:23px}.orgs-feature-main p{font-size:13px;line-height:1.4}.orgs-feature-row{margin-top:12px}.orgs-feature-stats{margin:12px 0}.orgs-feature-events{gap:8px}.orgs-feature-event{padding:8px;border-radius:14px}.orgs-feature-thumb{width:40px;height:40px}.orgs-view-all-events{min-height:44px}.orgs-follow-btn{min-height:36px;padding:8px 12px}.tab#tabOrganizations span{font-size:9px}
+@media (max-width:390px){.orgs-view .orgs-top{padding:20px 16px 14px}.orgs-shell{padding-left:14px;padding-right:14px}.orgs-popular-scroll{margin-left:-14px;margin-right:-14px;padding-left:14px;padding-right:14px}.orgs-popular-card{flex-basis:158px}.orgs-title{font-size:44px}.orgs-bell{width:40px;height:40px}.orgs-section-title h2{font-size:19px}.orgs-feature-head .orgs-logo{width:54px;height:54px}.orgs-feature-main h3{font-size:21px}.orgs-event-image{width:58px;height:58px}.tab#tabOrganizations span{font-size:8px}}
+
 
 .hidden{display:none !important}
 .profile-shell{padding:18px}
@@ -1642,6 +1652,46 @@ header h1{
   </div>
 </div>
 
+<div class="app hidden orgs-view" id="organizationsView">
+  <div class="orgs-top">
+    <div class="orgs-head-row">
+      <div>
+        <div class="orgs-eyebrow">JEWISH LA · ORGANIZATIONS</div>
+        <h1 class="orgs-title">Organizations</h1>
+        <div class="orgs-sub">Subscribe to orgs and never miss their events.</div>
+      </div>
+      <button class="orgs-bell" onclick="showProfileView()" aria-label="Profile &amp; notifications">🔔</button>
+    </div>
+    <div class="orgs-search"><div aria-hidden="true">🔍</div><input id="organizationsSearchInput" placeholder="Search organizations, causes, vibes..." aria-label="Search organizations" /></div>
+    <div class="orgs-chips" aria-label="Organization filters">
+      <button class="orgs-chip active" type="button" data-org-filter="all">All</button>
+      <button class="orgs-chip" type="button" data-org-filter="subscribed">Subscribed</button>
+      <button class="orgs-chip" type="button" data-org-filter="young-professionals">Young Professionals</button>
+      <button class="orgs-chip" type="button" data-org-filter="shabbat">Shabbat</button>
+      <button class="orgs-chip" type="button" data-org-filter="learning">Learning</button>
+      <button class="orgs-chip" type="button" data-org-filter="social">Social</button>
+      <button class="orgs-chip" type="button" data-org-filter="westside">Westside</button>
+    </div>
+  </div>
+
+  <div class="orgs-shell">
+    <section class="orgs-section" aria-labelledby="popularOrganizationsTitle">
+      <div class="orgs-section-title"><h2 id="popularOrganizationsTitle">Popular Organizations</h2><button class="orgs-section-link" type="button" onclick="focusPopularOrganizations()">See all</button></div>
+      <div class="orgs-popular-scroll" id="popularOrganizationsList" tabindex="0" aria-label="Popular organizations"></div>
+    </section>
+
+    <section class="orgs-section" aria-labelledby="upcomingFromOrgsTitle">
+      <div class="orgs-section-title"><h2 id="upcomingFromOrgsTitle">Upcoming from your orgs</h2><button class="orgs-section-link" type="button" onclick="focusUpcomingOrganizations()">View all</button></div>
+      <div class="orgs-card orgs-upcoming-list" id="orgUpcomingList" tabindex="0"></div>
+    </section>
+
+    <section class="orgs-section" aria-labelledby="featuredOrganizationTitle">
+      <div class="orgs-section-title"><h2 id="featuredOrganizationTitle">Featured organization card</h2><span>From loaded events</span></div>
+      <div id="featuredOrganizationCard"></div>
+    </section>
+  </div>
+</div>
+
 <div class="app hidden" id="profileView">
   <div class="top">
     <div class="eyebrow">Your Profile</div>
@@ -2013,9 +2063,8 @@ header h1{
   <div class="tabs" role="tablist">
     <div class="tab active" id="tabFeed" role="tab" aria-label="Feed" aria-selected="true"><div class="icon" aria-hidden="true">🏠</div><span>Feed</span></div>
     <div class="tab" id="tabTonight" role="tab" aria-label="Tonight" aria-selected="false"><div class="icon" aria-hidden="true">🔥</div><span>Tonight</span></div>
-    <div class="tab" id="tabMap" role="tab" aria-label="Map" aria-selected="false"><div class="icon" aria-hidden="true">🗺️</div><span>Map</span></div>
     <div class="tab" id="tabPlan" role="tab" aria-label="Calendar" aria-selected="false"><div class="icon" aria-hidden="true">📅</div><span>Calendar</span></div>
-    <div class="tab" id="tabNetwork" role="tab" aria-label="Network" aria-selected="false"><div class="icon" aria-hidden="true">🫂</div><span>Network</span></div>
+    <div class="tab" id="tabOrganizations" role="tab" aria-label="Organizations" aria-selected="false"><div class="icon" aria-hidden="true">🏛️</div><span>Organizations</span></div>
     <div class="tab" id="tabProfile" role="tab" aria-label="Profile" aria-selected="false"><div class="icon" aria-hidden="true">👤</div><span>Profile</span></div>
   </div>
 </div>
@@ -2117,9 +2166,12 @@ const COMMENTS_STORAGE_KEY = "livefeed_comments_v1";
 const VIEWER_STORAGE_KEY = "livefeed_viewer_v1";
 const NOTIFICATIONS_STORAGE_KEY = "livefeed_notifications_v1";
 const PENDING_INVITE_STORAGE_KEY = "livefeed_pending_invite_v1";
+const ORG_FOLLOWS_STORAGE_KEY = "lajt_followed_org_ids";
 
 let allEvents = [];
 let activeQuickFilter = 'all';
+let activeOrgFilter = 'all';
+let selectedOrganizationId = '';
 let _feedSubTab = 'feed';
 let feedEvents = [];
 let tonightEventsCache = [];
@@ -2137,21 +2189,6 @@ let localNotifications = [];
 let currentModalEventId = null;
 let inviteProcessing = false;
 
-function fallbackImage(category){
-  const placeholders = [
-    "https://images.unsplash.com/photo-1515169067868-5387ec356754?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1200&q=80"
-  ];
-  try{
-    const key = String(category || 'event');
-    let hash = 0;
-    for (let i = 0; i < key.length; i++) hash = ((hash << 5) - hash + key.charCodeAt(i)) | 0;
-    return placeholders[Math.abs(hash) % placeholders.length];
-  }catch(_e){
-    return placeholders[0];
-  }
-}
 function safeDateValue(value){
   if (!value) return null;
   const d = new Date(value);
@@ -2798,11 +2835,12 @@ function tonightTone(event){
 }
 function profileEventHtml(e){
   const image = getEventCardImage(e);
+  const imageHtml = image ? `<img src="${escapeHtml(image)}" alt="" onerror="handleEventImgError(this)">` : "";
   const key = String(e.id || "");
   const state = eventActionState(key);
   return `
-    <div class="profile-event">
-      <img src="${escapeHtml(image)}" alt="">
+    <div class="profile-event" style="${image ? '' : 'grid-template-columns:1fr;'}">
+      ${imageHtml}
       <div>
         <div class="profile-event-title">${escapeHtml(e.title || "Event")}</div>
         <div class="profile-event-meta">${escapeHtml(formatDate(e.start_time))}</div>
@@ -3364,6 +3402,281 @@ function applyCurrentFilters(){
   // Only animate on explicit filter changes, not on load
   if (allEvents.length) animateFeedRefresh();
 }
+
+function getEventOrganizationName(event){
+  const name = event?.organization || event?.org || event?.organizer || event?.source || event?.calendar_name || event?.calendarName || "Community";
+  return String(name || "Community").trim() || "Community";
+}
+function normalizeOrgId(name){
+  const base = String(name || "Community")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return base || "community";
+}
+function orgLogoText(name){
+  return String(name || "Community").split(/\s+/).filter(Boolean).map(part => part[0]).join("").slice(0,2).toUpperCase() || "LA";
+}
+function deriveOrgRegion(events){
+  const counts = {};
+  (events || []).forEach(event => {
+    const raw = event?.region || event?.area || event?.location || "LA Wide";
+    const region = String(raw || "LA Wide").trim() || "LA Wide";
+    counts[region] = (counts[region] || 0) + 1;
+  });
+  return Object.keys(counts).sort((a,b) => counts[b] - counts[a])[0] || "LA Wide";
+}
+function orgCategoryTagsForEvent(event){
+  const hay = [event?.event_type, event?.category, event?.title, event?.description, event?.region, event?.area, event?.location]
+    .filter(Boolean).join(" ").toLowerCase();
+  const tags = [];
+  if (/young|20s|30s|yjp|professionals|next gen/.test(hay)) tags.push("Young Professionals");
+  if (/shabbat|havdalah|seder|friday night|challah/.test(hay)) tags.push("Shabbat");
+  if (/learn|learning|class|torah|study|lecture|speaker|discussion/.test(hay)) tags.push("Learning");
+  if (/social|party|mixer|happy hour|network|meetup|dinner|brunch/.test(hay)) tags.push("Social");
+  if (/westside|west side|santa monica|venice|brentwood|west la|westwood|beverly hills|pico|fairfax/.test(hay)) tags.push("Westside");
+  return tags;
+}
+function buildOrganizationsFromEvents(events){
+  const groups = new Map();
+  (events || []).forEach(event => {
+    if (!event) return;
+    const name = getEventOrganizationName(event);
+    const id = normalizeOrgId(name);
+    if (!groups.has(id)) groups.set(id, { id, name, events: [] });
+    groups.get(id).events.push(event);
+  });
+
+  const now = Date.now();
+  return Array.from(groups.values()).map(group => {
+    const datedEvents = group.events.filter(event => safeDateValue(event?.start_time));
+    const upcomingEvents = (datedEvents.length ? datedEvents.filter(event => safeTimeMs(event?.start_time, -1) >= now) : group.events.slice())
+      .sort((a,b) => safeTimeMs(a?.start_time, Number.MAX_SAFE_INTEGER) - safeTimeMs(b?.start_time, Number.MAX_SAFE_INTEGER));
+    const tagCounts = {};
+    group.events.forEach(event => orgCategoryTagsForEvent(event).forEach(tag => { tagCounts[tag] = (tagCounts[tag] || 0) + 1; }));
+    const categoryTags = Object.keys(tagCounts).sort((a,b) => tagCounts[b] - tagCounts[a]).slice(0, 3);
+    const region = deriveOrgRegion(group.events);
+    const followersEstimate = Math.max(18, group.events.length * 14 + (group.id.split("").reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % 90));
+    const tagText = categoryTags.length ? categoryTags.join(", ").toLowerCase() : "community";
+    return {
+      id: group.id,
+      name: group.name,
+      region,
+      categoryTags,
+      logoText: orgLogoText(group.name),
+      eventCount: group.events.length,
+      upcomingEvents,
+      followersEstimate,
+      description: `${group.name} hosts ${tagText} events across ${region}.`
+    };
+  }).sort((a,b) => b.eventCount - a.eventCount || a.name.localeCompare(b.name));
+}
+function getFollowedOrgIds(){
+  try{
+    const parsed = JSON.parse(localStorage.getItem(ORG_FOLLOWS_STORAGE_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed.map(String).filter(Boolean) : [];
+  }catch(err){ return []; }
+}
+function saveFollowedOrgIds(ids){
+  try{ localStorage.setItem(ORG_FOLLOWS_STORAGE_KEY, JSON.stringify(Array.from(new Set((ids || []).map(String).filter(Boolean))))); }catch(err){}
+}
+function isOrgFollowed(orgId){
+  return getFollowedOrgIds().includes(String(orgId || ""));
+}
+function followOrg(orgId){
+  const key = String(orgId || "");
+  if (!key) return;
+  saveFollowedOrgIds([...getFollowedOrgIds(), key]);
+}
+function unfollowOrg(orgId){
+  const key = String(orgId || "");
+  saveFollowedOrgIds(getFollowedOrgIds().filter(id => id !== key));
+}
+function toggleOrgFollow(orgId){
+  if (isOrgFollowed(orgId)) unfollowOrg(orgId);
+  else followOrg(orgId);
+  renderOrganizationsView();
+  return false;
+}
+function renderOrgFollowButton(org){
+  const followed = isOrgFollowed(org?.id);
+  return `<button type="button" class="orgs-follow-btn${followed ? ' following' : ''}" onclick="event.stopPropagation();return toggleOrgFollow('${escapeHtml(org?.id || '')}')">${followed ? '✓ Following' : 'Follow'}</button>`;
+}
+function orgMatchesActiveFilter(org){
+  if (!activeOrgFilter || activeOrgFilter === "all") return true;
+  if (activeOrgFilter === "subscribed") return isOrgFollowed(org.id);
+  const label = {
+    "young-professionals": "Young Professionals",
+    shabbat: "Shabbat",
+    learning: "Learning",
+    social: "Social",
+    westside: "Westside"
+  }[activeOrgFilter];
+  return label ? (org.categoryTags || []).includes(label) : true;
+}
+function demoOrganizationsFallback(){
+  return [
+    { name:"Chabad of Westwood", region:"Westwood", categoryTags:["Shabbat","Learning","Westside"] },
+    { name:"Moishe House LA", region:"LA Wide", categoryTags:["Young Professionals","Social"] },
+    { name:"IKAR", region:"Mid-City", categoryTags:["Learning","Shabbat"] },
+    { name:"YJP LA", region:"Los Angeles", categoryTags:["Young Professionals","Social"] },
+    { name:"Hillel at UCLA", region:"Westwood", categoryTags:["Young Professionals","Learning","Westside"] }
+  ].map((item, index) => ({
+    id: normalizeOrgId(item.name),
+    name: item.name,
+    region: item.region,
+    categoryTags: item.categoryTags,
+    logoText: orgLogoText(item.name),
+    eventCount: 0,
+    upcomingEvents: [],
+    followersEstimate: 24 + (index * 17),
+    description: `${item.name} will appear here with live event data when matching events are loaded.`
+  }));
+}
+function selectOrganization(orgId){
+  selectedOrganizationId = String(orgId || "");
+  renderOrganizationsView();
+}
+function focusPopularOrganizations(){
+  const el = document.getElementById("popularOrganizationsList");
+  if (el){ el.scrollIntoView({ behavior:"smooth", block:"nearest" }); el.focus({ preventScroll:true }); }
+  return false;
+}
+function organizationCardHtml(org){
+  const selected = String(selectedOrganizationId || "") === String(org.id || "");
+  const category = (org.categoryTags || [])[0] || "Community";
+  return `<div class="orgs-popular-card${selected ? ' selected' : ''}" onclick="selectOrganization('${escapeHtml(org.id)}')">
+    <div class="orgs-logo">${escapeHtml(org.logoText)}</div>
+    <div class="orgs-popular-name">${escapeHtml(org.name)}</div>
+    <div class="orgs-popular-meta">${escapeHtml(org.region)} · ${escapeHtml(category)}</div>
+    <div class="orgs-popular-count">${org.eventCount} event${org.eventCount === 1 ? "" : "s"}</div>
+    ${renderOrgFollowButton(org)}
+  </div>`;
+}
+function focusUpcomingOrganizations(){
+  const el = document.getElementById("orgUpcomingList");
+  if (el){ el.scrollIntoView({ behavior:"smooth", block:"nearest" }); el.focus({ preventScroll:true }); }
+  return false;
+}
+function organizationUpcomingEventHtml(event, org){
+  const rawKey = String(event?.id || "");
+  const key = escapeHtml(rawKey);
+  const d = safeDateValue(event?.start_time);
+  const dateText = d ? formatDate(event?.start_time) : "Date TBA";
+  const locationText = event?.region || event?.area || event?.location || org.region || "LA Wide";
+  const img = getEventCardImage(event);
+  const imageHtml = img ? `<div class="orgs-event-image"><img src="${escapeHtml(img)}" onerror="this.closest('.orgs-upcoming-row')?.classList.add('no-image');this.closest('.orgs-event-image')?.remove()" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous"></div>` : "";
+  const state = eventActionState(rawKey);
+  return `<div class="orgs-upcoming-row${img ? '' : ' no-image'}">
+    ${imageHtml}
+    <div class="orgs-upcoming-main">
+      <div class="orgs-from">From ${escapeHtml(org.name)}</div>
+      <div class="orgs-upcoming-title">${escapeHtml(event?.title || "Event")}</div>
+      <div class="orgs-upcoming-meta">${escapeHtml(dateText)}<br>${escapeHtml(locationText)}</div>
+      <div class="orgs-upcoming-actions">
+        <button type="button" class="orgs-event-btn primary" onclick="event.stopPropagation();openEventModal('${key}')">Details</button>
+        ${rawKey ? `<button type="button" class="orgs-event-btn${state.going ? ' active' : ''}" onclick="event.stopPropagation();return handleGoing('${key}',this)">${state.going ? 'Going ✓' : 'RSVP'}</button>` : ""}
+      </div>
+    </div>
+  </div>`;
+}
+function featuredOrgDescription(org){
+  const tags = org?.categoryTags || [];
+  if (tags.includes("Learning")) return "A Jewish community for events, connection, and learning.";
+  if (tags.includes("Shabbat")) return "A Jewish community for Shabbat, events, and connection.";
+  if (tags.includes("Young Professionals")) return "A Jewish community for young professionals, events, and connection.";
+  return "A Jewish community for events, connection, and learning.";
+}
+function featuredOrgEventHtml(event){
+  const key = escapeHtml(String(event?.id || ""));
+  const img = getEventCardImage(event);
+  const imageHtml = img ? `<div class="orgs-feature-thumb"><img src="${escapeHtml(img)}" onerror="this.closest('.orgs-feature-event')?.classList.add('no-image');this.closest('.orgs-feature-thumb')?.remove()" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous"></div>` : "";
+  const dateText = event?.start_time ? formatDate(event.start_time) : "Date TBA";
+  return `<div class="orgs-feature-event${img ? '' : ' no-image'}" onclick="openEventModal('${key}')">
+    ${imageHtml}
+    <div>
+      <div class="orgs-feature-event-title">${escapeHtml(event?.title || "Event")}</div>
+      <div class="orgs-feature-event-meta">${escapeHtml(dateText)}</div>
+    </div>
+    <div class="orgs-feature-chevron">›</div>
+  </div>`;
+}
+function renderFeaturedOrganizationCard(org){
+  const tags = (org.categoryTags || []).map(tag => `<span class="orgs-pill">${escapeHtml(tag)}</span>`).join("");
+  const nextEvents = (org.upcomingEvents || []).slice(0, 3);
+  const eventsHtml = nextEvents.length
+    ? nextEvents.map(featuredOrgEventHtml).join("")
+    : `<div class="orgs-empty"><strong>No upcoming events loaded yet.</strong></div>`;
+  return `<div class="orgs-card orgs-feature">
+    <div class="orgs-feature-head">
+      <div class="orgs-logo">${escapeHtml(org.logoText)}</div>
+      <div class="orgs-feature-main">
+        <div class="orgs-feature-kicker">Featured organization</div>
+        <h3>${escapeHtml(org.name)}</h3>
+        <p>${escapeHtml(featuredOrgDescription(org))}</p>
+      </div>
+    </div>
+    <div class="orgs-feature-row">${tags || `<span class="orgs-pill">${escapeHtml(org.region)}</span>`}</div>
+    <div class="orgs-feature-stats">
+      <span class="orgs-stat-pill">${org.upcomingEvents.length} upcoming</span>
+      <span class="orgs-stat-pill">~${org.followersEstimate} followers</span>
+    </div>
+    ${renderOrgFollowButton(org)}
+    <div class="orgs-feature-events-title">Next events</div>
+    <div class="orgs-feature-events">${eventsHtml}</div>
+    <button type="button" class="orgs-view-all-events" onclick="focusUpcomingOrganizations()">View all events</button>
+  </div>`;
+}
+function renderOrganizationsView(){
+  const source = (allEvents && allEvents.length) ? allEvents : readEventsSnapshot();
+  const popularEl = document.getElementById("popularOrganizationsList");
+  const upcomingEl = document.getElementById("orgUpcomingList");
+  const featuredEl = document.getElementById("featuredOrganizationCard");
+  if (!popularEl || !upcomingEl || !featuredEl) return;
+  const query = (document.getElementById("organizationsSearchInput")?.value || "").trim().toLowerCase();
+  const eventOrganizations = buildOrganizationsFromEvents(source);
+  const allOrganizations = eventOrganizations.length ? eventOrganizations : demoOrganizationsFallback();
+  let organizations = allOrganizations.filter(org => {
+    const text = [org.name, org.region, org.description, ...(org.categoryTags || [])].join(" ").toLowerCase();
+    return (!query || text.includes(query)) && orgMatchesActiveFilter(org);
+  });
+
+  const followedOrganizations = allOrganizations.filter(org => isOrgFollowed(org.id));
+  const upcomingPairs = [];
+  followedOrganizations.forEach(org => (org.upcomingEvents || []).slice(0, 2).forEach(event => upcomingPairs.push({ org, event })));
+  upcomingPairs.sort((a,b) => safeTimeMs(a.event?.start_time, Number.MAX_SAFE_INTEGER) - safeTimeMs(b.event?.start_time, Number.MAX_SAFE_INTEGER));
+  const upcomingCountEl = document.getElementById("upcomingOrganizationsCount");
+  if (upcomingCountEl) upcomingCountEl.textContent = followedOrganizations.length ? `${upcomingPairs.length} upcoming` : "No followed orgs";
+  upcomingEl.innerHTML = followedOrganizations.length
+    ? (upcomingPairs.length
+      ? upcomingPairs.slice(0, 4).map(item => organizationUpcomingEventHtml(item.event, item.org)).join("")
+      : `<div class="orgs-empty"><strong>Your followed organizations don’t have upcoming events loaded yet.</strong></div>`)
+    : `<div class="orgs-empty"><strong>Follow organizations to see their latest events here.</strong></div>`;
+
+  const countEl = document.getElementById("popularOrganizationsCount");
+  if (countEl) countEl.textContent = organizations.length ? `${organizations.length} org${organizations.length === 1 ? "" : "s"}` : "No matches";
+
+  if (!organizations.length){
+    const message = activeOrgFilter === "subscribed"
+      ? "Follow organizations to see them here."
+      : "No organizations match this search yet. Try a broader term or the All filter.";
+    popularEl.innerHTML = `<div class="orgs-empty"><strong>No organizations found.</strong>${escapeHtml(message)}</div>`;
+    featuredEl.innerHTML = `<div class="orgs-empty"><strong>No featured organization yet.</strong>Featured cards are derived from loaded events.</div>`;
+    return;
+  }
+
+  const selectedStillExists = allOrganizations.some(org => String(org.id) === String(selectedOrganizationId));
+  if (!selectedOrganizationId || !selectedStillExists) {
+    selectedOrganizationId = followedOrganizations[0]?.id || organizations[0]?.id || "";
+  }
+  popularEl.innerHTML = organizations.slice(0, 12).map(organizationCardHtml).join("");
+
+  const featured = allOrganizations.find(org => String(org.id) === String(selectedOrganizationId)) || organizations[0];
+  featuredEl.innerHTML = featured ? renderFeaturedOrganizationCard(featured) : `<div class="orgs-empty"><strong>No featured organization yet.</strong></div>`;
+}
+
 function socialProofLine(event, info){
   const region = event.region || event.location || "near you";
   if (info.rsvps >= 8) return `${info.rsvps} people are already in for this one.`;
@@ -3423,7 +3736,6 @@ function getSocialProofBanner(event, info){
   return '';
 }
 function eventCard(event){
-  const image = getEventCardImage(event);
   const org = ((event.organization || "").trim().toLowerCase() === "la jewish events") ? "" : (event.organization || "Community Event");
   const desc = event.description || "Details coming soon.";
   const rsvp = event.rsvp_link || "#";
@@ -3450,7 +3762,7 @@ function eventCard(event){
       <h3 class="title"><a href="${escapeHtml(rsvp)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:inherit;text-decoration:none;">${escapeHtml(event.title || "Event")}</a></h3>
       <p class="desc">${escapeHtml(desc.slice(0,120))}</p>
     </div>
-    <a href="${escapeHtml(rsvp)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${renderEventImageTag(event, "image")}</a>
+    ${renderEventImageTag(event, "image", "", rsvp, `data-event-image-link="true" onclick="event.stopPropagation()"`)}
     <div class="details">${formatDate(event.start_time)} · ${escapeHtml(event.location || "Location TBA")}</div>
     <div class="card-map-preview-wrap" onclick="event.stopPropagation()">
       <iframe class="card-map-preview-frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?hl=en&q=${encodeURIComponent(event.location || 'Los Angeles')}&z=14&output=embed"></iframe>
@@ -3611,6 +3923,7 @@ async function loadEvents(){
     renderFomoStrip();
     if (currentProfile) renderProfileDashboard();
     if (_feedSubTab === 'agenda') renderAgenda();
+    if (!document.getElementById('organizationsView')?.classList.contains('hidden')) renderOrganizationsView();
     if (_leafletMap && !document.getElementById('mapView')?.classList.contains('hidden')) {
       renderMapPins(getAllUpcomingEventsForMap());
     }
@@ -4150,7 +4463,7 @@ function showNewsView(){
 function setActiveTab(which){
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   const _tabMap = {
-    profile:"tabProfile", tonight:"tabTonight", network:"tabNetwork",
+    profile:"tabProfile", tonight:"tabTonight", network:"tabNetwork", organizations:"tabOrganizations",
     map:"tabMap", plan:"tabPlan", planner:"tabPlanner", feed:"tabFeed"
   };
   const tabId = _tabMap[which] || "tabFeed";
@@ -4162,11 +4475,22 @@ function hideMainViews(){
   const tonightEl = document.getElementById("tonightView"); if (tonightEl) tonightEl.classList.add("hidden");
   const profileEl = document.getElementById("profileView"); if (profileEl) profileEl.classList.add("hidden");
   const networkEl = document.getElementById("networkView"); if (networkEl) networkEl.classList.add("hidden");
+  const organizationsEl = document.getElementById("organizationsView"); if (organizationsEl) organizationsEl.classList.add("hidden");
   const newsEl = document.getElementById("newsView"); if (newsEl) newsEl.classList.add("hidden");
   const mapEl = document.getElementById("mapView"); if (mapEl) mapEl.classList.add("hidden");
   const plannerEl = document.getElementById("plannerView"); if (plannerEl) plannerEl.classList.add("hidden");
   const planEl = document.getElementById("planView"); if (planEl) planEl.classList.add("hidden");
 }
+function showOrganizationsView(){
+  restorePageScroll();
+  hideMainViews();
+  const el = document.getElementById("organizationsView");
+  if (el) el.classList.remove("hidden");
+  setActiveTab("organizations");
+  updateTabAria("tabOrganizations");
+  renderOrganizationsView();
+}
+
 function showProfileView(){
   restorePageScroll();
   hideMainViews();
@@ -4287,12 +4611,13 @@ function renderTonightTab(){
 
   function itemHtml(e){
     const image = getEventCardImage(e);
+    const imageHtml = image ? `<img class="tonight-thumb" src="${escapeHtml(image)}" onerror="handleEventImgError(this)" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous">` : "";
     const key = String(e.id || "");
     const state = eventActionState(key);
     const info = attendeeInfo(e.id);
     return `
       <div class="tonight-item dynamic" style="background:${tonightTone(e)}" onclick="openEventModal('${escapeHtml(key)}')">
-        <img class="tonight-thumb" src="${escapeHtml(image)}" data-fallback-srcs="${escapeHtml(getEventImageSources(e).slice(1).join('||'))}" onerror="handleEventImgError(this)" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous">
+        ${imageHtml}
         <div class="tonight-card-copy">
           <div class="tonight-kicker">${escapeHtml(e.category || "Tonight")} · ${escapeHtml(e.region || "Los Angeles")}</div>
           <h4>${escapeHtml(e.title || "Event")}</h4>
@@ -4460,7 +4785,7 @@ function openEventModal(eventId){
         <h3 class="title" style="margin-top:4px;">${escapeHtml(event.title || "Event")}</h3>
         <p class="desc">${escapeHtml(event.description || "Details coming soon.")}</p>
       </div>
-      <img class="image" src="${escapeHtml(getEventCardImage(event))}" data-fallback-srcs="${escapeHtml(getEventImageSources(event).slice(1).join('||'))}" onerror="handleEventImgError(this)" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous">
+      ${renderEventImageTag(event, "image")}
       <div class="details">${formatDate(event.start_time)} · ${escapeHtml(event.location || "Location TBA")}</div>
       <div class="attendees">
         <div class="facepile">${info.faces}</div>
@@ -4935,9 +5260,10 @@ function plannerEventCard(e, badgeLabel) {
   const key = String(e.id || '');
   const state = eventActionState(key);
   const img = getEventCardImage(e);
+  const imageHtml = img ? `<img class="planner-event-img" src="${escapeHtml(img)}" onerror="handleEventImgError(this)" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous">` : "";
   const dateStr = formatDate(e.start_time);
-  return `<div class="planner-event-card">
-    <img class="planner-event-img" src="${escapeHtml(img)}" data-fallback-srcs="${escapeHtml(getEventImageSources(e).slice(1).join('||'))}" onerror="handleEventImgError(this)" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous">
+  return `<div class="planner-event-card" style="${img ? '' : 'grid-template-columns:1fr;'}">
+    ${imageHtml}
     <div>
       ${badgeLabel ? `<div style="font-size:10px;font-weight:900;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">${escapeHtml(badgeLabel)}</div>` : ''}
       <div class="planner-event-title">${escapeHtml(e.title || 'Event')}</div>
@@ -5627,6 +5953,7 @@ function agendaEventRow(event, goingIds, savedIds, likedIds){
   var monthAbbr = d ? d.toLocaleString([],{month:'short'}) : '';
   var timeStr = d ? agendaFormatTime(d) : 'Time TBA';
   var img = getEventCardImage(event);
+  var imageHtml = img ? `<div class="agenda-thumb"><img src="${escapeHtml(img)}" onerror="handleEventImgError(this)" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous"></div>` : "";
   var title = escapeHtml(event.title||'Event');
   var loc = escapeHtml(event.location||'Location TBA');
   var cat = escapeHtml(event.category||'');
@@ -5645,9 +5972,7 @@ function agendaEventRow(event, goingIds, savedIds, likedIds){
       <div class="agenda-date-day">${dayNum}</div>
       <div class="agenda-date-month">${escapeHtml(monthAbbr)}</div>
     </div>
-    <div class="agenda-thumb">
-      <img src="${escapeHtml(img)}" data-fallback-srcs="${escapeHtml(getEventImageSources(event).slice(1).join('||'))}" onerror="handleEventImgError(this)" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous">
-    </div>
+    ${imageHtml}
     <div class="agenda-event-content">
       <div class="agenda-event-title">${title}</div>
       <div class="agenda-event-meta">${escapeHtml(timeStr)} · ${loc}</div>
@@ -5671,10 +5996,11 @@ function renderAgendaTodayStrip(todayEvents){
     var k = String(ev.id||'');
     var state = eventActionState(k);
     var img = getEventCardImage(ev);
+    var imageHtml = img ? `<img src="${escapeHtml(img)}" onerror="handleEventImgError(this)" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous">` : "";
     var d = safeDateValue(ev.start_time);
     var timeStr = d ? agendaFormatTime(d) : '';
     return `<div class="agenda-today-card" onclick="openEventModal('${escapeHtml(k)}')">
-      <img src="${escapeHtml(img)}" data-fallback-srcs="${escapeHtml(getEventImageSources(ev).slice(1).join('||'))}" onerror="handleEventImgError(this)" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous">
+      ${imageHtml}
       <div class="agenda-today-card-body">
         <div class="agenda-today-card-title">${escapeHtml(ev.title||'Event')}</div>
         <div class="agenda-today-card-meta">${escapeHtml(timeStr)} · ${escapeHtml(ev.location||'')}</div>
@@ -5945,6 +6271,7 @@ function renderTheMoveHero(){
   var ev = candidates[0];
   var info = getSocialSnapshot(ev.id);
   var img = getEventCardImage(ev);
+  if(!img){ wrap.innerHTML=''; return; }
   var id = escapeHtml(String(ev.id||''));
   var d = safeDateValue(ev.start_time);
   var timeStr = d ? d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}) : '';
@@ -5955,7 +6282,7 @@ function renderTheMoveHero(){
 
   wrap.innerHTML = `
   <div class="the-move-hero" onclick="openEventModal('${id}')">
-    <img class="the-move-img" src="${escapeHtml(img)}" data-fallback-srcs="${escapeHtml(getEventImageSources(ev).slice(1).join('||'))}" onerror="handleEventImgError(this)" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous">
+    <img class="the-move-img" src="${escapeHtml(img)}" onerror="handleEventImgError(this)" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous">
     <div class="the-move-overlay"></div>
     <div class="the-move-badge"><div class="the-move-badge-dot"></div>THE MOVE TONIGHT</div>
     <div class="the-move-content">
@@ -6305,67 +6632,72 @@ function buildLinkPreviewCandidates(url){
 function buildLinkPreviewImage(url){
   return '';
 }
+function normalizeRealEventImageUrl(value){
+  if (!value) return '';
+  if (Array.isArray(value)) return normalizeRealEventImageUrl(value[0]);
+  if (typeof value === 'object') return normalizeRealEventImageUrl(value.url || value.src || value.href || value.image_url || value.photo_url);
+  let img = decodeMaybeUrl(value || '').replace(/\\//g,'/').replace(/&amp;/g,'&').trim();
+  if (!img) return '';
+  if (/^\/\//.test(img)) img = `https:${img}`;
+  if (!/^https?:\/\//i.test(img)) return '';
+  if (isPlaceholderEventImageUrl(img)) return '';
+  return img;
+}
+function isPlaceholderEventImageUrl(value){
+  const url = String(value || '').toLowerCase();
+  if (!url) return true;
+  return /unsplash\.com\/photo-(1515169067868-5387ec356754|1511795409834-ef04bbd61622|1528605248644-14dd04022da1)/i.test(url)
+    || /api\.microlink\.io\/screenshot/i.test(url)
+    || /(?:placeholder|fallback|default-event|generic-event|fake-event|hero-fallback|jewish-la-event|la-jewish-tonight)/i.test(url);
+}
 function getEventImageSources(event){
   const sources = [];
   const seen = new Set();
   const push = (value) => {
-    const normalized = decodeMaybeUrl(value || '').replace(/&amp;/g,'&').trim();
+    if (Array.isArray(value)) { value.forEach(push); return; }
+    const normalized = normalizeRealEventImageUrl(value);
     if (!normalized || seen.has(normalized)) return;
     seen.add(normalized);
     sources.push(normalized);
   };
-  
-  // PRIMARY: Try the image_url field first
+
+  push(event?.image);
   push(event?.image_url);
-  
-  // SECONDARY: Try to extract images from event URLs
-  // These fields often contain the actual event page which has images
-  const eventUrls = [
-    event?.rsvp_link,
-    event?.public_event_url,
-    event?.event_url,
-    event?.google_event_url,
-    event?.source_url,
-    event?.url
-  ].filter(Boolean);
-  
-  // For URL-based events, try to get OG images using screenshot services
-  eventUrls.forEach(url => {
-    if (url && url.includes('http')) {
-      // Try Microlink screenshot service for actual page screenshots
-      push(`https://api.microlink.io/screenshot?url=${encodeURIComponent(url)}&type=jpeg&overlay.browser=light&overlay.background=linear-gradient(225deg,%20%23FF057C%200%25,%20%238D0B93%2050%25,%20%23321575%20100%25)`);
-    }
-  });
-  
-  // FALLBACK: Use category-based placeholder
-  push(fallbackImage(event?.category));
-  
+  push(event?.photo_url);
+  push(event?.hero_image);
+  push(event?.thumbnail);
+  push(event?.link_preview_image);
+  push(event?.og_image);
+  push(event?.preview_image);
+
+  const cacheKey = String(event?.id || '');
+  if (cacheKey){
+    const cache = readEventImageCache();
+    push(cache[cacheKey]);
+  }
+
   return sources;
 }
-function getEventCardImage(event){
-  return getEventImageSources(event)[0] || fallbackImage(event?.category);
+function hasRealEventImage(event){
+  return getEventImageSources(event).length > 0;
 }
-function renderEventImageTag(event, className, extraAttrs){
-  const sources = getEventImageSources(event);
-  const primary = sources[0] || fallbackImage(event?.category);
-  const fallbackChain = sources.slice(1).join('||');
-  return `<img class="${escapeHtml(className || 'image')}" src="${escapeHtml(primary)}" data-fallback-srcs="${escapeHtml(fallbackChain)}" onerror="handleEventImgError(this)" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous" ${extraAttrs || ''}>`;
+function getEventCardImage(event){
+  return getEventImageSources(event)[0] || '';
+}
+function renderEventImageTag(event, className, extraAttrs, href, linkAttrs){
+  const primary = getEventCardImage(event);
+  if (!primary) return '';
+  const img = `<img class="${escapeHtml(className || 'image')}" src="${escapeHtml(primary)}" onerror="handleEventImgError(this)" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" crossorigin="anonymous" ${extraAttrs || ''}>`;
+  return href ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener" ${linkAttrs || ''}>${img}</a>` : img;
 }
 function handleEventImgError(img){
   if (!img) return;
-  const remaining = String(img.dataset.fallbackSrcs || '').split('||').filter(Boolean);
-  if (!remaining.length){
-    img.onerror = null;
-    return;
-  }
-  const next = remaining.shift();
-  img.dataset.fallbackSrcs = remaining.join('||');
-  // Some preview services reject hotlinking unless referrer/crossorigin are absent.
-  if (/mshots|thum\.io|s-shot|microlink/i.test(next)) {
-    img.removeAttribute('crossorigin');
-    img.referrerPolicy = 'origin-when-cross-origin';
-  }
-  img.src = next;
+  img.onerror = null;
+  const card = img.closest('.profile-event, .planner-event-card');
+  if (card) card.style.gridTemplateColumns = '1fr';
+  const removable = img.closest('[data-event-image-link="true"], .agenda-thumb');
+  if (removable) { removable.remove(); return; }
+  img.remove();
 }
 async function fetchTextThroughProxy(url){
   const cleaned = normalizePossibleEventUrl(url);
@@ -6520,8 +6852,7 @@ async function refreshEventImagesFromLinks(){
   if (!allEvents || !allEvents.length) return false;
   
   const eventsNeedingImages = allEvents.filter(e => {
-    // Events without image_url or with placeholder images
-    return !e.image_url || e.image_url.includes('unsplash.com/photo');
+    return !hasRealEventImage(e);
   }).slice(0, 20); // Process up to 20 events to avoid overwhelming the browser
   
   if (!eventsNeedingImages.length) return false;
@@ -6551,12 +6882,7 @@ async function refreshEventImagesFromLinks(){
           // Update the event object with the discovered image
           event.image_url = metaImg;
           // Force re-render of this specific card if it's visible
-          const cardImgs = document.querySelectorAll(`[onclick*="openEventModal('${event.id}')"] img.image`);
-          cardImgs.forEach(img => {
-            if (img.src.includes('unsplash.com')) {
-              img.src = metaImg;
-            }
-          });
+          renderFeed(feedEvents.length ? feedEvents : allEvents);
         }
       } catch (err) {
         console.warn('Could not fetch image for event:', event.id, err);
@@ -6614,10 +6940,20 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("clearProfileBtn")?.addEventListener("click", clearProfile);
   document.getElementById("editProfileBtn")?.addEventListener("click", openProfileEditor);
 
+  document.getElementById("organizationsSearchInput")?.addEventListener("input", renderOrganizationsView);
+  document.querySelectorAll(".orgs-chip[data-org-filter]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeOrgFilter = btn.dataset.orgFilter || "all";
+      document.querySelectorAll(".orgs-chip[data-org-filter]").forEach(chip => chip.classList.toggle("active", chip === btn));
+      renderOrganizationsView();
+    });
+  });
+
   document.getElementById("tabProfile")?.addEventListener("click", showProfileView);
   document.getElementById("tabFeed")?.addEventListener("click", showFeedView);
   document.getElementById("tabNetwork")?.addEventListener("click", showNetworkView);
   document.getElementById("tabTonight")?.addEventListener("click", showTonightView);
+  document.getElementById("tabOrganizations")?.addEventListener("click", showOrganizationsView);
   document.getElementById("tabMap")?.addEventListener("click", showMapView);
   document.getElementById("tabPlan")?.addEventListener("click", function(){ showPlanView(); });
   document.getElementById("calPrev")?.addEventListener("click", calPrev);
