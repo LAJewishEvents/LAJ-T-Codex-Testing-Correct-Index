@@ -1522,6 +1522,7 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
   background: rgba(255,255,255,.38) !important;
 }
 #feedView .feed .card-map-preview-bg { background: linear-gradient(135deg,rgba(255,248,236,.92),rgba(238,246,255,.94)) !important; }
+#feedView .feed .card-map-preview-frame { height: 116px !important; background: rgba(255,255,255,.45) !important; }
 #feedView .feed .card-map-preview-overlay { background: linear-gradient(180deg,rgba(16,50,82,0) 0%, rgba(16,50,82,.18) 100%) !important; }
 #feedView .feed .card-map-preview-pill { background: rgba(255,255,255,.92) !important; color: var(--navy) !important; }
 #feedView .feed .card-map-preview-open { background: rgba(16,50,82,.92) !important; color: #fff !important; }
@@ -1840,6 +1841,28 @@ header h1{
 <body>
 <div class="toast" id="toast"></div>
 <div class="notification-popover" id="notificationPopover" role="status" aria-live="polite"></div>
+
+<div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" aria-describedby="onboardingBody">
+  <div class="onboarding-modal">
+    <div class="onboarding-eyebrow">Jewish LA · Personalized</div>
+    <h2 class="onboarding-title" id="onboardingTitle">Welcome to LA Jewish Tonight</h2>
+    <div class="onboarding-subtitle">Let’s personalize your Jewish LA feed.</div>
+    <p class="onboarding-body" id="onboardingBody">Enter your name and ZIP code so we can tailor nearby events, community suggestions, and your profile.</p>
+    <form class="onboarding-form" id="onboardingForm" novalidate>
+      <div class="onboarding-field">
+        <label for="onboardingNameInput">Name</label>
+        <input id="onboardingNameInput" name="name" autocomplete="name" placeholder="Your name" required />
+      </div>
+      <div class="onboarding-field">
+        <label for="onboardingZipInput">ZIP code</label>
+        <input id="onboardingZipInput" name="zip" inputmode="numeric" autocomplete="postal-code" maxlength="5" placeholder="90024" required />
+      </div>
+      <div class="onboarding-error" id="onboardingError" aria-live="polite"></div>
+      <button class="onboarding-submit" type="submit">Enter LA Jewish Tonight</button>
+      <div class="onboarding-note">You can edit this later in your Profile.</div>
+    </form>
+  </div>
+</div>
 
 <div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" aria-describedby="onboardingBody">
   <div class="onboarding-modal">
