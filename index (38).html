@@ -551,7 +551,7 @@ h1{margin:0;font-size:52px !important;line-height:.92 !important;font-weight:900
 .tonight-chip{display:inline-flex;align-items:center;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.7);font-size:12px;font-weight:800;color:#173c62}
 
 
-.bottom .tabs{display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:3px !important;padding-left:4px;padding-right:4px;}
+.bottom .tabs{display:grid !important;grid-template-columns:repeat(5,minmax(0,1fr)) !important;gap:3px !important;padding-left:4px;padding-right:4px;}
 .bottom .tabs .tab{width:100% !important;justify-self:center;}
 
 .pending-request-card{background:#f7fbff;border:1px solid #dbe8fb;border-radius:18px;padding:14px 14px 12px;margin-bottom:14px}
@@ -3977,7 +3977,7 @@ var ORG_LOGO_URLS = {
   'hillel at ucla':       'https://hillelucla.org/wp-content/uploads/2020/05/hillel-logo.png',
   'aish':                 'https://aish.com/wp-content/uploads/2020/07/Aish-Logo.png',
   'sinai temple':         'https://www.sinaitemple.org/wp-content/uploads/2019/01/sinai-logo.png',
-  'beit t'shuvah':       'https://beittshuvah.org/wp-content/uploads/2020/01/BT-logo.png',
+  "beit t'shuvah":       'https://beittshuvah.org/wp-content/uploads/2020/01/BT-logo.png',
   'young israel':         'https://youngisrael.org/wp-content/uploads/2019/07/young-israel-logo.png',
   'jcc':                  'https://www.jccla.org/wp-content/uploads/2020/01/jcc-logo.png',
   'jcc of greater la':    'https://www.jccla.org/wp-content/uploads/2020/01/jcc-logo.png',
@@ -4017,7 +4017,7 @@ function renderOrgLogoHtml(org, width, height) {
   if (url) {
     return '<div class="orgs-logo" style="' + style + 'background:#fff;">'
       + '<img src="' + url + '" alt="' + (org.name || '') + '" style="width:100%;height:100%;object-fit:contain;display:block;padding:6px;" '
-      + 'onerror="this.parentNode.innerHTML='' + (org.logoText || 'LA').replace(/'/g, '') + '';this.parentNode.style.background='linear-gradient(135deg,#c9993a,#e8c26a)';this.parentNode.style.color='#0d1117';this.parentNode.style.fontSize='14px';this.parentNode.style.fontWeight='900';" '
+      + 'onerror="this.parentNode.textContent=' + JSON.stringify(String(org.logoText || 'LA').replace(/'/g, '')) + ';this.parentNode.style.background=\'linear-gradient(135deg,#c9993a,#e8c26a)\';this.parentNode.style.color=\'#0d1117\';this.parentNode.style.fontSize=\'14px\';this.parentNode.style.fontWeight=\'900\';" '
       + 'loading="lazy" referrerpolicy="no-referrer">'
       + '</div>';
   }
@@ -4359,7 +4359,7 @@ function renderFeaturedOrganizationCard(org){
     ${renderOrganizationEventDropdown(org)}
   </div>`;
 }
-function renderOrganizationsView(){
+function renderOrganizationsViewUnsafe(){
   const source = (allEvents && allEvents.length) ? allEvents : readEventsSnapshot();
   const popularEl = document.getElementById("popularOrganizationsList");
   const upcomingEl = document.getElementById("orgUpcomingList");
@@ -4409,6 +4409,18 @@ function renderOrganizationsView(){
 
   const featured = allOrganizations.find(org => String(org.id) === String(selectedOrganizationId)) || organizations[0];
   featuredEl.innerHTML = featured ? renderFeaturedOrganizationCard(featured) : `<div class="orgs-empty"><strong>No featured organization yet.</strong></div>`;
+}
+function renderOrganizationsView(){
+  try{
+    return renderOrganizationsViewUnsafe();
+  }catch(err){
+    console.warn("Organizations render failed", err);
+    const targets = ["popularOrganizationsList", "orgUpcomingList", "featuredOrganizationCard"];
+    targets.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = `<div class="orgs-empty"><strong>Organizations are temporarily unavailable.</strong>The rest of LA Jewish Tonight is still working.</div>`;
+    });
+  }
 }
 
 function socialProofLine(event, info){
@@ -4470,8 +4482,10 @@ function getSocialProofBanner(event, info){
   return '';
 }
 function eventCard(event){
-  const org = ((event.organization || "").trim().toLowerCase() === "la jewish events") ? "" : (event.organization || "Community Event");
-  const desc = event.description || "Details coming soon.";
+  event = event || {};
+  const organizationName = String(event.organization || "");
+  const org = (organizationName.trim().toLowerCase() === "la jewish events") ? "" : (organizationName || "Community Event");
+  const desc = String(event.description || "Details coming soon.");
   const rsvp = event.rsvp_link || "#";
   const info = attendeeInfo(event.id);
   const vibeChips = vibeChipsForEvent(event);
@@ -4532,11 +4546,16 @@ function eventCard(event){
 function renderFeed(events){
   const feed = document.getElementById("feed");
   if (!feed) return;
-  if (!events.length){
+  const safeEvents = Array.isArray(events) ? events.filter(Boolean) : [];
+  if (!safeEvents.length){
     feed.innerHTML = `<div class="empty">No events were returned yet. Once your feed has current or recent rows, the premium social layer will appear automatically.</div>`;
     return;
   }
-  feed.innerHTML = events.slice(0,24).map(eventCard).join("");
+  const cards = safeEvents.slice(0,24).map(event => {
+    try{ return eventCard(event); }
+    catch(err){ console.warn("Skipping event card render failure", event?.id || event?.title, err); return ""; }
+  }).filter(Boolean).join("");
+  feed.innerHTML = cards || `<div class="empty">Events loaded, but no cards could be rendered yet.</div>`;
 }
 function filterEvents(query){
   const q = query.trim().toLowerCase();
@@ -5230,6 +5249,7 @@ function showProfileView(){
   hideMainViews();
   document.getElementById("profileView").classList.remove("hidden");
   setActiveTab("profile");
+  updateTabAria("tabProfile");
   refreshProfileUI();
 }
 
