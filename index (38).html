@@ -647,8 +647,14 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 .invite-card .ic-name{font-size:13px;opacity:.82;font-weight:700}
 .invite-card .ic-event{font-size:18px;font-weight:900;line-height:1.15;margin-top:4px;letter-spacing:-.02em}
 .invite-card .ic-cta{margin-top:10px;font-size:12px;font-weight:900;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);border-radius:999px;display:inline-block;padding:5px 12px}
-.invite-wa-btn{width:100%;background:#25D366;color:#fff;border:0;border-radius:14px;padding:13px 16px;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
+.invite-wa-btn{width:100%;background:var(--navy);color:#fff;border:0;border-radius:14px;padding:13px 16px;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
 .invite-skip-btn{width:100%;background:transparent;color:var(--muted);border:0;font-size:13px;font-weight:700;cursor:pointer;padding:6px}
+.notification-popover{position:fixed;right:max(14px,calc((100vw - 460px)/2 + 14px));top:72px;z-index:260;display:none;width:min(320px,calc(100vw - 28px));background:rgba(255,255,255,.98);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 42px rgba(16,50,82,.18);padding:14px;color:var(--navy)}
+.notification-popover.open{display:block}
+.notification-popover h3{margin:0 0 8px;font-size:16px;font-weight:900;color:var(--navy)}
+.notification-popover p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+.notification-popover-item{border-top:1px solid #f0e8d8;padding:10px 0;font-size:13px;color:var(--muted)}
+.notification-popover-item:first-of-type{border-top:0}
 
 /* ─── Shabbat mode ─── */
 .shabbat-btn{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:900;color:var(--gold);background:rgba(199,162,87,.1);border:1px solid rgba(199,162,87,.22);border-radius:999px;padding:6px 13px;cursor:pointer;margin-top:10px;transition:background .2s}
@@ -1785,6 +1791,7 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
 
 .card-map-preview-wrap{position:relative;display:block;margin:10px 14px 0;border:1px solid #e8dcc8;border-radius:16px;overflow:hidden;background:#f4eee4;text-decoration:none;min-height:116px}
 .card-map-preview-bg{position:absolute;inset:0;background:linear-gradient(135deg,#efe6d7 0%,#f8f2e8 48%,#e6eef7 100%)}
+.card-map-preview-frame{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:#efe6d7}
 .card-map-preview-bg::before{content:"";position:absolute;inset:-30%;background:linear-gradient(30deg,transparent 0 43%,rgba(16,50,82,.08) 44% 46%,transparent 47% 100%),linear-gradient(115deg,transparent 0 48%,rgba(201,162,87,.16) 49% 51%,transparent 52% 100%);background-size:72px 72px,92px 92px;opacity:.9}
 .card-map-pin{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);display:grid;place-items:center;width:34px;height:34px;border-radius:50% 50% 50% 0;background:#c9993a;color:#0d1728;font-size:18px;font-weight:900;box-shadow:0 10px 24px rgba(16,50,82,.22);rotate:-45deg}
 .card-map-pin span{rotate:45deg}
@@ -1833,6 +1840,29 @@ header h1{
 </head>
 <body>
 <div class="toast" id="toast"></div>
+<div class="notification-popover" id="notificationPopover" role="status" aria-live="polite"></div>
+
+<div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" aria-describedby="onboardingBody">
+  <div class="onboarding-modal">
+    <div class="onboarding-eyebrow">Jewish LA · Personalized</div>
+    <h2 class="onboarding-title" id="onboardingTitle">Welcome to LA Jewish Tonight</h2>
+    <div class="onboarding-subtitle">Let’s personalize your Jewish LA feed.</div>
+    <p class="onboarding-body" id="onboardingBody">Enter your name and ZIP code so we can tailor nearby events, community suggestions, and your profile.</p>
+    <form class="onboarding-form" id="onboardingForm" novalidate>
+      <div class="onboarding-field">
+        <label for="onboardingNameInput">Name</label>
+        <input id="onboardingNameInput" name="name" autocomplete="name" placeholder="Your name" required />
+      </div>
+      <div class="onboarding-field">
+        <label for="onboardingZipInput">ZIP code</label>
+        <input id="onboardingZipInput" name="zip" inputmode="numeric" autocomplete="postal-code" maxlength="5" placeholder="90024" required />
+      </div>
+      <div class="onboarding-error" id="onboardingError" aria-live="polite"></div>
+      <button class="onboarding-submit" type="submit">Enter LA Jewish Tonight</button>
+      <div class="onboarding-note">You can edit this later in your Profile.</div>
+    </form>
+  </div>
+</div>
 
 <div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" aria-describedby="onboardingBody">
   <div class="onboarding-modal">
@@ -1868,7 +1898,7 @@ header h1{
           <div class="brand-eyebrow">Jewish LA · Live Platform</div>
           <div class="brand-name">Tonight in <span class="brand-accent">Jewish&nbsp;LA</span></div>
         </div>
-        <button class="notif-bell" onclick="showProfileView()" aria-label="Profile &amp; notifications">
+        <button class="notif-bell" onclick="return handleNotificationBellClick(event)" aria-label="Notifications">
           🔔<div class="notif-dot" id="notifDot"></div>
         </button>
       </div>
@@ -1974,7 +2004,7 @@ header h1{
         <h1 class="orgs-title">Organizations</h1>
         <div class="orgs-sub">Subscribe to orgs and never miss their events.</div>
       </div>
-      <button class="orgs-bell" onclick="showProfileView()" aria-label="Profile &amp; notifications">🔔</button>
+      <button class="orgs-bell" onclick="return handleNotificationBellClick(event)" aria-label="Notifications">🔔</button>
     </div>
     <div class="orgs-search"><div aria-hidden="true">🔍</div><input id="organizationsSearchInput" placeholder="Search organizations, causes, vibes..." aria-label="Search organizations" /></div>
     <div class="orgs-chips" aria-label="Organization filters">
@@ -2253,15 +2283,15 @@ header h1{
 <!-- ═══ POST-RSVP INVITE MODAL ═══ -->
 <div class="invite-overlay" id="inviteOverlay" onclick="handleInviteOverlayClick(event)">
   <div class="invite-sheet" id="inviteSheet">
-    <h3>You're going! 🎉</h3>
-    <p class="inv-sub">Bring a friend — share your invite card below.</p>
+    <h3>Added to your Profile</h3>
+    <p class="inv-sub">Don’t forget to register with the organizer using the actual event link.</p>
     <div class="invite-card">
-      <div class="ic-name" id="inviteCardName">You are going to</div>
-      <div class="ic-event" id="inviteCardEvent">Tonight's event</div>
-      <div class="ic-cta">Join me →</div>
+      <div class="ic-name" id="inviteCardName">Saved to your profile</div>
+      <div class="ic-event" id="inviteCardEvent">Event added</div>
+      <div class="ic-cta">Registration still required</div>
     </div>
-    <button class="invite-wa-btn" id="inviteWaBtn">📲 Share on WhatsApp</button>
-    <button class="invite-skip-btn" onclick="closeInviteModal()">Maybe later</button>
+    <button class="invite-wa-btn" id="inviteWaBtn">Open Event Link</button>
+    <button class="invite-skip-btn" onclick="closeInviteModal()">Done</button>
   </div>
 </div>
 
@@ -3654,6 +3684,22 @@ function renderProfileDashboard(){
   recTitle.textContent = `Recommended near ${currentProfile.neighborhood || "you"}`;
   recEl.innerHTML = rec.length ? rec.map(profileEventHtml).join("") : `<div class="empty">Add your neighborhood to personalize this section.</div>`;
 }
+function closeNotificationPopover(){
+  const pop = document.getElementById('notificationPopover');
+  if (pop) pop.classList.remove('open');
+}
+function handleNotificationBellClick(ev){
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  const pop = document.getElementById('notificationPopover');
+  if (!pop) return false;
+  const visibleLocal = (localNotifications || []).filter(item => !item.dismissed).slice(0, 4);
+  const visibleOrg = (orgEventNotifications || []).filter(item => !item.read_at).slice(0, 4);
+  const items = visibleOrg.map(item => `<div class="notification-popover-item"><strong>${escapeHtml(item.title || 'Notification')}</strong><br>${escapeHtml(item.body || '')}</div>`).join('')
+    + visibleLocal.map(item => `<div class="notification-popover-item"><strong>${escapeHtml(item.title || 'Notification')}</strong><br>${escapeHtml(item.body || '')}</div>`).join('');
+  pop.innerHTML = items ? `<h3>Notifications</h3>${items}` : `<h3>No current notifications</h3><p>You’re all caught up.</p>`;
+  pop.classList.toggle('open');
+  return false;
+}
 function refreshNotifDot(){
   var dot = document.getElementById('notifDot');
   if(!dot) return;
@@ -4805,18 +4851,23 @@ function getEventLatLng(event){
 function getEventLocationText(event){
   return String(event?.address || event?.full_address || event?.venue || event?.location || "").trim();
 }
-function getGoogleMapsUrl(event){
+function getGoogleMapsQuery(event){
   const coords = getEventLatLng(event);
-  if (coords) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${coords.lat},${coords.lng}`)}`;
-  const locationText = getEventLocationText(event);
-  return locationText ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}` : "";
+  if (coords) return `${coords.lat},${coords.lng}`;
+  return getEventLocationText(event);
 }
-function renderEventMapPreview(event){
+function getGoogleMapsUrl(event){
+  const query = getGoogleMapsQuery(event);
+  return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : "";
+}
+function renderEventMapPreview(event, useGoogleMap){
   const mapsUrl = getGoogleMapsUrl(event);
   const locationText = getEventLocationText(event);
+  const mapQuery = getGoogleMapsQuery(event);
   if (!mapsUrl || !locationText) return "";
+  const googleFrame = useGoogleMap ? `<iframe class="card-map-preview-frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?hl=en&q=${encodeURIComponent(mapQuery)}&z=14&output=embed" aria-hidden="true"></iframe>` : `<div class="card-map-preview-bg" aria-hidden="true"></div>`;
   return `<a class="card-map-preview-wrap" href="${escapeHtml(mapsUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" aria-label="Open ${escapeHtml(locationText)} in Google Maps">
-    <div class="card-map-preview-bg" aria-hidden="true"></div>
+    ${googleFrame}
     <div class="card-map-pin" aria-hidden="true"><span>📍</span></div>
     <div class="card-map-preview-overlay">
       <span class="card-map-preview-pill">📍 ${escapeHtml(locationText)}</span>
@@ -4854,7 +4905,7 @@ function eventCard(event){
     </div>
     ${renderEventImageTag(event, "image", "", rsvp, `data-event-image-link="true" onclick="event.stopPropagation()"`)}
     <div class="details">${formatDate(event.start_time)} · ${escapeHtml(event.location || "Location TBA")}</div>
-    ${renderEventMapPreview(event)}
+    ${renderEventMapPreview(event, true)}
     ${urgencySignals.length ? `<div class="urgency-row">${urgencySignals.map(s=>`<span class="urgency-pill ${s.cls}">${s.icon} ${escapeHtml(s.text)}</span>`).join('')}</div>` : ''}
     <div class="vibe-row">${vibeChips.map(chip => `<div class="vibe-chip">${escapeHtml(chip)}</div>`).join("")}</div>
     ${getSocialProofBanner(event, info)}
@@ -5920,21 +5971,24 @@ function getCountdownText(event) {
 /* ═══════════════════════════════════════════════
    POST-RSVP INVITE MODAL
    ═══════════════════════════════════════════════ */
+function getEventRealLink(event){
+  return candidateEventLink(event) || event?.rsvp_link || event?.public_event_url || event?.event_url || event?.url || "";
+}
 function showInviteModal(event) {
   const overlay = document.getElementById('inviteOverlay');
   if (!overlay) return;
-  const name = (currentProfile && currentProfile.name) ? currentProfile.name : 'You';
-  const title = (event && event.title) ? event.title : 'Tonight\'s event';
+  const title = (event && event.title) ? event.title : 'Event added';
   const el = document.getElementById('inviteCardName');
   const et = document.getElementById('inviteCardEvent');
-  if (el) el.textContent = name + ' is going to';
+  if (el) el.textContent = 'Saved to your profile';
   if (et) et.textContent = title;
-  const waBtn = document.getElementById('inviteWaBtn');
-  if (waBtn) {
-    const waText = name + ' is going to ' + title + '!\nJoin me tonight: ' +
-      (event && event.rsvp_link ? event.rsvp_link : window.location.href.split('?')[0]);
-    waBtn.onclick = function() {
-      window.open('https://wa.me/?text=' + encodeURIComponent(waText), '_blank', 'noopener,noreferrer');
+  const openBtn = document.getElementById('inviteWaBtn');
+  const link = getEventRealLink(event);
+  if (openBtn) {
+    openBtn.disabled = !link;
+    openBtn.textContent = 'Open Event Link';
+    openBtn.onclick = function() {
+      if (link) window.open(link, '_blank', 'noopener,noreferrer');
       closeInviteModal();
     };
   }
@@ -7755,7 +7809,14 @@ function hasRealEventImage(event){
 const EVENT_CARD_PLACEHOLDER_SVGS = [
   { bg1:'#071a2f', bg2:'#12395f', gold:'#c7a257', text:'Jewish LA Event' },
   { bg1:'#0c2742', bg2:'#1f5480', gold:'#e0bc6b', text:'Community Night' },
-  { bg1:'#10213a', bg2:'#5b4521', gold:'#f0d58e', text:'LA Jewish Tonight' }
+  { bg1:'#10213a', bg2:'#5b4521', gold:'#f0d58e', text:'LA Jewish Tonight' },
+  { bg1:'#18223a', bg2:'#6d4d8a', gold:'#f2c46d', text:'Young Jewish LA' },
+  { bg1:'#0d2a33', bg2:'#26736b', gold:'#e9c46a', text:'Shabbat Social' },
+  { bg1:'#1d1833', bg2:'#6f43c2', gold:'#f4d35e', text:'Community Mixer' },
+  { bg1:'#112b46', bg2:'#2d5d9f', gold:'#ffd166', text:'Friends Going' },
+  { bg1:'#241a2e', bg2:'#b85c7a', gold:'#f7d794', text:'LA Night Out' },
+  { bg1:'#15311f', bg2:'#2f7b42', gold:'#f0d58e', text:'Meet Your People' },
+  { bg1:'#2b2118', bg2:'#a58240', gold:'#ffe0a3', text:'Local Jewish Event' }
 ];
 function eventPlaceholderSeed(event){
   const key = String(event?.id || event?.title || event?.organization || 'lajt-event');
@@ -8006,6 +8067,14 @@ async function refreshEventImagesFromLinks(){
   
   return true;
 }
+
+document.addEventListener('keydown', function(ev){
+  if (ev.key === 'Escape') { closeInviteModal(); closeNotificationPopover(); }
+});
+document.addEventListener('click', function(ev){
+  const pop = document.getElementById('notificationPopover');
+  if (pop && pop.classList.contains('open') && !pop.contains(ev.target) && !ev.target.closest('.notif-bell,.orgs-bell')) closeNotificationPopover();
+});
 
 window.addEventListener('resize', detectRuntimeEnvironment, { passive:true });
 window.addEventListener('orientationchange', function(){ setTimeout(detectRuntimeEnvironment, 60); }, { passive:true });
