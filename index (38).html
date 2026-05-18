@@ -4905,7 +4905,7 @@ function eventCard(event){
     </div>
     ${renderEventImageTag(event, "image", "", rsvp, `data-event-image-link="true" onclick="event.stopPropagation()"`)}
     <div class="details">${formatDate(event.start_time)} · ${escapeHtml(event.location || "Location TBA")}</div>
-    ${renderEventMapPreview(event, true)}
+    ${renderEventMapPreview(event)}
     ${urgencySignals.length ? `<div class="urgency-row">${urgencySignals.map(s=>`<span class="urgency-pill ${s.cls}">${s.icon} ${escapeHtml(s.text)}</span>`).join('')}</div>` : ''}
     <div class="vibe-row">${vibeChips.map(chip => `<div class="vibe-chip">${escapeHtml(chip)}</div>`).join("")}</div>
     ${getSocialProofBanner(event, info)}
@@ -7807,16 +7807,16 @@ function hasRealEventImage(event){
   return getEventImageSources(event).length > 0;
 }
 const EVENT_CARD_PLACEHOLDER_SVGS = [
-  { bg1:'#071a2f', bg2:'#12395f', gold:'#c7a257', text:'Jewish LA Event' },
-  { bg1:'#0c2742', bg2:'#1f5480', gold:'#e0bc6b', text:'Community Night' },
-  { bg1:'#10213a', bg2:'#5b4521', gold:'#f0d58e', text:'LA Jewish Tonight' },
-  { bg1:'#18223a', bg2:'#6d4d8a', gold:'#f2c46d', text:'Young Jewish LA' },
-  { bg1:'#0d2a33', bg2:'#26736b', gold:'#e9c46a', text:'Shabbat Social' },
-  { bg1:'#1d1833', bg2:'#6f43c2', gold:'#f4d35e', text:'Community Mixer' },
-  { bg1:'#112b46', bg2:'#2d5d9f', gold:'#ffd166', text:'Friends Going' },
-  { bg1:'#241a2e', bg2:'#b85c7a', gold:'#f7d794', text:'LA Night Out' },
-  { bg1:'#15311f', bg2:'#2f7b42', gold:'#f0d58e', text:'Meet Your People' },
-  { bg1:'#2b2118', bg2:'#a58240', gold:'#ffe0a3', text:'Local Jewish Event' }
+  { title:'Shabbat Dinner', sub:'Young professionals around a candlelit table', bg1:'#1b2438', bg2:'#6d4b32', accent:'#f4d08b', skin:'#d9a06e', scene:'table', people:['#f7c6d9','#8ecae6','#f6bd60','#bde0fe'] },
+  { title:'Rooftop Mixer', sub:'Golden-hour LA rooftop social', bg1:'#0b2742', bg2:'#d18b47', accent:'#ffd166', skin:'#c9855c', scene:'rooftop', people:['#ffffff','#90dbf4','#ffafcc','#cdb4db'] },
+  { title:'Community Mixer', sub:'Small-group conversation', bg1:'#17213a', bg2:'#3f6f7d', accent:'#f2c46d', skin:'#b8754f', scene:'conversation', people:['#bde0fe','#ffc8dd','#caffbf','#fdffb6'] },
+  { title:'Dinner Laughs', sub:'Friends laughing at a long table', bg1:'#241a2e', bg2:'#9d4d61', accent:'#f7d794', skin:'#d19466', scene:'table', people:['#ffd6a5','#a0c4ff','#ffadad','#bdb2ff'] },
+  { title:'Candlelit Havdalah', sub:'Warm evening community gathering', bg1:'#12182d', bg2:'#654321', accent:'#ffe0a3', skin:'#bd7b55', scene:'candles', people:['#f1faee','#e9c46a','#a8dadc','#f4a261'] },
+  { title:'Networking Night', sub:'Name tags, introductions, new friends', bg1:'#10213a', bg2:'#2d5d9f', accent:'#ffd166', skin:'#ca8a60', scene:'networking', people:['#edf6f9','#ffddd2','#83c5be','#e29578'] },
+  { title:'Outdoor Social', sub:'Garden lights and conversation', bg1:'#15311f', bg2:'#2f7b42', accent:'#f0d58e', skin:'#a96f4f', scene:'outdoor', people:['#d8f3dc','#b7e4c7','#ffd6a5','#bde0fe'] },
+  { title:'Coffee + Learning', sub:'Casual learning circle over coffee', bg1:'#2b2118', bg2:'#a58240', accent:'#ffe0a3', skin:'#c98b61', scene:'coffee', people:['#fff1e6','#cb997e','#ddbea9','#b7b7a4'] },
+  { title:'Happy Hour Lounge', sub:'Premium young professionals lounge vibe', bg1:'#1d1833', bg2:'#6f43c2', accent:'#f4d35e', skin:'#b97854', scene:'lounge', people:['#cdb4db','#ffc8dd','#bde0fe','#fdffb6'] },
+  { title:'Jewish YP Night', sub:'Young Jewish LA gathering', bg1:'#071a2f', bg2:'#12395f', accent:'#c7a257', skin:'#d39a6a', scene:'star', people:['#ffffff','#e0fbfc','#ffd166','#caffbf'] }
 ];
 function eventPlaceholderSeed(event){
   const key = String(event?.id || event?.title || event?.organization || 'lajt-event');
@@ -7824,26 +7824,46 @@ function eventPlaceholderSeed(event){
   for (let i = 0; i < key.length; i++) total = (total + key.charCodeAt(i) * (i + 1)) % 9973;
   return total;
 }
-function eventPlaceholderImage(event){
+function getEventPlaceholderImage(event){
   const palette = EVENT_CARD_PLACEHOLDER_SVGS[eventPlaceholderSeed(event) % EVENT_CARD_PLACEHOLDER_SVGS.length];
-  const label = escapeHtml(palette.text);
+  const label = escapeHtml(palette.title);
+  const sub = escapeHtml(palette.sub);
+  const people = palette.people || ['#fff','#bde0fe','#ffc8dd','#fdffb6'];
+  const sceneExtras = {
+    table: `<ellipse cx="610" cy="442" rx="330" ry="72" fill="#2b1d18" opacity="0.82"/><ellipse cx="610" cy="418" rx="300" ry="52" fill="${palette.accent}" opacity="0.22"/><circle cx="520" cy="410" r="10" fill="#fff7dc"/><circle cx="625" cy="404" r="10" fill="#fff7dc"/><circle cx="735" cy="412" r="10" fill="#fff7dc"/>`,
+    rooftop: `<rect x="0" y="398" width="1200" height="232" fill="#0b1728" opacity="0.58"/><path d="M92 382h1016" stroke="#fff" stroke-opacity="0.45" stroke-width="8"/><path d="M130 345h70v37h-70zm118 20h54v17h-54zm690-42h88v59h-88z" fill="#fff" opacity="0.18"/>`,
+    conversation: `<circle cx="600" cy="420" r="120" fill="${palette.accent}" opacity="0.13"/><path d="M442 390c84-64 232-64 316 0" fill="none" stroke="#fff" stroke-opacity="0.3" stroke-width="10" stroke-linecap="round"/>`,
+    candles: `<rect x="515" y="392" width="20" height="86" rx="8" fill="#fff7dc"/><path d="M525 365c22 28 4 42 0 50-12-18-24-28 0-50z" fill="${palette.accent}"/><rect x="670" y="398" width="18" height="78" rx="8" fill="#fff7dc"/><path d="M679 373c20 25 4 38 0 46-11-16-22-26 0-46z" fill="${palette.accent}"/>`,
+    networking: `<rect x="462" y="392" width="88" height="42" rx="12" fill="#fff" opacity="0.9"/><rect x="668" y="392" width="88" height="42" rx="12" fill="#fff" opacity="0.9"/><path d="M550 414h118" stroke="${palette.accent}" stroke-width="8" stroke-linecap="round"/>`,
+    outdoor: `<path d="M0 420 C220 352 355 492 586 410 S950 345 1200 420v210H0z" fill="#0f5132" opacity="0.62"/><circle cx="205" cy="130" r="8" fill="${palette.accent}"/><circle cx="342" cy="102" r="7" fill="${palette.accent}"/><circle cx="870" cy="130" r="8" fill="${palette.accent}"/>`,
+    coffee: `<ellipse cx="610" cy="438" rx="250" ry="56" fill="#3c2a1e" opacity="0.75"/><circle cx="555" cy="418" r="28" fill="#fff1e6"/><circle cx="555" cy="418" r="16" fill="#8b5e34"/><circle cx="685" cy="418" r="28" fill="#fff1e6"/><circle cx="685" cy="418" r="16" fill="#8b5e34"/>`,
+    lounge: `<rect x="240" y="410" width="720" height="120" rx="48" fill="#21142f" opacity="0.72"/><circle cx="304" cy="156" r="70" fill="${palette.accent}" opacity="0.18"/><circle cx="912" cy="150" r="90" fill="#fff" opacity="0.10"/>`,
+    star: `<path d="M596 162l34 61 69 13-48 51 9 70-64-30-64 30 9-70-48-51 69-13z" fill="${palette.accent}" opacity="0.20"/><path d="M596 202l22 39 44 8-31 33 6 45-41-19-41 19 6-45-31-33 44-8z" fill="none" stroke="${palette.accent}" stroke-width="8" opacity="0.76"/>`
+  }[palette.scene] || '';
+  const person = (x, y, shirt, scale) => `<g transform="translate(${x} ${y}) scale(${scale || 1})"><circle cx="0" cy="-72" r="34" fill="${palette.skin}"/><path d="M-40-86c18-38 64-38 82 0-20-12-62-12-82 0z" fill="#2b1d18" opacity="0.85"/><path d="M-58 20c8-62 26-92 58-92s50 30 58 92z" fill="${shirt}"/><path d="M-58 20h116v42H-58z" fill="${shirt}" opacity="0.72"/><circle cx="-12" cy="-76" r="4" fill="#1b2438"/><circle cx="14" cy="-76" r="4" fill="#1b2438"/><path d="M-12-58c12 10 26 10 38 0" fill="none" stroke="#733f2f" stroke-width="5" stroke-linecap="round"/></g>`;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="${label}">
     <defs>
       <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${palette.bg1}"/><stop offset="0.62" stop-color="${palette.bg2}"/><stop offset="1" stop-color="#08192c"/></linearGradient>
-      <radialGradient id="glow" cx="72%" cy="28%" r="52%"><stop offset="0" stop-color="${palette.gold}" stop-opacity="0.55"/><stop offset="1" stop-color="${palette.gold}" stop-opacity="0"/></radialGradient>
+      <radialGradient id="glow" cx="74%" cy="24%" r="54%"><stop offset="0" stop-color="${palette.accent}" stop-opacity="0.54"/><stop offset="1" stop-color="${palette.accent}" stop-opacity="0"/></radialGradient>
     </defs>
     <rect width="1200" height="630" fill="url(#bg)"/>
     <rect width="1200" height="630" fill="url(#glow)"/>
-    <circle cx="100" cy="105" r="135" fill="${palette.gold}" opacity="0.16"/>
-    <circle cx="1090" cy="545" r="180" fill="#ffffff" opacity="0.07"/>
-    <path d="M145 430 C285 260, 430 535, 585 345 S865 215, 1035 392" fill="none" stroke="${palette.gold}" stroke-width="18" stroke-linecap="round" opacity="0.42"/>
-    <path d="M186 156 h116 c35 0 64 29 64 64v116c0 35-29 64-64 64H186c-35 0-64-29-64-64V220c0-35 29-64 64-64z" fill="none" stroke="${palette.gold}" stroke-width="12" opacity="0.9"/>
-    <path d="M244 188v180M154 278h180M180 214l128 128M308 214L180 342" stroke="#fff7dd" stroke-width="10" stroke-linecap="round" opacity="0.76"/>
-    <text x="430" y="280" fill="#fff7dd" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="58" font-weight="900" letter-spacing="-2">${label}</text>
-    <text x="432" y="340" fill="${palette.gold}" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="28" font-weight="800" letter-spacing="5">LOS ANGELES</text>
-    <text x="432" y="392" fill="#ffffff" opacity="0.72" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="26" font-weight="700">Events · Community · Connection</text>
+    <circle cx="94" cy="106" r="128" fill="${palette.accent}" opacity="0.14"/>
+    <circle cx="1090" cy="540" r="188" fill="#ffffff" opacity="0.07"/>
+    ${sceneExtras}
+    ${person(370, 392, people[0], 1.02)}
+    ${person(510, 374, people[1], .92)}
+    ${person(690, 374, people[2], .92)}
+    ${person(830, 392, people[3], 1.02)}
+    <path d="M145 520 C280 470, 402 538, 548 494 S820 452, 1038 514" fill="none" stroke="${palette.accent}" stroke-width="16" stroke-linecap="round" opacity="0.34"/>
+    <text x="70" y="88" fill="#fff7dd" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="44" font-weight="900" letter-spacing="-1.2">${label}</text>
+    <text x="72" y="132" fill="${palette.accent}" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="22" font-weight="900" letter-spacing="4">JEWISH YOUNG PROFESSIONALS</text>
+    <text x="72" y="570" fill="#ffffff" opacity="0.82" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="26" font-weight="800">${sub}</text>
   </svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+function eventPlaceholderImage(event){
+  return getEventPlaceholderImage(event);
 }
 function resolveEventCardImage(event){
   try{
