@@ -1863,6 +1863,28 @@ header h1{
   </div>
 </div>
 
+<div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" aria-describedby="onboardingBody">
+  <div class="onboarding-modal">
+    <div class="onboarding-eyebrow">Jewish LA · Personalized</div>
+    <h2 class="onboarding-title" id="onboardingTitle">Welcome to LA Jewish Tonight</h2>
+    <div class="onboarding-subtitle">Let’s personalize your Jewish LA feed.</div>
+    <p class="onboarding-body" id="onboardingBody">Enter your name and ZIP code so we can tailor nearby events, community suggestions, and your profile.</p>
+    <form class="onboarding-form" id="onboardingForm" novalidate>
+      <div class="onboarding-field">
+        <label for="onboardingNameInput">Name</label>
+        <input id="onboardingNameInput" name="name" autocomplete="name" placeholder="Your name" required />
+      </div>
+      <div class="onboarding-field">
+        <label for="onboardingZipInput">ZIP code</label>
+        <input id="onboardingZipInput" name="zip" inputmode="numeric" autocomplete="postal-code" maxlength="5" placeholder="90024" required />
+      </div>
+      <div class="onboarding-error" id="onboardingError" aria-live="polite"></div>
+      <button class="onboarding-submit" type="submit">Enter LA Jewish Tonight</button>
+      <div class="onboarding-note">You can edit this later in your Profile.</div>
+    </form>
+  </div>
+</div>
+
 <div class="app" id="feedView">
 
   <!-- ═══ HEADER ═══ -->
@@ -7797,6 +7819,9 @@ function eventPlaceholderSeed(event){
 }
 function getEventPlaceholderImage(event){
   return EVENT_CARD_PLACEHOLDER_IMAGES[eventPlaceholderSeed(event) % EVENT_CARD_PLACEHOLDER_IMAGES.length];
+}
+function eventPlaceholderImage(event){
+  return getEventPlaceholderImage(event);
 }
 function eventPlaceholderImage(event){
   return getEventPlaceholderImage(event);
