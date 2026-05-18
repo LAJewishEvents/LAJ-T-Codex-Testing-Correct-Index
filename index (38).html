@@ -7802,31 +7802,16 @@ const EVENT_CARD_PLACEHOLDER_SVGS = [
   { bg1:'#2b2118', bg2:'#a58240', gold:'#ffe0a3', text:'Local Jewish Event' }
 ];
 function eventPlaceholderSeed(event){
-  const key = String(event?.id || event?.title || event?.organization || 'lajt-event');
+  const key = String(event?.id || event?.title || event?.name || 'lajt-event');
   let total = 0;
   for (let i = 0; i < key.length; i++) total = (total + key.charCodeAt(i) * (i + 1)) % 9973;
   return total;
 }
+function getEventPlaceholderImage(event){
+  return EVENT_CARD_PLACEHOLDER_IMAGES[eventPlaceholderSeed(event) % EVENT_CARD_PLACEHOLDER_IMAGES.length];
+}
 function eventPlaceholderImage(event){
-  const palette = EVENT_CARD_PLACEHOLDER_SVGS[eventPlaceholderSeed(event) % EVENT_CARD_PLACEHOLDER_SVGS.length];
-  const label = escapeHtml(palette.text);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="${label}">
-    <defs>
-      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${palette.bg1}"/><stop offset="0.62" stop-color="${palette.bg2}"/><stop offset="1" stop-color="#08192c"/></linearGradient>
-      <radialGradient id="glow" cx="72%" cy="28%" r="52%"><stop offset="0" stop-color="${palette.gold}" stop-opacity="0.55"/><stop offset="1" stop-color="${palette.gold}" stop-opacity="0"/></radialGradient>
-    </defs>
-    <rect width="1200" height="630" fill="url(#bg)"/>
-    <rect width="1200" height="630" fill="url(#glow)"/>
-    <circle cx="100" cy="105" r="135" fill="${palette.gold}" opacity="0.16"/>
-    <circle cx="1090" cy="545" r="180" fill="#ffffff" opacity="0.07"/>
-    <path d="M145 430 C285 260, 430 535, 585 345 S865 215, 1035 392" fill="none" stroke="${palette.gold}" stroke-width="18" stroke-linecap="round" opacity="0.42"/>
-    <path d="M186 156 h116 c35 0 64 29 64 64v116c0 35-29 64-64 64H186c-35 0-64-29-64-64V220c0-35 29-64 64-64z" fill="none" stroke="${palette.gold}" stroke-width="12" opacity="0.9"/>
-    <path d="M244 188v180M154 278h180M180 214l128 128M308 214L180 342" stroke="#fff7dd" stroke-width="10" stroke-linecap="round" opacity="0.76"/>
-    <text x="430" y="280" fill="#fff7dd" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="58" font-weight="900" letter-spacing="-2">${label}</text>
-    <text x="432" y="340" fill="${palette.gold}" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="28" font-weight="800" letter-spacing="5">LOS ANGELES</text>
-    <text x="432" y="392" fill="#ffffff" opacity="0.72" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="26" font-weight="700">Events · Community · Connection</text>
-  </svg>`;
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  return getEventPlaceholderImage(event);
 }
 function resolveEventCardImage(event){
   try{
