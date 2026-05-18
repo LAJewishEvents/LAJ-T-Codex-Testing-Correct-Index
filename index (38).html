@@ -1863,28 +1863,6 @@ header h1{
   </div>
 </div>
 
-<div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" aria-describedby="onboardingBody">
-  <div class="onboarding-modal">
-    <div class="onboarding-eyebrow">Jewish LA · Personalized</div>
-    <h2 class="onboarding-title" id="onboardingTitle">Welcome to LA Jewish Tonight</h2>
-    <div class="onboarding-subtitle">Let’s personalize your Jewish LA feed.</div>
-    <p class="onboarding-body" id="onboardingBody">Enter your name and ZIP code so we can tailor nearby events, community suggestions, and your profile.</p>
-    <form class="onboarding-form" id="onboardingForm" novalidate>
-      <div class="onboarding-field">
-        <label for="onboardingNameInput">Name</label>
-        <input id="onboardingNameInput" name="name" autocomplete="name" placeholder="Your name" required />
-      </div>
-      <div class="onboarding-field">
-        <label for="onboardingZipInput">ZIP code</label>
-        <input id="onboardingZipInput" name="zip" inputmode="numeric" autocomplete="postal-code" maxlength="5" placeholder="90024" required />
-      </div>
-      <div class="onboarding-error" id="onboardingError" aria-live="polite"></div>
-      <button class="onboarding-submit" type="submit">Enter LA Jewish Tonight</button>
-      <div class="onboarding-note">You can edit this later in your Profile.</div>
-    </form>
-  </div>
-</div>
-
 <div class="app" id="feedView">
 
   <!-- ═══ HEADER ═══ -->
@@ -7804,12 +7782,32 @@ function getEventImageSources(event){
 function hasRealEventImage(event){
   return getEventImageSources(event).length > 0;
 }
+function buildEventPlaceholderDataUri(title, subtitle, bg1, bg2, accent, scene){
+  const sceneArt = {
+    cocktail: `<circle cx="940" cy="115" r="88" fill="${accent}" opacity="0.20"/><path d="M740 392h190l-42 128H782z" fill="#ffffff" opacity="0.22"/><path d="M766 392l70 72 70-72" fill="none" stroke="#fff7dc" stroke-width="10" opacity="0.72"/><circle cx="444" cy="332" r="46" fill="#d9a06e"/><circle cx="610" cy="314" r="42" fill="#c9855c"/><circle cx="770" cy="336" r="46" fill="#bd7b55"/>`,
+    drinks: `<ellipse cx="604" cy="454" rx="330" ry="70" fill="#2b1d18" opacity="0.72"/><path d="M470 384h70l-18 94h-34zM680 382h74l-22 96h-34z" fill="#fff7dc" opacity="0.54"/><circle cx="390" cy="326" r="46" fill="#d19466"/><circle cx="594" cy="306" r="44" fill="#b8754f"/><circle cx="805" cy="328" r="46" fill="#d9a06e"/>`,
+    rooftop: `<rect x="0" y="410" width="1200" height="220" fill="#0b1728" opacity="0.54"/><path d="M96 394h1008" stroke="#fff" stroke-opacity="0.44" stroke-width="8"/><path d="M146 348h64v46h-64zm112 18h58v28h-58zm690-54h88v82h-88z" fill="#fff" opacity="0.17"/><circle cx="430" cy="330" r="46" fill="#c9855c"/><circle cx="620" cy="312" r="44" fill="#d9a06e"/><circle cx="810" cy="334" r="46" fill="#a96f4f"/>`,
+    dinner: `<ellipse cx="610" cy="448" rx="350" ry="78" fill="#342018" opacity="0.78"/><circle cx="500" cy="420" r="11" fill="#fff7dc"/><circle cx="610" cy="412" r="11" fill="#fff7dc"/><circle cx="720" cy="420" r="11" fill="#fff7dc"/><path d="M810 145h210v120H810z" fill="#ffffff" opacity="0.12"/><circle cx="395" cy="326" r="44" fill="#bd7b55"/><circle cx="600" cy="304" r="44" fill="#d9a06e"/><circle cx="810" cy="326" r="44" fill="#c9855c"/>`,
+    sunset: `<circle cx="870" cy="170" r="92" fill="${accent}" opacity="0.50"/><rect x="0" y="418" width="1200" height="212" fill="#111827" opacity="0.48"/><path d="M102 398h996" stroke="#fff" stroke-opacity="0.38" stroke-width="8"/><path d="M760 384h164l-42 116h-80z" fill="#ffffff" opacity="0.22"/><circle cx="430" cy="330" r="46" fill="#d19466"/><circle cx="618" cy="310" r="44" fill="#b97854"/><circle cx="805" cy="332" r="46" fill="#d9a06e"/>`
+  }[scene] || '';
+  const person = (x, shirt) => `<g transform="translate(${x} 402)"><path d="M-58 54c8-76 28-116 58-116s50 40 58 116z" fill="${shirt}"/><path d="M-40-74c20-34 62-34 82 0-24-13-58-13-82 0z" fill="#2b1d18" opacity="0.88"/><circle cx="-12" cy="-68" r="4" fill="#17213a"/><circle cx="14" cy="-68" r="4" fill="#17213a"/><path d="M-12-50c14 10 28 10 42 0" fill="none" stroke="#733f2f" stroke-width="5" stroke-linecap="round"/></g>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="${escapeHtml(title)}">
+    <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${bg1}"/><stop offset="0.64" stop-color="${bg2}"/><stop offset="1" stop-color="#071625"/></linearGradient><radialGradient id="glow" cx="72%" cy="22%" r="56%"><stop offset="0" stop-color="${accent}" stop-opacity="0.56"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient></defs>
+    <rect width="1200" height="630" fill="url(#bg)"/><rect width="1200" height="630" fill="url(#glow)"/><circle cx="90" cy="110" r="130" fill="${accent}" opacity="0.13"/>${sceneArt}
+    ${person(455, '#f7c6d9')}${person(610, '#8ecae6')}${person(765, '#f6bd60')}
+    <path d="M145 522 C292 470, 410 540, 552 498 S812 452, 1042 514" fill="none" stroke="${accent}" stroke-width="16" stroke-linecap="round" opacity="0.34"/>
+    <text x="70" y="90" fill="#fff7dd" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="44" font-weight="900" letter-spacing="-1.2">${escapeHtml(title)}</text>
+    <text x="72" y="132" fill="${accent}" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="22" font-weight="900" letter-spacing="4">JEWISH YOUNG PROFESSIONALS</text>
+    <text x="72" y="570" fill="#ffffff" opacity="0.84" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="26" font-weight="800">${escapeHtml(subtitle)}</text>
+  </svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
 const EVENT_CARD_PLACEHOLDER_IMAGES = [
-  '/mnt/data/elegant_evening_at_a_chic_cocktail_party.png',
-  '/mnt/data/laughter_and_drinks_at_a_gathering.png',
-  '/mnt/data/golden_hour_rooftop_gathering_with_drinks.png',
-  '/mnt/data/cozy_dinner_party_with_city_view.png',
-  '/mnt/data/sunset_rooftop_cocktail_gathering_in_la.png'
+  buildEventPlaceholderDataUri('Elegant Cocktail Party', 'Chic evening social with friends', '#1b2438', '#6d4b74', '#f4d08b', 'cocktail'),
+  buildEventPlaceholderDataUri('Laughter + Drinks', 'A warm gathering around the table', '#241a2e', '#9d4d61', '#f7d794', 'drinks'),
+  buildEventPlaceholderDataUri('Golden Hour Rooftop', 'LA rooftop mixer with drinks', '#0b2742', '#d18b47', '#ffd166', 'rooftop'),
+  buildEventPlaceholderDataUri('Cozy Dinner Party', 'Dinner with city lights and candles', '#2b2118', '#8a6540', '#ffe0a3', 'dinner'),
+  buildEventPlaceholderDataUri('Sunset Rooftop Social', 'Cocktails and skyline views in LA', '#10213a', '#b85c7a', '#f7d794', 'sunset')
 ];
 function eventPlaceholderSeed(event){
   const key = String(event?.id || event?.title || event?.name || 'lajt-event');
@@ -7819,9 +7817,6 @@ function eventPlaceholderSeed(event){
 }
 function getEventPlaceholderImage(event){
   return EVENT_CARD_PLACEHOLDER_IMAGES[eventPlaceholderSeed(event) % EVENT_CARD_PLACEHOLDER_IMAGES.length];
-}
-function eventPlaceholderImage(event){
-  return getEventPlaceholderImage(event);
 }
 function eventPlaceholderImage(event){
   return getEventPlaceholderImage(event);
