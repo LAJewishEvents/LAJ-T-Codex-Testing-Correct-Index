@@ -1522,6 +1522,7 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
   background: rgba(255,255,255,.38) !important;
 }
 #feedView .feed .card-map-preview-bg { background: linear-gradient(135deg,rgba(255,248,236,.92),rgba(238,246,255,.94)) !important; }
+#feedView .feed .card-map-preview-frame { height: 116px !important; background: rgba(255,255,255,.45) !important; }
 #feedView .feed .card-map-preview-overlay { background: linear-gradient(180deg,rgba(16,50,82,0) 0%, rgba(16,50,82,.18) 100%) !important; }
 #feedView .feed .card-map-preview-pill { background: rgba(255,255,255,.92) !important; color: var(--navy) !important; }
 #feedView .feed .card-map-preview-open { background: rgba(16,50,82,.92) !important; color: #fff !important; }
@@ -1790,9 +1791,9 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
 
 .card-map-preview-wrap{position:relative;display:block;margin:10px 14px 0;border:1px solid #e8dcc8;border-radius:16px;overflow:hidden;background:#f4eee4;text-decoration:none;min-height:116px}
 .card-map-preview-bg{position:absolute;inset:0;background:linear-gradient(135deg,#efe6d7 0%,#f8f2e8 48%,#e6eef7 100%)}
-.card-map-preview-bg::before{content:"";position:absolute;inset:-20%;background:linear-gradient(30deg,transparent 0 42%,rgba(16,50,82,.14) 43% 47%,transparent 48% 100%),linear-gradient(115deg,transparent 0 47%,rgba(201,162,87,.20) 48% 52%,transparent 53% 100%),linear-gradient(0deg,transparent 0 46%,rgba(255,255,255,.55) 47% 49%,transparent 50% 100%);background-size:86px 86px,112px 112px,64px 64px;opacity:.95}
-.card-map-preview-bg::after{content:"";position:absolute;inset:12px;border-radius:14px;background:radial-gradient(circle at 52% 40%,rgba(201,162,87,.32) 0 7px,transparent 8px),radial-gradient(circle at 24% 68%,rgba(16,50,82,.12) 0 5px,transparent 6px),radial-gradient(circle at 76% 28%,rgba(16,50,82,.10) 0 6px,transparent 7px);border:1px solid rgba(255,255,255,.42)}
-.card-map-pin{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);display:grid;place-items:center;width:34px;height:34px;border-radius:50% 50% 50% 0;background:#c9993a;color:#0d1728;font-size:18px;font-weight:900;box-shadow:0 10px 24px rgba(16,50,82,.22);rotate:-45deg;z-index:1}
+.card-map-preview-frame{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:#efe6d7}
+.card-map-preview-bg::before{content:"";position:absolute;inset:-30%;background:linear-gradient(30deg,transparent 0 43%,rgba(16,50,82,.08) 44% 46%,transparent 47% 100%),linear-gradient(115deg,transparent 0 48%,rgba(201,162,87,.16) 49% 51%,transparent 52% 100%);background-size:72px 72px,92px 92px;opacity:.9}
+.card-map-pin{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);display:grid;place-items:center;width:34px;height:34px;border-radius:50% 50% 50% 0;background:#c9993a;color:#0d1728;font-size:18px;font-weight:900;box-shadow:0 10px 24px rgba(16,50,82,.22);rotate:-45deg}
 .card-map-pin span{rotate:45deg}
 .card-map-preview-overlay{position:relative;min-height:116px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding:10px 12px;background:linear-gradient(180deg,rgba(16,50,82,0) 0%, rgba(16,50,82,.22) 100%);text-decoration:none}
 .card-map-preview-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);color:var(--navy);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800;max-width:68%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1840,6 +1841,28 @@ header h1{
 <body>
 <div class="toast" id="toast"></div>
 <div class="notification-popover" id="notificationPopover" role="status" aria-live="polite"></div>
+
+<div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" aria-describedby="onboardingBody">
+  <div class="onboarding-modal">
+    <div class="onboarding-eyebrow">Jewish LA · Personalized</div>
+    <h2 class="onboarding-title" id="onboardingTitle">Welcome to LA Jewish Tonight</h2>
+    <div class="onboarding-subtitle">Let’s personalize your Jewish LA feed.</div>
+    <p class="onboarding-body" id="onboardingBody">Enter your name and ZIP code so we can tailor nearby events, community suggestions, and your profile.</p>
+    <form class="onboarding-form" id="onboardingForm" novalidate>
+      <div class="onboarding-field">
+        <label for="onboardingNameInput">Name</label>
+        <input id="onboardingNameInput" name="name" autocomplete="name" placeholder="Your name" required />
+      </div>
+      <div class="onboarding-field">
+        <label for="onboardingZipInput">ZIP code</label>
+        <input id="onboardingZipInput" name="zip" inputmode="numeric" autocomplete="postal-code" maxlength="5" placeholder="90024" required />
+      </div>
+      <div class="onboarding-error" id="onboardingError" aria-live="polite"></div>
+      <button class="onboarding-submit" type="submit">Enter LA Jewish Tonight</button>
+      <div class="onboarding-note">You can edit this later in your Profile.</div>
+    </form>
+  </div>
+</div>
 
 <div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" aria-describedby="onboardingBody">
   <div class="onboarding-modal">
@@ -4837,16 +4860,17 @@ function getGoogleMapsUrl(event){
   const query = getGoogleMapsQuery(event);
   return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : "";
 }
-function renderEventMapPreview(event){
+function renderEventMapPreview(event, useGoogleMap){
   const mapsUrl = getGoogleMapsUrl(event);
   const locationText = getEventLocationText(event);
-  const displayLocation = locationText || (getEventLatLng(event) ? "Event location" : "");
-  if (!mapsUrl || !displayLocation) return "";
-  return `<a class="card-map-preview-wrap" href="${escapeHtml(mapsUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" aria-label="Open ${escapeHtml(displayLocation)} in Google Maps">
-    <div class="card-map-preview-bg" aria-hidden="true"></div>
+  const mapQuery = getGoogleMapsQuery(event);
+  if (!mapsUrl || !locationText) return "";
+  const googleFrame = useGoogleMap ? `<iframe class="card-map-preview-frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?hl=en&q=${encodeURIComponent(mapQuery)}&z=14&output=embed" aria-hidden="true"></iframe>` : `<div class="card-map-preview-bg" aria-hidden="true"></div>`;
+  return `<a class="card-map-preview-wrap" href="${escapeHtml(mapsUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" aria-label="Open ${escapeHtml(locationText)} in Google Maps">
+    ${googleFrame}
     <div class="card-map-pin" aria-hidden="true"><span>📍</span></div>
     <div class="card-map-preview-overlay">
-      <span class="card-map-preview-pill">📍 ${escapeHtml(displayLocation)}</span>
+      <span class="card-map-preview-pill">📍 ${escapeHtml(locationText)}</span>
       <span class="card-map-preview-open">Open in Google Maps</span>
     </div>
   </a>`;
