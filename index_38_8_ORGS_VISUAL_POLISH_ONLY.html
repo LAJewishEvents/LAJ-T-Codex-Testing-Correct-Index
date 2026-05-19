@@ -448,6 +448,153 @@ h1{margin:0;font-size:52px !important;line-height:.92 !important;font-weight:900
 }
 
 
+/* Scoped Main Feed event cards below Featured tonight — Tonight tab visual system */
+#feedView .section.feed-events-tonight-style{
+  margin:0 16px 18px !important;
+  padding:16px !important;
+  background:#fff !important;
+  border:1px solid var(--line) !important;
+  border-radius:24px !important;
+  box-shadow:var(--shadow) !important;
+}
+#feedView .section.feed-events-tonight-style .section-title{margin-bottom:14px !important;}
+#feedView .section.feed-events-tonight-style .section-title h2{
+  color:var(--navy) !important;
+  font-size:21px !important;
+  font-weight:900 !important;
+}
+#feedView .section.feed-events-tonight-style .section-title span{color:var(--muted) !important;}
+#feedView .section.feed-events-tonight-style .feed{gap:12px !important;}
+#feedView .section.feed-events-tonight-style .feed .card{
+  border:1px solid var(--line) !important;
+  border-radius:18px !important;
+  box-shadow:var(--shadow) !important;
+}
+#feedView .section.feed-events-tonight-style .feed .image{height:190px !important;}
+
+/* Organizations view — aligned to the Tonight tab cream/navy/gold system */
+.orgs-view{
+  background:linear-gradient(180deg,#f8f2e8,#f1e8da) !important;
+  color:var(--text) !important;
+}
+.orgs-view .orgs-top{
+  background:rgba(248,242,232,.96) !important;
+  border-bottom:1px solid rgba(231,220,200,.86) !important;
+  box-shadow:0 10px 30px rgba(16,50,82,.08) !important;
+  backdrop-filter:blur(8px) !important;
+  -webkit-backdrop-filter:blur(8px) !important;
+}
+.orgs-eyebrow{color:var(--gold) !important;text-shadow:none !important;}
+.orgs-title{color:var(--navy) !important;text-shadow:none !important;}
+.orgs-sub{color:var(--muted) !important;}
+.orgs-bell{
+  background:#fff !important;
+  border:1px solid var(--line) !important;
+  color:var(--navy) !important;
+  box-shadow:var(--shadow) !important;
+}
+.orgs-bell:active{background:#faf7f1 !important;border-color:var(--gold) !important;box-shadow:0 8px 18px rgba(16,50,82,.10) !important;}
+.orgs-search{
+  background:#fff !important;
+  border:1px solid var(--line) !important;
+  box-shadow:var(--shadow) !important;
+}
+.orgs-search:focus-within{border-color:rgba(201,162,87,.65) !important;box-shadow:0 0 0 3px rgba(201,162,87,.14),var(--shadow) !important;}
+.orgs-search input{color:var(--text) !important;}
+.orgs-search input::placeholder{color:rgba(107,116,130,.66) !important;}
+.orgs-chip{
+  background:#fff !important;
+  border:1px solid var(--line) !important;
+  color:var(--navy) !important;
+  box-shadow:0 8px 18px rgba(16,50,82,.05) !important;
+  font-weight:800 !important;
+}
+.orgs-chip.active{
+  background:var(--navy) !important;
+  border-color:var(--navy) !important;
+  color:#fff !important;
+  box-shadow:0 10px 24px rgba(16,50,82,.18) !important;
+}
+.orgs-section-title h2{color:var(--navy) !important;text-shadow:none !important;}
+.orgs-section-title span{color:var(--muted) !important;}
+.orgs-section-link{color:var(--blue) !important;}
+.orgs-popular-card,
+.orgs-card{
+  background:#fff !important;
+  border:1px solid var(--line) !important;
+  box-shadow:var(--shadow) !important;
+}
+.orgs-popular-card{border-radius:18px !important;}
+.orgs-popular-card.selected{
+  background:linear-gradient(135deg,#fff8ec 0%,#f4efe6 42%,#efe6d7 100%) !important;
+  border-color:rgba(201,162,87,.55) !important;
+  box-shadow:0 14px 34px rgba(16,50,82,.12),0 0 0 1px rgba(201,162,87,.12) inset !important;
+}
+.orgs-popular-card .orgs-logo,
+.orgs-logo{
+  background:linear-gradient(135deg,#14385a,#254f7d 72%,#a58240 150%) !important;
+  color:#fff !important;
+  box-shadow:0 10px 22px rgba(16,50,82,.18),inset 0 1px 0 rgba(255,255,255,.28) !important;
+}
+.orgs-popular-name,
+.orgs-upcoming-title,
+.orgs-feature-main h3,
+.orgs-feature-event-title,
+.orgs-empty strong{color:var(--navy) !important;}
+.orgs-popular-meta,
+.orgs-upcoming-meta,
+.orgs-feature-main p,
+.orgs-feature-event-meta,
+.orgs-empty{color:var(--muted) !important;}
+.orgs-popular-count,
+.orgs-from,
+.orgs-feature-kicker,
+.orgs-feature-events-title,
+.orgs-feature-chevron,
+.orgs-view-all-events{color:var(--gold) !important;}
+.orgs-follow-btn,
+.orgs-popular-card .orgs-follow-btn,
+.orgs-feature .orgs-follow-btn,
+.orgs-event-btn.primary{
+  background:var(--green) !important;
+  border:0 !important;
+  color:#fff !important;
+  box-shadow:none !important;
+}
+.orgs-follow-btn.following,
+.orgs-popular-card .orgs-follow-btn.following,
+.orgs-feature .orgs-follow-btn.following,
+.orgs-event-btn.active{
+  background:#eaf8ee !important;
+  border:1px solid rgba(47,123,66,.18) !important;
+  color:var(--green) !important;
+}
+.orgs-card.orgs-feature{
+  background:linear-gradient(135deg,#f8f4ec 0%,#eef5ff 55%,#f6efe3 100%) !important;
+  border:1px solid var(--line) !important;
+  box-shadow:var(--shadow) !important;
+}
+.orgs-feature-stats{border-top:1px solid var(--line) !important;border-bottom:1px solid var(--line) !important;}
+.orgs-stat-pill{color:var(--navy) !important;}
+.orgs-pill,
+.orgs-feature-event,
+.orgs-empty{
+  background:#faf7f1 !important;
+  border:1px solid var(--line) !important;
+}
+.orgs-feature-event:active{background:#f4efe6 !important;border-color:rgba(201,162,87,.42) !important;}
+.orgs-upcoming-row{border-bottom:1px solid var(--line) !important;}
+.orgs-event-image,
+.orgs-feature-thumb,
+.orgs-from-avatar{background:#ddd !important;box-shadow:inset 0 0 0 1px rgba(16,50,82,.08) !important;}
+.orgs-event-btn{
+  background:#fff !important;
+  border:1px solid var(--line) !important;
+  color:var(--navy) !important;
+}
+.orgs-card-row{border-bottom:1px solid var(--line) !important;}
+
+
 .hidden{display:none !important}
 .profile-shell{padding:18px}
 .profile-card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);overflow:hidden}
@@ -1185,14 +1332,23 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
   padding: 0 !important;
 }
 .top-inner {
-  padding: 14px 18px 0;
+  padding: 8px 16px 0;
 }
+.home-compact-header{display:grid;gap:8px}
+.home-brand-stack{display:grid;gap:2px}
+.home-welcome-line{font-size:11px;font-weight:700;color:rgba(240,201,106,.82);letter-spacing:.01em;line-height:1.1}
+.home-brand-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.home-brand-title{font-size:15px;line-height:1;font-weight:900;color:#fff;letter-spacing:-.02em}
+.home-brand-title .gold{color:var(--lajt-gold2)}
+.home-greeting{font-size:14px;font-weight:800;color:rgba(255,255,255,.9)}
+.home-headline{margin:0;color:#fff;font-size:24px;line-height:1.08;font-weight:900;letter-spacing:-.02em}
+.home-subtitle{margin:0;color:rgba(255,255,255,.56);font-size:13px;line-height:1.35}
 /* Brand row */
 .brand-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .brand-lockup { display: flex; flex-direction: column; gap: 2px; }
 .brand-eyebrow {
@@ -1220,7 +1376,7 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  margin: 10px 0 14px;
+  margin: 6px 0 8px;
 }
 .traction-pill {
   display: inline-flex;
@@ -1254,7 +1410,7 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
   background: rgba(255,255,255,.07) !important;
   border: 1px solid rgba(255,255,255,.1) !important;
   border-radius: 14px !important;
-  padding: 11px 14px !important;
+  padding: 9px 12px !important;
   box-shadow: none !important;
   gap: 9px !important;
 }
@@ -1307,7 +1463,7 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
   margin-left: auto;
 }
 /* Quick filters */
-#feedView .quick-filters { padding: 0 0 14px !important; scrollbar-width: none; }
+#feedView .quick-filters { padding: 0 0 8px !important; scrollbar-width: none; }
 #feedView .quick-filters::-webkit-scrollbar { display: none; }
 #feedView .filter-chip {
   background: rgba(255,255,255,.07) !important;
@@ -1333,10 +1489,7 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
 
 /* ═══ LIVE TICKER ═══ */
 #feedView .live-ticker {
-  background: rgba(10,12,20,.95) !important;
-  border-bottom: 1px solid rgba(255,255,255,.06) !important;
-  padding: 0 18px !important;
-  height: 34px !important;
+  display:none !important;
 }
 #feedView .ticker-dot { background: var(--lajt-green) !important; }
 #feedView .ticker-text { color: rgba(255,255,255,.6) !important; font-size: 11px !important; font-weight: 600 !important; }
@@ -1380,7 +1533,7 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
 
 /* ═══ HERO MOVE (THE MOVE TONIGHT) ═══ */
 #feedView .the-move-hero {
-  margin: 0 16px 6px !important;
+  margin: 0 16px 2px !important;
   border-radius: 20px !important;
   box-shadow: 0 16px 48px rgba(0,0,0,.5) !important;
   border: 1px solid rgba(255,255,255,.06) !important;
@@ -1407,7 +1560,7 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
 }
 
 /* ═══ HOOD HEAT ROW ═══ */
-#feedView .hood-heat-row { padding: 0 16px 12px !important; }
+#feedView .hood-heat-row { padding: 0 16px 8px !important; }
 #feedView .hood-chip {
   background: rgba(255,255,255,.07) !important;
   border-color: rgba(255,255,255,.1) !important;
@@ -1430,7 +1583,7 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
 
 /* ═══ FOMO STRIP ═══ */
 #feedView .fomo-strip {
-  margin: 0 16px 14px !important;
+  margin: 0 16px 8px !important;
   background: rgba(255,255,255,.04) !important;
   border-color: rgba(255,255,255,.08) !important;
   border-radius: 14px !important;
@@ -1448,7 +1601,7 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
 /* ═══ SECTION HEADER ═══ */
 #feedView .section {
   background: transparent !important;
-  padding: 14px 16px !important;
+  padding: 10px 16px !important;
 }
 #feedView .section-title h2 {
   color: #fff !important;
@@ -1463,7 +1616,14 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
   font-weight: 600 !important;
 }
 
+
+#feedView .feed-day-pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:0 0 10px;}
+#feedView .feed-day-pills::-webkit-scrollbar{display:none}
+#feedView .feed-day-pill{flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:999px;padding:8px 12px;font-size:12px;font-weight:800;box-shadow:0 8px 18px rgba(16,50,82,.05)}
+#feedView .feed-day-pill.active{background:var(--navy);border-color:var(--navy);color:#fff}
+
 /* ═══ EVENT CARDS — match Tonight tab card visual system ═══ */
+
 #feedView .feed { gap: 12px !important; }
 #feedView .feed .card {
   background: linear-gradient(135deg,#f8f4ec 0%,#eef5ff 55%,#f6efe3 100%) !important;
@@ -1881,54 +2041,32 @@ header h1{
   <div class="top">
     <div class="top-inner">
 
-      <!-- Brand + notif row -->
-      <div class="brand-row">
-        <div class="brand-lockup">
-          <div class="brand-eyebrow">Jewish LA · Live Platform</div>
-          <div class="brand-name">Tonight in <span class="brand-accent">Jewish&nbsp;LA</span></div>
+      <div class="home-compact-header">
+        <div class="home-brand-row">
+          <div class="home-brand-stack">
+            <div class="home-welcome-line" id="homeWelcomeLine">Welcome, friend 👋</div>
+            <div class="home-brand-title">LA <span class="gold">Jewish</span> Tonight ✡</div>
+          </div>
+          <button class="notif-bell" onclick="return handleNotificationBellClick(event)" aria-label="Notifications">
+            🔔<div class="notif-dot" id="notifDot"></div>
+          </button>
         </div>
-        <button class="notif-bell" onclick="return handleNotificationBellClick(event)" aria-label="Notifications">
-          🔔<div class="notif-dot" id="notifDot"></div>
-        </button>
-      </div>
-
-      <!-- Live traction strip — what UCLA wants to see above the fold -->
-      <div class="traction-strip">
-        <div class="traction-pill tp-live">
-          <div class="tp-dot"></div>
-          Live now
-        </div>
-        <div class="traction-pill">
-          <div class="tp-dot"></div>
-          3,000+ members
-        </div>
-        <div class="traction-pill">
-          <div class="tp-dot"></div>
-          50+ events / week
-        </div>
-        <div class="traction-pill">
-          <div class="tp-dot"></div>
-          Growing daily
-        </div>
-      </div>
-
-      <!-- Action row: shabbat toggle -->
-      <div class="top-action-row">
-        <button class="shabbat-btn" id="shabbatToggle" onclick="toggleShabbatMode()" aria-label="Toggle Shabbat mode">🕯️ Shabbat mode</button>
+        <div class="home-greeting" id="homeGreeting">Hi Andrew 👋</div>
+        <h2 class="home-headline">What’s happening in Jewish LA?</h2>
+        <p class="home-subtitle">Find events, save plans, and see what’s happening tonight.</p>
       </div>
 
       <!-- Search -->
-      <div class="search"><div>🔍</div><input id="searchInput" placeholder="Search events, neighborhoods, vibes…" aria-label="Search events" /></div>
+      <div class="search"><div>🔍</div><input id="searchInput" placeholder="Search events, orgs, neighborhoods..." aria-label="Search events" /></div>
 
       <!-- Filter chips -->
       <div class="quick-filters" id="quickFilters">
-        <button class="filter-chip active" data-filter="all">All</button>
-        <button class="filter-chip" data-filter="tonight">Tonight</button>
-        <button class="filter-chip" data-filter="free">Free</button>
-        <button class="filter-chip" data-filter="westside">Westside</button>
-        <button class="filter-chip" data-filter="20s/30s">20s/30s</button>
+        <button class="filter-chip active" data-filter="tonight">Tonight</button>
         <button class="filter-chip" data-filter="shabbat">Shabbat</button>
-        <button class="filter-chip" data-filter="outdoors">Outdoors</button>
+        <button class="filter-chip" data-filter="free">Free</button>
+        <button class="filter-chip" data-filter="20s/30s">Young Pros</button>
+        <button class="filter-chip" data-filter="westside">Westside</button>
+        <button class="filter-chip" data-filter="learning">Learning</button>
       </div>
 
     </div><!-- /top-inner -->
@@ -1958,16 +2096,17 @@ header h1{
   <!-- ── Feed section ── -->
   <div class="feed-section active" id="feedSection">
     <!-- "The Move Tonight" hero -->
-    <div id="theMoveWrap" style="padding:14px 0 0"></div>
+    <div id="theMoveWrap" style="padding:8px 0 0"></div>
     <!-- Neighborhood heat -->
     <div class="hood-heat-row" id="hoodHeatRow"></div>
     <!-- FOMO strip -->
     <div id="fomoStripWrap"></div>
-    <div class="section" style="padding-top:4px">
+    <div class="section feed-events-tonight-style" style="padding-top:4px">
       <div class="section-title">
         <h2>Community feed</h2>
         <span id="statusText">Loading…</span>
       </div>
+      <div class="feed-day-pills" id="feedDayPills" aria-label="Filter events by day"></div>
       <div class="feed" id="feed"></div>
     </div>
   </div>
@@ -2506,8 +2645,12 @@ const ORG_SYNC_HASH_STORAGE_KEY = "lajt_last_org_sync_hash";
 const ORG_SYNC_AT_STORAGE_KEY = "lajt_last_org_sync_at";
 
 let allEvents = [];
-let activeQuickFilter = 'all';
+let activeQuickFilter = 'tonight';
+let selectedFeedDay = 'tonight';
 let activeOrgFilter = 'all';
+let rsvpRealtimeChannel = null;
+let rsvpPollTimer = null;
+let rsvpRefreshInFlight = false;
 let selectedOrganizationId = '';
 let expandedOrgId = '';
 let allOrganizationsCache = [];
@@ -3323,6 +3466,66 @@ function bumpCardButton(btn){
   void btn.offsetWidth;
   btn.classList.add("tap-burst");
 }
+function mergeRsvpRowsIntoCounts(rsvpRows){
+  const next = {};
+  const currentLikes = countsByEvent || {};
+  Object.keys(currentLikes).forEach(key => {
+    next[key] = {
+      rsvps: 0,
+      likes: Number(currentLikes[key]?.likes || 0),
+      profileIds: []
+    };
+  });
+  (rsvpRows || []).forEach(r => {
+    const key = String(r?.event_id || "");
+    if (!key) return;
+    if (!next[key]) next[key] = { rsvps: 0, likes: 0, profileIds: [] };
+    next[key].rsvps += 1;
+    if (r?.profile_id) next[key].profileIds.push(String(r.profile_id));
+  });
+  countsByEvent = next;
+}
+async function refreshRsvpCountsFromBackend(){
+  if (rsvpRefreshInFlight) return false;
+  rsvpRefreshInFlight = true;
+  try{
+    const rsvps = await fetchJsonSafe('rsvps?select=event_id,profile_id&limit=3000', []);
+    mergeRsvpRowsIntoCounts(rsvps);
+    if (!_shabbatActive) renderFeed(applyFeedDayFilter(getVisibleEvents(document.getElementById("searchInput")?.value || "")));
+    renderTonightTab();
+    if (_feedSubTab === "agenda") renderAgenda();
+    if (!document.getElementById('organizationsView')?.classList.contains('hidden')) renderOrganizationsView();
+    return true;
+  }catch(err){
+    console.warn("RSVP refresh failed", err);
+    return false;
+  }finally{
+    rsvpRefreshInFlight = false;
+  }
+}
+async function startRsvpSync(){
+  if (rsvpRealtimeChannel || rsvpPollTimer) return;
+  const client = await ensureSupabaseClient().catch(() => null);
+  if (client?.channel){
+    try{
+      rsvpRealtimeChannel = client
+        .channel('rsvps-live-counts')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'rsvps' }, () => {
+          refreshRsvpCountsFromBackend();
+        })
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') return;
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
+            if (!rsvpPollTimer) rsvpPollTimer = setInterval(refreshRsvpCountsFromBackend, 25000);
+          }
+        });
+      return;
+    }catch(err){
+      console.warn("RSVP realtime unavailable, switching to polling", err);
+    }
+  }
+  if (!rsvpPollTimer) rsvpPollTimer = setInterval(refreshRsvpCountsFromBackend, 25000);
+}
 async function handleGoing(eventId, btn){
   if (!requireProfileOrGate()) return false;
   const key = String(eventId);
@@ -3707,6 +3910,10 @@ function refreshProfileUI(){
     : "Create a simple profile so you can RSVP, like events, and appear in attendee circles.";
   document.getElementById("profileStatePill").textContent = p ? (p.synced ? "Saved + synced" : "Saved in browser") : "Local profile mode";
   setBigAvatar(p?.photo_url, p?.name);
+  const homeGreeting = document.getElementById("homeGreeting");
+  if (homeGreeting) homeGreeting.textContent = `Hi ${p?.name || "Andrew"} 👋`;
+  const homeWelcomeLine = document.getElementById("homeWelcomeLine");
+  if (homeWelcomeLine) homeWelcomeLine.textContent = p?.name ? `Welcome, ${p.name} 👋` : "Welcome, friend 👋";
 
   const formWrap = document.getElementById("profileFormWrap");
   const dash = document.getElementById("profileDashboard");
@@ -4062,6 +4269,59 @@ function animateFeedRefresh(){
   }, 210);
 }
 
+
+function getFeedDayPillDefs(){
+  const now = new Date();
+  const dow = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const defs = [
+    {key:"tonight", label:"Tonight"},
+    {key:"tomorrow", label:"Tomorrow"},
+    {key:"weekend", label:"This Weekend"}
+  ];
+  for (let i = 1; i <= 5; i++){
+    const d = new Date(now);
+    d.setDate(now.getDate() + i);
+    const key = `day-${d.getDay()}`;
+    if (!defs.some(item => item.key === key)) defs.push({ key, label: dow[d.getDay()] });
+  }
+  return defs;
+}
+function normalizeEventDate(event){
+  const ms = safeTimeMs(event?.start_time, NaN);
+  if (!Number.isFinite(ms)) return null;
+  const d = new Date(ms);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function isEventOnSelectedFeedDay(event, dayKey){
+  const d = normalizeEventDate(event);
+  if (!d) return dayKey === "tonight";
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  if (dayKey === "tonight") return d.getTime() === today.getTime();
+  if (dayKey === "tomorrow") return d.getTime() === tomorrow.getTime();
+  if (dayKey === "weekend") return [5,6,0].includes(d.getDay());
+  if (dayKey.startsWith("day-")) return d.getDay() === Number(dayKey.split("-")[1]);
+  return true;
+}
+function applyFeedDayFilter(events){
+  const src = Array.isArray(events) ? events : [];
+  return src.filter(e => isEventOnSelectedFeedDay(e, selectedFeedDay));
+}
+function renderFeedDayPills(){
+  const wrap = document.getElementById("feedDayPills");
+  if (!wrap) return;
+  const defs = getFeedDayPillDefs();
+  wrap.innerHTML = defs.map(def => `<button type="button" class="feed-day-pill${def.key===selectedFeedDay?' active':''}" data-feed-day="${escapeHtml(def.key)}">${escapeHtml(def.label)}</button>`).join("");
+  wrap.querySelectorAll(".feed-day-pill").forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedFeedDay = btn.dataset.feedDay || "tonight";
+      renderFeedDayPills();
+      applyCurrentFilters();
+    });
+  });
+}
+
 function activeFilterLabel(){
   const map = {all:"All events", tonight:"Tonight", free:"Free", westside:"Westside", "20s/30s":"20s/30s", shabbat:"Shabbat", outdoors:"Outdoors"};
   return map[activeQuickFilter] || "All events";
@@ -4081,6 +4341,7 @@ function filterEventsByChip(list, chip){
     if (chip === "westside") return text.includes("westside") || text.includes("santa monica") || text.includes("venice") || text.includes("brentwood") || text.includes("west la") || text.includes("west hollywood");
     if (chip === "20s/30s") return text.includes("20s") || text.includes("30s") || text.includes("young adult") || text.includes("young professionals");
     if (chip === "shabbat") return text.includes("shabbat") || text.includes("seder") || text.includes("passover");
+    if (chip === "learning") return text.includes("learning") || text.includes("class") || text.includes("study") || text.includes("torah") || text.includes("discussion");
     if (chip === "outdoors") return text.includes("outdoor") || text.includes("outdoors") || text.includes("hike") || text.includes("beach") || text.includes("park") || text.includes("picnic");
     return true;
   });
@@ -4097,7 +4358,7 @@ function getVisibleEvents(query){
 function applyCurrentFilters(){
   const q = document.getElementById("searchInput")?.value || "";
   const statusText = document.getElementById("statusText");
-  const filtered = getVisibleEvents(q);
+  const filtered = applyFeedDayFilter(getVisibleEvents(q));
   renderHero(filtered[0] || allEvents[0]);
   renderFeed(filtered);
   if (statusText) statusText.textContent = `${filtered.length} ${activeFilterLabel().toLowerCase()}`;
@@ -4914,7 +5175,7 @@ function renderFeed(events){
   if (!feed) return;
   const safeEvents = Array.isArray(events) ? events.filter(Boolean) : [];
   if (!safeEvents.length){
-    feed.innerHTML = `<div class="empty">No events were returned yet. Once your feed has current or recent rows, the premium social layer will appear automatically.</div>`;
+    feed.innerHTML = `<div class="empty">No events loaded for this day yet.</div>`;
     return;
   }
   const cards = safeEvents.slice(0,24).map(event => {
@@ -5033,7 +5294,7 @@ async function loadEvents(){
 
   function renderEventSurfaces(sourceLabel){
     const query = document.getElementById("searchInput")?.value || searchValue;
-    if (!_shabbatActive) renderFeed(getVisibleEvents(query));
+    if (!_shabbatActive) renderFeed(applyFeedDayFilter(getVisibleEvents(query)));
     renderHero(allEvents[0]);
     renderTonightTab();
     renderNetworkTab();
@@ -5047,7 +5308,7 @@ async function loadEvents(){
       renderMapPins(getAllUpcomingEventsForMap());
     }
     if (statusText) {
-      const visibleCount = getVisibleEvents(query).length;
+      const visibleCount = applyFeedDayFilter(getVisibleEvents(query)).length;
       statusText.textContent = visibleCount
         ? `${visibleCount} ${activeFilterLabel().toLowerCase()}${sourceLabel ? ` · ${sourceLabel}` : ''}`
         : 'No matching events';
@@ -5129,7 +5390,7 @@ async function loadEvents(){
 
     (rsvps || []).forEach(r => {
       const key = String(r.event_id || '');
-      if (!countsByEvent[key]) countsByEvent[key] = { rsvps: 0, likes: 0, profileIds: [] };
+    if (!countsByEvent[key]) countsByEvent[key] = { rsvps: 0, likes: 0, profileIds: [] };
       countsByEvent[key].rsvps += 1;
       if (r.profile_id) countsByEvent[key].profileIds.push(String(r.profile_id));
     });
@@ -5141,6 +5402,7 @@ async function loadEvents(){
     });
 
     if (allEvents.length) { renderEventSurfaces('live'); setTimeout(refreshEventImagesFromLinks, 30); }
+    startRsvpSync();
     loadMemberCount();
   } catch (err) {
     console.error('Load events error:', err);
@@ -8091,6 +8353,7 @@ window.addEventListener("DOMContentLoaded", () => {
     clearTimeout(_searchDebounce);
     _searchDebounce = setTimeout(applyCurrentFilters, 250);
   });
+  renderFeedDayPills();
   document.querySelectorAll("#quickFilters .filter-chip").forEach(btn => {
     btn.addEventListener("click", () => {
       activeQuickFilter = btn.dataset.filter || "all";
