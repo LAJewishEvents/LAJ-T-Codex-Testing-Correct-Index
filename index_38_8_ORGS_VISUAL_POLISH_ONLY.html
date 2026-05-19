@@ -1334,6 +1334,13 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
 .top-inner {
   padding: 8px 16px 0;
 }
+.home-compact-header{display:grid;gap:8px}
+.home-brand-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.home-brand-title{font-size:17px;line-height:1;font-weight:900;color:#fff;letter-spacing:-.02em}
+.home-brand-title .gold{color:var(--lajt-gold2)}
+.home-greeting{font-size:14px;font-weight:800;color:rgba(255,255,255,.9)}
+.home-headline{margin:0;color:#fff;font-size:24px;line-height:1.08;font-weight:900;letter-spacing:-.02em}
+.home-subtitle{margin:0;color:rgba(255,255,255,.56);font-size:13px;line-height:1.35}
 /* Brand row */
 .brand-row {
   display: flex;
@@ -1480,10 +1487,7 @@ body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system
 
 /* ═══ LIVE TICKER ═══ */
 #feedView .live-ticker {
-  background: rgba(10,12,20,.95) !important;
-  border-bottom: 1px solid rgba(255,255,255,.06) !important;
-  padding: 0 18px !important;
-  height: 34px !important;
+  display:none !important;
 }
 #feedView .ticker-dot { background: var(--lajt-green) !important; }
 #feedView .ticker-text { color: rgba(255,255,255,.6) !important; font-size: 11px !important; font-weight: 600 !important; }
@@ -2280,54 +2284,29 @@ header h1{
   <div class="top">
     <div class="top-inner">
 
-      <!-- Brand + notif row -->
-      <div class="brand-row">
-        <div class="brand-lockup">
-          <div class="brand-eyebrow">Jewish LA · Live Platform</div>
-          <div class="brand-name">Tonight in <span class="brand-accent">Jewish&nbsp;LA</span></div>
+      <div class="home-compact-header">
+        <div class="home-brand-row">
+          <div class="home-brand-title">LA <span class="gold">Jewish</span> Tonight ✡</div>
+          <button class="notif-bell" onclick="return handleNotificationBellClick(event)" aria-label="Notifications">
+            🔔<div class="notif-dot" id="notifDot"></div>
+          </button>
         </div>
-        <button class="notif-bell" onclick="return handleNotificationBellClick(event)" aria-label="Notifications">
-          🔔<div class="notif-dot" id="notifDot"></div>
-        </button>
-      </div>
-
-      <!-- Live traction strip — what UCLA wants to see above the fold -->
-      <div class="traction-strip">
-        <div class="traction-pill tp-live">
-          <div class="tp-dot"></div>
-          Live now
-        </div>
-        <div class="traction-pill">
-          <div class="tp-dot"></div>
-          3,000+ members
-        </div>
-        <div class="traction-pill">
-          <div class="tp-dot"></div>
-          50+ events / week
-        </div>
-        <div class="traction-pill">
-          <div class="tp-dot"></div>
-          Growing daily
-        </div>
-      </div>
-
-      <!-- Action row: shabbat toggle -->
-      <div class="top-action-row">
-        <button class="shabbat-btn" id="shabbatToggle" onclick="toggleShabbatMode()" aria-label="Toggle Shabbat mode">🕯️ Shabbat mode</button>
+        <div class="home-greeting" id="homeGreeting">Hi Andrew 👋</div>
+        <h2 class="home-headline">What’s happening in Jewish LA?</h2>
+        <p class="home-subtitle">Find events, save plans, and see what’s happening tonight.</p>
       </div>
 
       <!-- Search -->
-      <div class="search"><div>🔍</div><input id="searchInput" placeholder="Search events, neighborhoods, vibes…" aria-label="Search events" /></div>
+      <div class="search"><div>🔍</div><input id="searchInput" placeholder="Search events, orgs, neighborhoods..." aria-label="Search events" /></div>
 
       <!-- Filter chips -->
       <div class="quick-filters" id="quickFilters">
-        <button class="filter-chip active" data-filter="all">All</button>
-        <button class="filter-chip" data-filter="tonight">Tonight</button>
-        <button class="filter-chip" data-filter="free">Free</button>
-        <button class="filter-chip" data-filter="westside">Westside</button>
-        <button class="filter-chip" data-filter="20s/30s">20s/30s</button>
+        <button class="filter-chip active" data-filter="tonight">Tonight</button>
         <button class="filter-chip" data-filter="shabbat">Shabbat</button>
-        <button class="filter-chip" data-filter="outdoors">Outdoors</button>
+        <button class="filter-chip" data-filter="free">Free</button>
+        <button class="filter-chip" data-filter="20s/30s">Young Pros</button>
+        <button class="filter-chip" data-filter="westside">Westside</button>
+        <button class="filter-chip" data-filter="learning">Learning</button>
       </div>
 
     </div><!-- /top-inner -->
@@ -2908,7 +2887,7 @@ const ORG_SYNC_HASH_STORAGE_KEY = "lajt_last_org_sync_hash";
 const ORG_SYNC_AT_STORAGE_KEY = "lajt_last_org_sync_at";
 
 let allEvents = [];
-let activeQuickFilter = 'all';
+let activeQuickFilter = 'tonight';
 let selectedFeedDay = 'tonight';
 let activeOrgFilter = 'all';
 let selectedOrganizationId = '';
@@ -4111,6 +4090,8 @@ function refreshProfileUI(){
     : "Create a simple profile so you can RSVP, like events, and appear in attendee circles.";
   document.getElementById("profileStatePill").textContent = p ? (p.synced ? "Saved + synced" : "Saved in browser") : "Local profile mode";
   setBigAvatar(p?.photo_url, p?.name);
+  const homeGreeting = document.getElementById("homeGreeting");
+  if (homeGreeting) homeGreeting.textContent = `Hi ${p?.name || "Andrew"} 👋`;
 
   const formWrap = document.getElementById("profileFormWrap");
   const dash = document.getElementById("profileDashboard");
@@ -4593,6 +4574,7 @@ function filterEventsByChip(list, chip){
     if (chip === "westside") return text.includes("westside") || text.includes("santa monica") || text.includes("venice") || text.includes("brentwood") || text.includes("west la") || text.includes("west hollywood");
     if (chip === "20s/30s") return text.includes("20s") || text.includes("30s") || text.includes("young adult") || text.includes("young professionals");
     if (chip === "shabbat") return text.includes("shabbat") || text.includes("seder") || text.includes("passover");
+    if (chip === "learning") return text.includes("learning") || text.includes("class") || text.includes("study") || text.includes("torah") || text.includes("discussion");
     if (chip === "outdoors") return text.includes("outdoor") || text.includes("outdoors") || text.includes("hike") || text.includes("beach") || text.includes("park") || text.includes("picnic");
     return true;
   });
