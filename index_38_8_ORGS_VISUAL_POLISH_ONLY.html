@@ -1886,6 +1886,34 @@ header h1{
 #feedView .feed-below-featured .feed .open-btn,
 #feedView .feed-below-featured .feed .saved-btn{background:rgba(255,255,255,.65) !important;color:#173c62 !important;border:1px solid rgba(255,255,255,.7) !important}
 
+.community-day-browser{
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  padding:0 0 10px;
+  margin:-6px 0 2px;
+}
+.community-day-browser::-webkit-scrollbar{display:none}
+.community-day-pill{
+  flex:0 0 auto;
+  border:1px solid rgba(20,56,90,.12);
+  background:rgba(255,255,255,.66);
+  color:#173c62;
+  border-radius:999px;
+  padding:7px 11px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.01em;
+  cursor:pointer;
+}
+.community-day-pill.active{
+  background:var(--navy);
+  border-color:var(--navy);
+  color:#fff;
+}
+
 .orgs-view{
   background:linear-gradient(180deg,#f8f2e8,#f1e8da) !important;
   color:var(--text) !important;
@@ -2032,6 +2060,27 @@ header h1{
   color:var(--gold) !important;
 }
 
+/* Feed header compaction */
+#feedView .top{padding:10px 0 6px !important}
+#feedView .top-inner{padding:10px 16px 0 !important;gap:8px !important}
+#feedView .brand-row{margin-bottom:6px !important}
+#feedView .brand-eyebrow{font-size:9px !important;letter-spacing:.12em !important}
+#feedView .brand-name{font-size:18px !important}
+#feedView .top-sub-line{font-size:12px !important;margin:2px 0 8px !important}
+#feedView .traction-strip{gap:5px !important;margin:6px 0 8px !important}
+#feedView .traction-pill{padding:4px 8px !important;font-size:10px !important}
+#feedView .top-action-row{margin-bottom:8px !important}
+#feedView .search{margin-top:8px !important;padding:9px 12px !important}
+#feedView .quick-filters{padding:0 0 8px !important;gap:7px !important}
+#feedView .filter-chip{padding:6px 10px !important;font-size:11px !important;border-radius:999px !important}
+#feedView .the-move-hero{margin:0 16px 2px !important}
+#feedView .hood-heat-row{padding:0 16px 8px !important}
+#feedView .fomo-strip{margin:0 16px 8px !important}
+#feedView .feed-below-featured{padding:10px 16px 14px !important}
+#feedView .feed-below-featured .section-title{margin-bottom:8px !important}
+#feedView .feed-below-featured .section-title h2{font-size:18px !important}
+#feedView .feed-below-featured .section-title span{font-size:11px !important}
+
 </style>
 
 <meta property="og:title" content="LA Jewish Tonight — The move for young Jewish LA" />
@@ -2164,6 +2213,7 @@ header h1{
         <h2>Community feed</h2>
         <span id="statusText">Loading…</span>
       </div>
+      <div class="community-day-browser" id="communityDayBrowser" aria-label="Community feed day filter"></div>
       <div class="feed" id="feed"></div>
     </div>
   </div>
@@ -2717,6 +2767,7 @@ let orgFollowsLoadedProfileId = '';
 let orgFollowsLoadPromise = null;
 let _feedSubTab = 'feed';
 let feedEvents = [];
+let selectedCommunityFeedDay = 'tonight';
 let tonightEventsCache = [];
 let thisWeekEventsCache = [];
 let countsByEvent = {};
@@ -4262,6 +4313,61 @@ function activeFilterLabel(){
   const map = {all:"All events", tonight:"Tonight", free:"Free", westside:"Westside", "20s/30s":"20s/30s", shabbat:"Shabbat", outdoors:"Outdoors"};
   return map[activeQuickFilter] || "All events";
 }
+function getEventDate(event){
+  if (!event?.start_time) return null;
+  const d = new Date(event.start_time);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+function dayStart(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function dayKeyFromDate(d){ return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
+function buildCommunityFeedDays(){
+  const now = new Date();
+  const days = [
+    { key:'tonight', label:'Tonight', kind:'today' },
+    { key:'tomorrow', label:'Tomorrow', kind:'tomorrow' },
+    { key:'weekend', label:'This Weekend', kind:'weekend' }
+  ];
+  for (let i=1; i<=5; i++){
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    days.push({ key: `day:${dayKeyFromDate(d)}`, label: d.toLocaleDateString(undefined,{weekday:'short'}), kind:'day', dateKey: dayKeyFromDate(d) });
+  }
+  return days;
+}
+function isEventInCommunityFeedDay(event, selectedDay){
+  const d = getEventDate(event);
+  if (!d) return false;
+  const now = new Date();
+  const today = dayStart(now);
+  const eventDay = dayStart(d);
+  if (selectedDay === 'tonight') return eventDay.getTime() === today.getTime();
+  if (selectedDay === 'tomorrow'){
+    const t = new Date(today); t.setDate(t.getDate()+1);
+    return eventDay.getTime() === t.getTime();
+  }
+  if (selectedDay === 'weekend'){
+    const n = new Date(today);
+    const next7 = new Date(today); next7.setDate(next7.getDate()+7);
+    return d >= n && d < next7 && [5,6,0].includes(d.getDay());
+  }
+  if (String(selectedDay || '').startsWith('day:')){
+    return dayKeyFromDate(d) === String(selectedDay).slice(4);
+  }
+  return true;
+}
+function filterCommunityFeedEventsByDay(events, selectedDay){
+  const list = Array.isArray(events) ? events : [];
+  return list.filter(e => {
+    try { return isEventInCommunityFeedDay(e, selectedDay); }
+    catch(_){ return false; }
+  });
+}
+function renderCommunityFeedDayPills(){
+  const wrap = document.getElementById('communityDayBrowser');
+  if (!wrap) return;
+  const days = buildCommunityFeedDays();
+  if (!days.some(d => d.key === selectedCommunityFeedDay)) selectedCommunityFeedDay = 'tonight';
+  wrap.innerHTML = days.map(d => `<button type="button" class="community-day-pill${d.key===selectedCommunityFeedDay?' active':''}" data-feed-day="${escapeHtml(d.key)}">${escapeHtml(d.label)}</button>`).join('');
+}
 function filterEventsByChip(list, chip){
   const items = Array.isArray(list) ? list.slice() : [];
   const now = new Date();
@@ -4288,15 +4394,17 @@ function getVisibleEvents(query){
       return safeTimeMs(e.start_time, 0) >= Date.now() && isShabbatLikeEvent(e);
     });
   }
-  return filterEventsByChip(searched, activeQuickFilter);
+  const chipFiltered = filterEventsByChip(searched, activeQuickFilter);
+  return filterCommunityFeedEventsByDay(chipFiltered, selectedCommunityFeedDay);
 }
 function applyCurrentFilters(){
   const q = document.getElementById("searchInput")?.value || "";
   const statusText = document.getElementById("statusText");
   const filtered = getVisibleEvents(q);
+  renderCommunityFeedDayPills();
   renderHero(filtered[0] || allEvents[0]);
   renderFeed(filtered);
-  if (statusText) statusText.textContent = `${filtered.length} ${activeFilterLabel().toLowerCase()}`;
+  if (statusText) statusText.textContent = `${filtered.length} ${activeFilterLabel().toLowerCase()} · ${selectedCommunityFeedDay === 'tonight' ? 'tonight' : selectedCommunityFeedDay === 'tomorrow' ? 'tomorrow' : selectedCommunityFeedDay === 'weekend' ? 'weekend' : 'day'}`;
   // Only animate on explicit filter changes, not on load
   if (allEvents.length) animateFeedRefresh();
   scheduleOrgNewEventDetection();
@@ -5110,7 +5218,7 @@ function renderFeed(events){
   if (!feed) return;
   const safeEvents = Array.isArray(events) ? events.filter(Boolean) : [];
   if (!safeEvents.length){
-    feed.innerHTML = `<div class="empty">No events were returned yet. Once your feed has current or recent rows, the premium social layer will appear automatically.</div>`;
+    feed.innerHTML = `<div class="empty">No events loaded for this day yet.</div>`;
     return;
   }
   const cards = safeEvents.slice(0,24).map(event => {
@@ -5229,6 +5337,7 @@ async function loadEvents(){
 
   function renderEventSurfaces(sourceLabel){
     const query = document.getElementById("searchInput")?.value || searchValue;
+    renderCommunityFeedDayPills();
     if (!_shabbatActive) renderFeed(getVisibleEvents(query));
     renderHero(allEvents[0]);
     renderTonightTab();
@@ -8293,6 +8402,12 @@ window.addEventListener("DOMContentLoaded", () => {
       document.querySelectorAll("#quickFilters .filter-chip").forEach(chip => chip.classList.toggle("active", chip === btn));
       applyCurrentFilters();
     });
+  });
+  document.getElementById("communityDayBrowser")?.addEventListener("click", (ev) => {
+    const btn = ev.target && ev.target.closest ? ev.target.closest(".community-day-pill[data-feed-day]") : null;
+    if (!btn) return;
+    selectedCommunityFeedDay = btn.dataset.feedDay || "tonight";
+    applyCurrentFilters();
   });
 
   const _gbtn = document.getElementById("googleProfileBtn"); if (_gbtn) { _gbtn.style.display = "none"; }
