@@ -2774,6 +2774,9 @@ let countsByEvent = {};
 let profilesById = {};
 let currentProfile = null;
 let userRsvpEventIds = new Set();
+let rsvpRealtimeChannel = null;
+let rsvpCountsPollingTimer = null;
+let rsvpCountsRefreshInFlight = false;
 let friendRequestsCache = [];
 let acceptedFriendshipsCache = [];
 let friendCountsByProfile = {};
@@ -3467,6 +3470,64 @@ async function loadUserRsvpsFromSupabase(){
     console.error("Failed loading user RSVPs", err);
     userRsvpEventIds = previousIds;
     return [];
+  }
+}
+
+async function refreshRsvpCountsFromSupabase(){
+  if (rsvpCountsRefreshInFlight) return false;
+  rsvpCountsRefreshInFlight = true;
+  try{
+    const [rsvps, likes] = await Promise.all([
+      fetchJsonSafe('rsvps?select=event_id,profile_id&limit=180', []),
+      fetchJsonSafe('likes?select=event_id,profile_id&limit=180', [])
+    ]);
+
+    const rebuilt = {};
+    (rsvps || []).forEach(r => {
+      const key = String(r.event_id || '');
+      if (!rebuilt[key]) rebuilt[key] = { rsvps: 0, likes: 0, profileIds: [] };
+      rebuilt[key].rsvps += 1;
+      if (r.profile_id) rebuilt[key].profileIds.push(String(r.profile_id));
+    });
+    (likes || []).forEach(l => {
+      const key = String(l.event_id || '');
+      if (!rebuilt[key]) rebuilt[key] = { rsvps: 0, likes: 0, profileIds: [] };
+      rebuilt[key].likes += 1;
+    });
+    countsByEvent = rebuilt;
+    syncViews();
+    return true;
+  }catch(err){
+    console.error('RSVP count refresh failed:', err);
+    return false;
+  }finally{
+    rsvpCountsRefreshInFlight = false;
+  }
+}
+
+function ensureRsvpCountSync(){
+  if (!rsvpCountsPollingTimer){
+    rsvpCountsPollingTimer = setInterval(() => {
+      refreshRsvpCountsFromSupabase();
+    }, 25000);
+  }
+
+  if (rsvpRealtimeChannel || !window.supabase?.createClient || !supabase){
+    return;
+  }
+  try{
+    rsvpRealtimeChannel = supabase
+      .channel('public:rsvps:count-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rsvps' }, () => {
+        refreshRsvpCountsFromSupabase();
+      })
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.warn('RSVP realtime unavailable; using polling fallback.', status);
+        }
+      });
+  }catch(err){
+    console.warn('RSVP realtime setup failed; using polling fallback.', err);
   }
 }
 
@@ -5445,6 +5506,7 @@ async function loadEvents(){
       countsByEvent[key].likes += 1;
     });
 
+    ensureRsvpCountSync();
     if (allEvents.length) { renderEventSurfaces('live'); setTimeout(refreshEventImagesFromLinks, 30); }
     loadMemberCount();
   } catch (err) {
@@ -8436,6 +8498,7 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("calTodayBtn")?.addEventListener("click", calGoToday);
   const postNewsBtn = document.getElementById("postNewsStatusBtn"); if (postNewsBtn) postNewsBtn.addEventListener("click", postNewsStatus);
   ensureSupabaseClient().then(client => {
+    ensureRsvpCountSync();
     if (client?.auth?.onAuthStateChange){
       client.auth.onAuthStateChange(async (_event, session) => {
         if (session?.user) await upsertProfileFromGoogleUser(session.user);
