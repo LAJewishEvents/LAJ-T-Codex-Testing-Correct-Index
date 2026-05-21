@@ -614,6 +614,11 @@ h1{margin:0;font-size:52px !important;line-height:.92 !important;font-weight:900
 .profile-friend-meta{font-size:12px;color:var(--muted);margin-top:2px}
 .profile-friend-state{display:inline-flex;align-items:center;justify-content:center;padding:7px 11px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid #d9e5ff;background:#eef4ff;color:#234f88}
 .profile-friend-state.accepted{background:#eaf8ee;color:#246739;border-color:rgba(47,123,66,.22)}
+.friend-action-btn{margin-left:auto;border:1px solid #d9e5ff;background:#eef4ff;color:#234f88;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:900;cursor:pointer}
+.friend-action-btn.accept{background:var(--green);border-color:var(--green);color:#fff}
+.friend-action-btn.friends{background:#eaf8ee;color:#246739;border-color:rgba(47,123,66,.22);cursor:default}
+.friend-action-btn.requested{background:#f5f0ff;color:#5b21b6;border-color:#e4d8ff;cursor:default}
+.friend-action-btn.self{background:#f6f3ed;color:#857860;border-color:#eadfcd;cursor:default}
 
 
 .feed-refreshing{opacity:.18;transform:translateY(14px) scale(.985);filter:blur(2px);transition:opacity .22s ease, transform .22s ease, filter .22s ease}
@@ -2656,6 +2661,7 @@ header h1{
           <div class="connections-card">
             <div class="connections-title">🔥 Community connections</div>
             <p class="connections-sub">See who’s attending the same events this week.</p>
+            <div id="profileFriendDiscovery" style="margin-top:10px;"></div>
           </div>
         </div>
       </div>
@@ -4236,6 +4242,29 @@ function renderProfilePendingRequestsCard(){
   if (mount) mount.innerHTML = "";
 }
 
+function renderProfileFriendDiscovery(){
+  const mount = document.getElementById("profileFriendDiscovery");
+  if (!mount || !currentProfile?.id) return;
+  const myId = String(currentProfile.id);
+  const candidates = Object.values(profilesById || {}).filter(p => String(p?.id || "") !== myId).slice(0, 6);
+  if (!candidates.length){
+    mount.innerHTML = `<div class="profile-sub" style="margin:0;">Find friends from the Network tab as more profiles come online.</div>`;
+    return;
+  }
+  mount.innerHTML = `
+    <div class="pending-request-head" style="margin:0 0 8px;"><h3 class="pending-request-title" style="font-size:16px;">Find friends</h3></div>
+    ${candidates.map(p => `
+      <div class="pending-request-row" style="padding:8px 0;border-top:1px solid #eee4d6;">
+        ${p.photo_url ? `<div class="network-avatar"><img src="${escapeHtml(p.photo_url)}" alt=""></div>` : `<div class="network-avatar">${escapeHtml(getInitials(p.name || "FR"))}</div>`}
+        <div class="pending-request-copy">
+          <div class="pending-request-name">${escapeHtml(p.name || "Community member")}</div>
+          <div class="profile-friend-meta">${escapeHtml(p.neighborhood || "Los Angeles")}</div>
+        </div>
+        ${friendActionButtonMarkup(p.id)}
+      </div>
+    `).join("")}`;
+}
+
 async function acceptFriendRequestFromProfile(requestId){
   const ok = await acceptFriendRequestById(requestId);
   if (ok){
@@ -4258,6 +4287,7 @@ function renderProfileDashboard(){
   renderProfileNotificationsCard();
   renderProfilePendingRequestsCard();
   renderProfileFriendsCircleCard();
+  renderProfileFriendDiscovery();
   document.getElementById("statRsvps").textContent = String(userRsvpEventIds.size || 0);
   document.getElementById("statLikes").textContent = String(countLocalLikedEvents());
   document.getElementById("statComments").textContent = String(countLocalCommentEvents());
@@ -4606,6 +4636,20 @@ function commentAvatarHtml(profile){
 }
 function attendeeInfo(eventId){
   return getSocialSnapshot(eventId);
+}
+function attendeePeopleRows(eventId){
+  const ids = Array.from(new Set(((countsByEvent[String(eventId)]?.profileIds) || []).map(String)));
+  const rows = ids.map(id => profilesById[String(id)]).filter(Boolean).slice(0, 5).map(p => `
+    <div class="pending-request-row" style="padding:8px 0;border-top:1px solid #eee4d6;">
+      ${p.photo_url ? `<div class="network-avatar"><img src="${escapeHtml(p.photo_url)}" alt=""></div>` : `<div class="network-avatar">${escapeHtml(getInitials(p.name || "FR"))}</div>`}
+      <div class="pending-request-copy">
+        <div class="pending-request-name">${escapeHtml(p.name || "Attendee")}</div>
+        <div class="profile-friend-meta">${escapeHtml(p.neighborhood || "Los Angeles")}</div>
+      </div>
+      ${friendActionButtonMarkup(p.id)}
+    </div>
+  `).join("");
+  return rows ? `<div style="padding:0 14px 10px;"><div class="pending-request-head" style="margin:0 0 6px;"><h3 class="pending-request-title" style="font-size:15px;">People attending</h3></div>${rows}</div>` : "";
 }
 function commentSnippet(event){
   return latestCommentForEvent(event);
@@ -5885,6 +5929,30 @@ function getPendingOutgoingFriendRequests(){
   return (friendRequestsCache || []).filter(row => String(row.from_profile_id || "") === me && String(row.status || "") === "pending");
 }
 
+function getFriendStateForProfile(profileId){
+  const me = String(currentProfile?.id || "");
+  const target = String(profileId || "");
+  if (!me || !target) return "unavailable";
+  if (me === target) return "self";
+  if (getAcceptedFriendIdsForCurrentProfile().includes(target)) return "friends";
+  if (getPendingOutgoingFriendRequests().some(r => String(r.to_profile_id || "") === target)) return "outgoing_pending";
+  if (getPendingIncomingFriendRequests().some(r => String(r.from_profile_id || "") === target)) return "incoming_pending";
+  return "none";
+}
+
+function friendActionButtonMarkup(profileId){
+  const state = getFriendStateForProfile(profileId);
+  if (state === "self") return `<button class="friend-action-btn self" disabled>You</button>`;
+  if (state === "friends") return `<button class="friend-action-btn friends" disabled>Friends</button>`;
+  if (state === "outgoing_pending") return `<button class="friend-action-btn requested" disabled>Requested</button>`;
+  if (state === "incoming_pending"){
+    const req = getPendingIncomingFriendRequests().find(r => String(r.from_profile_id || "") === String(profileId || ""));
+    return req?.id ? `<button class="friend-action-btn accept" onclick="return acceptFriendRequestById('${escapeHtml(String(req.id))}')">Accept</button>` : `<button class="friend-action-btn accept" disabled>Accept</button>`;
+  }
+  if (state === "none") return `<button class="friend-action-btn" onclick="return sendFriendRequestToProfile('${escapeHtml(String(profileId || ""))}')">Add Friend</button>`;
+  return ``;
+}
+
 async function sendFriendRequestToProfile(targetProfileId){
   if (!currentProfile?.id || !targetProfileId) return null;
   const targetId = String(targetProfileId || "");
@@ -5926,6 +5994,7 @@ async function sendFriendRequestToProfile(targetProfileId){
     if (ok){
       await loadFriendBackendData();
       renderNetworkTab();
+      if (currentProfile) renderProfileDashboard();
       pushNotificationCard({
         type: "request_sent",
         title: "Friend request sent",
@@ -5968,6 +6037,7 @@ async function acceptFriendRequestById(requestId){
     if (ok){
       await loadFriendBackendData();
       renderNetworkTab();
+      if (currentProfile) renderProfileDashboard();
       pushNotificationCard({
         type: "friend_connected",
         title: "Friend added",
@@ -6017,6 +6087,26 @@ function renderNetworkTab(){
   if (!highlightEl || !listEl || !commentsEl) return;
 
   const events = allEvents.length ? allEvents : [];
+  const myId = String(currentProfile?.id || "");
+  const discoverable = Object.values(profilesById || {}).filter(p => String(p?.id || "") !== myId);
+  const suggested = discoverable.slice(0, 4);
+  const searchCard = discoverable.length ? `
+    <div class="network-item">
+      <div class="network-copy">
+        <h4>Find friends</h4>
+        <p>Search and add people in the community.</p>
+      </div>
+      ${suggested.map(p => `
+        <div class="network-row" style="margin-top:10px;">
+          ${avatarMarkup({name:p.name||"Friend", initials:getInitials(p.name||"FR"), photo:p.photo_url})}
+          <div class="network-copy">
+            <h4>${escapeHtml(p.name || "Community member")}</h4>
+            <p>${escapeHtml(p.neighborhood || "Los Angeles")}</p>
+          </div>
+          ${friendActionButtonMarkup(p.id)}
+        </div>
+      `).join("")}
+    </div>` : "";
   const summary = getFriendBackendSummary();
   const acceptedFriendIds = summary.friendIds || [];
   const acceptedProfiles = acceptedFriendIds.map(id => profilesById[String(id)]).filter(Boolean);
@@ -6102,7 +6192,7 @@ function renderNetworkTab(){
         </div>`;
     });
 
-    listEl.innerHTML = [...incomingCards, ...outgoingCards, ...acceptedCards].join("") || `<div class="network-item"><div class="network-copy"><h4>Your network is empty</h4><p>Create a few friend connections and this section will come alive.</p></div></div>`;
+    listEl.innerHTML = [searchCard, ...incomingCards, ...outgoingCards, ...acceptedCards].join("") || `<div class="network-item"><div class="network-copy"><h4>Your network is empty</h4><p>Create a few friend connections and this section will come alive.</p></div></div>`;
     commentsEl.innerHTML = acceptedProfiles.length
       ? acceptedProfiles.slice(0, 3).map(p => `
         <div class="network-item">
@@ -6136,7 +6226,7 @@ function renderNetworkTab(){
       </div>`;
   }
 
-  listEl.innerHTML = friends.map(friend => {
+  listEl.innerHTML = [searchCard, ...friends.map(friend => {
     const e = friend.event;
     const link = e?.rsvp_link || "#";
     return `
@@ -6155,7 +6245,7 @@ function renderNetworkTab(){
           </div>
         </div>
       </div>`;
-  }).join("");
+  })].join("");
 
   commentsEl.innerHTML = friends.slice(1).map(friend => {
     const e = friend.event;
@@ -6580,6 +6670,7 @@ function openEventModal(eventId){
         <div class="facepile">${info.faces}</div>
         <div class="attend-text">${escapeHtml(info.text)}</div>
       </div>
+      ${attendeePeopleRows(event.id)}
       <div class="socialbar${currentProfile ? "" : " gated"}" ${currentProfile ? "" : 'onclick="showGatePop()"'} style="padding-bottom:10px;">
         <div class="stat">❤️ ${info.likes}</div>
         <div class="stat">✅ ${info.rsvps}</div>
