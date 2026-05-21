@@ -611,6 +611,14 @@ h1{margin:0;font-size:52px !important;line-height:.92 !important;font-weight:900
 .profile-friends-btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:14px;font-weight:900;text-decoration:none;border:1px solid var(--line);cursor:pointer}
 .profile-friends-btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
 .profile-friends-btn.secondary{background:var(--green);color:#fff;border-color:var(--green)}
+.profile-friend-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.profile-friend-state{display:inline-flex;align-items:center;justify-content:center;padding:7px 11px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid #d9e5ff;background:#eef4ff;color:#234f88}
+.profile-friend-state.accepted{background:#eaf8ee;color:#246739;border-color:rgba(47,123,66,.22)}
+.friend-action-btn{margin-left:auto;border:1px solid #d9e5ff;background:#eef4ff;color:#234f88;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:900;cursor:pointer}
+.friend-action-btn.accept{background:var(--green);border-color:var(--green);color:#fff}
+.friend-action-btn.friends{background:#eaf8ee;color:#246739;border-color:rgba(47,123,66,.22);cursor:default}
+.friend-action-btn.requested{background:#f5f0ff;color:#5b21b6;border-color:#e4d8ff;cursor:default}
+.friend-action-btn.self{background:#f6f3ed;color:#857860;border-color:#eadfcd;cursor:default}
 
 
 .feed-refreshing{opacity:.18;transform:translateY(14px) scale(.985);filter:blur(2px);transition:opacity .22s ease, transform .22s ease, filter .22s ease}
@@ -2653,6 +2661,7 @@ header h1{
           <div class="connections-card">
             <div class="connections-title">🔥 Community connections</div>
             <p class="connections-sub">See who’s attending the same events this week.</p>
+            <div id="profileFriendDiscovery" style="margin-top:10px;"></div>
           </div>
         </div>
       </div>
@@ -3027,6 +3036,7 @@ async function ensureSupabaseClient(){
 const PROFILE_STORAGE_KEY = "livefeed_profile_v1";
 const ONBOARDING_PROFILE_STORAGE_KEY = "lajt_onboarding_profile_v1";
 const PROFILE_BUCKET = "profile-photos";
+const PENDING_WHATSAPP_INVITES_KEY = "livefeed_pending_whatsapp_invites_v1";
 const ACTIONS_STORAGE_KEY = "livefeed_actions_v1";
 const COMMENTS_STORAGE_KEY = "livefeed_comments_v1";
 const VIEWER_STORAGE_KEY = "livefeed_viewer_v1";
@@ -3565,6 +3575,33 @@ function readPendingInviteData(){
 function clearPendingInviteData(){
   try{ localStorage.removeItem(PENDING_INVITE_STORAGE_KEY); }catch(e){}
 }
+function readPendingWhatsappInvites(){
+  try{
+    const rows = JSON.parse(localStorage.getItem(PENDING_WHATSAPP_INVITES_KEY) || "[]");
+    return Array.isArray(rows) ? rows : [];
+  }catch(e){ return []; }
+}
+function savePendingWhatsappInvites(rows){
+  try{ localStorage.setItem(PENDING_WHATSAPP_INVITES_KEY, JSON.stringify(Array.isArray(rows) ? rows : [])); }catch(e){}
+}
+function upsertPendingWhatsappInvite(row){
+  if (!row?.invite_code || !currentProfile?.id) return;
+  const me = String(currentProfile.id);
+  const next = readPendingWhatsappInvites().filter(item => String(item?.profile_id || "") !== me || String(item?.invite_code || "") !== String(row.invite_code));
+  next.unshift({
+    profile_id: me,
+    invite_code: String(row.invite_code || ""),
+    invitee_name: String(row.invitee_name || "").trim(),
+    status: "pending",
+    created_at: new Date().toISOString()
+  });
+  savePendingWhatsappInvites(next.slice(0, 40));
+}
+function getPendingWhatsappInvitesForCurrentProfile(){
+  if (!currentProfile?.id) return [];
+  const me = String(currentProfile.id);
+  return readPendingWhatsappInvites().filter(item => String(item?.profile_id || "") === me && String(item?.status || "pending") === "pending");
+}
 async function resolveInviteToProfileId(inviteCode){
   if (!inviteCode) return null;
   const client = await ensureSupabaseClient().catch(() => null);
@@ -3604,7 +3641,9 @@ async function processPendingInviteFlow(){
   const ref = url.searchParams.get("ref");
   const stored = readPendingInviteData();
   const targetFromStored = stored?.target_profile_id || null;
-  const targetProfileId = targetFromStored || (invite ? await resolveInviteToProfileId(invite) : null) || ref || null;
+  const inviteFromStored = stored?.invite_code || null;
+  const inviteCode = invite || inviteFromStored || null;
+  const targetProfileId = targetFromStored || (inviteCode ? await resolveInviteToProfileId(inviteCode) : null) || ref || null;
 
   if (!addFriend && !stored) return;
   if (!targetProfileId || String(targetProfileId) === String(currentProfile.id)){
@@ -3613,7 +3652,7 @@ async function processPendingInviteFlow(){
   }
 
   inviteProcessing = true;
-  persistPendingInviteData({ target_profile_id: targetProfileId });
+  persistPendingInviteData({ target_profile_id: targetProfileId, invite_code: inviteCode });
   try{
     const ok = await sendFriendRequestToProfile(targetProfileId);
     if (ok){
@@ -4150,85 +4189,128 @@ function profileFriendAvatarMarkup(profile){
 function renderProfileFriendsCircleCard(){
   const mount = document.getElementById("profileFriendsCircleCard");
   if (!mount || !currentProfile) return;
-  const friends = getAcceptedFriendProfilesForCurrentProfile();
+  const incoming = getPendingIncomingFriendRequests();
+  const outgoing = getPendingOutgoingFriendRequests();
+  const pendingInvites = getPendingWhatsappInvitesForCurrentProfile();
+  const friendIds = getAcceptedFriendIdsForCurrentProfile();
+  const friends = friendIds.map(id => profilesById[String(id)] || { id, name:"Friend" });
   const friendCount = Number(friendCountsByProfile[String(currentProfile.id || "")] || friends.length || 0);
-  if (!friendCount){
-    mount.innerHTML = "";
+  const incomingRows = incoming.map(req => {
+    const sender = profilesById[String(req.from_profile_id)] || {};
+    const name = sender.name || "Someone";
+    const hood = sender.neighborhood || sender.region || "";
+    const avatar = sender.photo_url
+      ? `<div class="network-avatar"><img src="${escapeHtml(sender.photo_url)}" alt=""></div>`
+      : `<div class="network-avatar">${escapeHtml(getInitials(name))}</div>`;
+    return `
+      <div class="pending-request-row" style="padding:10px 0;border-top:1px solid #eee4d6;">
+        ${avatar}
+        <div class="pending-request-copy">
+          <div class="pending-request-name">${escapeHtml(name)}</div>
+          <div class="profile-friend-meta">${escapeHtml(hood || "Los Angeles")}</div>
+        </div>
+        <button class="pending-request-btn accept" onclick="return acceptFriendRequestFromProfile('${escapeHtml(String(req.id || ""))}')">Accept</button>
+      </div>`;
+  }).join("");
+  const outgoingRows = outgoing.map(req => {
+    const to = profilesById[String(req.to_profile_id)] || {};
+    const name = to.name || "Pending friend";
+    const hood = to.neighborhood || to.region || "";
+    const avatar = to.photo_url
+      ? `<div class="network-avatar"><img src="${escapeHtml(to.photo_url)}" alt=""></div>`
+      : `<div class="network-avatar">${escapeHtml(getInitials(name))}</div>`;
+    return `
+      <div class="pending-request-row" style="padding:10px 0;border-top:1px solid #eee4d6;">
+        ${avatar}
+        <div class="pending-request-copy">
+          <div class="pending-request-name">${escapeHtml(name)}</div>
+          <div class="profile-friend-meta">${escapeHtml(hood || "Los Angeles")}</div>
+        </div>
+        <div class="profile-friend-state">Requested</div>
+      </div>`;
+  }).join("");
+  const acceptedRows = friends.map(friend => {
+    const name = friend?.name || "Friend";
+    const hood = friend?.neighborhood || friend?.region || "";
+    return `
+      <div class="pending-request-row" style="padding:10px 0;border-top:1px solid #eee4d6;">
+        ${profileFriendAvatarMarkup(friend)}
+        <div class="pending-request-copy">
+          <div class="pending-request-name">${escapeHtml(name)}</div>
+          <div class="profile-friend-meta">${escapeHtml(hood || "Los Angeles")}</div>
+        </div>
+        <div class="profile-friend-state accepted">Friends</div>
+      </div>`;
+  }).join("");
+  const pendingInviteRows = pendingInvites.map(item => `
+    <div class="pending-request-row" style="padding:10px 0;border-top:1px solid #eee4d6;">
+      <div class="network-avatar">WA</div>
+      <div class="pending-request-copy">
+        <div class="pending-request-name">${escapeHtml(item.invitee_name ? `Pending request to ${item.invitee_name}` : "Pending WhatsApp friend invite")}</div>
+        <div class="profile-friend-meta">Invite sent via WhatsApp</div>
+      </div>
+      <div class="profile-friend-state">Requested</div>
+    </div>
+  `).join("");
+  const hasAny = incoming.length || outgoing.length || friendCount || pendingInvites.length;
+  if (!hasAny){
+    mount.innerHTML = `
+      <div class="profile-friends-section">
+        <div class="profile-friends-card">
+          <div style="font-size:18px;font-weight:900;color:var(--navy);margin-bottom:6px;">Friends</div>
+          <div class="profile-sub" style="margin-bottom:0;">No incoming requests, outgoing requests, or accepted friends yet.</div>
+        </div>
+      </div>`;
     return;
   }
-  const visible = friends.slice(0, 6);
-  const mutuals = Math.max(0, Math.min(friendCount - 1, 2));
   mount.innerHTML = `
     <div class="profile-friends-section">
       <div class="dashboard-header" style="margin-bottom:10px;">
         <h3>Friends</h3>
-        
       </div>
       <div class="profile-friends-card">
         <div style="font-size:18px;font-weight:900;color:var(--navy);margin-bottom:6px;">Friends (${friendCount})</div>
-        <div class="profile-sub" style="margin-bottom:0;">Each profile gets a dedicated Friends section with profile circles, mutual friend count, and a View all friends path.</div>
-        <div class="profile-friends-grid">
-          ${visible.map(friend => `
-            <div class="profile-friend-pill">
-              ${profileFriendAvatarMarkup(friend)}
-              <div class="profile-friend-pill-name">${escapeHtml(friend.name || "Friend")}</div>
-            </div>
-          `).join("")}
+        <div class="profile-sub" style="margin-bottom:0;">Incoming requests, sent requests, and accepted friends.</div>
+        <div style="margin-top:10px;">
+          <a href="#" class="profile-friends-btn primary" onclick="return addFriendViaWhatsapp(event)">Add a Friend</a>
         </div>
-        <div class="profile-friends-stats">
-          <div class="profile-friends-stat">
-            <div class="profile-friends-stat-num">${friendCount}</div>
-            <div class="profile-friends-stat-label">Friends</div>
-          </div>
-          <div class="profile-friends-stat">
-            <div class="profile-friends-stat-num">${mutuals}</div>
-            <div class="profile-friends-stat-label">Mutuals</div>
-          </div>
-          <div class="profile-friends-stat">
-            <div class="profile-friends-stat-num">10</div>
-            <div class="profile-friends-stat-label">Unlock goal</div>
-          </div>
-        </div>
-        <div class="profile-friends-actions">
-          <a href="#" class="profile-friends-btn primary" onclick="return false;">See all friends</a>
-          <a href="#" class="profile-friends-btn secondary" onclick="showTonightView(); return false;">Invite Friends</a>
-        </div>
+        ${pendingInviteRows ? `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Pending WhatsApp invites</h3><div class="pending-request-count">${pendingInvites.length}</div></div>${pendingInviteRows}` : ""}
+        ${incomingRows ? `<div class="pending-request-head" style="margin-top:8px;"><h3 class="pending-request-title" style="font-size:16px;">Incoming pending requests</h3><div class="pending-request-count">${incoming.length}</div></div>${incomingRows}` : ""}
+        ${outgoingRows ? `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Outgoing requested users</h3><div class="pending-request-count">${outgoing.length}</div></div>${outgoingRows}` : ""}
+        ${acceptedRows ? `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Accepted friends</h3><div class="pending-request-count">${friendCount}</div></div>${acceptedRows}` : ""}
       </div>
     </div>`;
 }
 
 function renderProfilePendingRequestsCard(){
   const mount = document.getElementById("profilePendingRequestsCard");
-  if (!mount || !currentProfile) return;
-  const incoming = getPendingIncomingFriendRequests();
-  if (!incoming.length){
-    mount.innerHTML = "";
+  if (mount) mount.innerHTML = "";
+}
+
+function renderProfileFriendDiscovery(){
+  const mount = document.getElementById("profileFriendDiscovery");
+  if (!mount || !currentProfile?.id) return;
+  const myId = String(currentProfile.id);
+  const candidates = Object.values(profilesById || {}).filter(p => String(p?.id || "") !== myId).slice(0, 6);
+  if (!candidates.length){
+    mount.innerHTML = `<div class="profile-sub" style="margin:0;">Find friends from the Network tab as more profiles come online.</div>`;
     return;
   }
-  const req = incoming[0];
-  const sender = profilesById[String(req.from_profile_id)] || {};
-  const senderName = sender.name || "Someone";
-  const senderPhoto = sender.photo_url || "";
-  const senderAvatar = senderPhoto
-    ? `<div class="network-avatar"><img src="${escapeHtml(senderPhoto)}" alt="" loading="eager" decoding="async"></div>`
-    : `<div class="network-avatar">${escapeHtml(getInitials(senderName))}</div>`;
   mount.innerHTML = `
-    <div class="pending-request-card">
-      <div class="pending-request-head">
-        <h3 class="pending-request-title">Pending friend requests</h3>
-        <div class="pending-request-count">${incoming.length}</div>
-      </div>
-      <div class="pending-request-row">
-        ${senderAvatar}
+    <div class="pending-request-head" style="margin:0 0 8px;">
+      <h3 class="pending-request-title" style="font-size:16px;">Find friends</h3>
+      <a href="#" class="dashboard-link" onclick="return inviteViaWhatsAppFromFindFriends(event)">Invite via WhatsApp</a>
+    </div>
+    ${candidates.map(p => `
+      <div class="pending-request-row" style="padding:8px 0;border-top:1px solid #eee4d6;">
+        ${p.photo_url ? `<div class="network-avatar"><img src="${escapeHtml(p.photo_url)}" alt=""></div>` : `<div class="network-avatar">${escapeHtml(getInitials(p.name || "FR"))}</div>`}
         <div class="pending-request-copy">
-          <div class="pending-request-name">${escapeHtml(senderName)} wants to connect</div>
-          <p class="pending-request-sub">Accept to add them to your network.</p>
-          <div class="pending-request-actions">
-            <button class="pending-request-btn accept" onclick="return acceptFriendRequestFromProfile('${escapeHtml(String(req.id || ""))}')">Accept</button>
-          </div>
+          <div class="pending-request-name">${escapeHtml(p.name || "Community member")}</div>
+          <div class="profile-friend-meta">${escapeHtml(p.neighborhood || "Los Angeles")}</div>
         </div>
+        ${friendActionButtonMarkup(p.id)}
       </div>
-    </div>`;
+    `).join("")}`;
 }
 
 async function acceptFriendRequestFromProfile(requestId){
@@ -4253,6 +4335,7 @@ function renderProfileDashboard(){
   renderProfileNotificationsCard();
   renderProfilePendingRequestsCard();
   renderProfileFriendsCircleCard();
+  renderProfileFriendDiscovery();
   document.getElementById("statRsvps").textContent = String(userRsvpEventIds.size || 0);
   document.getElementById("statLikes").textContent = String(countLocalLikedEvents());
   document.getElementById("statComments").textContent = String(countLocalCommentEvents());
@@ -4601,6 +4684,20 @@ function commentAvatarHtml(profile){
 }
 function attendeeInfo(eventId){
   return getSocialSnapshot(eventId);
+}
+function attendeePeopleRows(eventId){
+  const ids = Array.from(new Set(((countsByEvent[String(eventId)]?.profileIds) || []).map(String)));
+  const rows = ids.map(id => profilesById[String(id)]).filter(Boolean).slice(0, 5).map(p => `
+    <div class="pending-request-row" style="padding:8px 0;border-top:1px solid #eee4d6;">
+      ${p.photo_url ? `<div class="network-avatar"><img src="${escapeHtml(p.photo_url)}" alt=""></div>` : `<div class="network-avatar">${escapeHtml(getInitials(p.name || "FR"))}</div>`}
+      <div class="pending-request-copy">
+        <div class="pending-request-name">${escapeHtml(p.name || "Attendee")}</div>
+        <div class="profile-friend-meta">${escapeHtml(p.neighborhood || "Los Angeles")}</div>
+      </div>
+      ${friendActionButtonMarkup(p.id)}
+    </div>
+  `).join("");
+  return rows ? `<div style="padding:0 14px 10px;"><div class="pending-request-head" style="margin:0 0 6px;"><h3 class="pending-request-title" style="font-size:15px;">People attending</h3></div>${rows}</div>` : "";
 }
 function commentSnippet(event){
   return latestCommentForEvent(event);
@@ -5880,8 +5977,43 @@ function getPendingOutgoingFriendRequests(){
   return (friendRequestsCache || []).filter(row => String(row.from_profile_id || "") === me && String(row.status || "") === "pending");
 }
 
+function getFriendStateForProfile(profileId){
+  const me = String(currentProfile?.id || "");
+  const target = String(profileId || "");
+  if (!me || !target) return "unavailable";
+  if (me === target) return "self";
+  if (getAcceptedFriendIdsForCurrentProfile().includes(target)) return "friends";
+  if (getPendingOutgoingFriendRequests().some(r => String(r.to_profile_id || "") === target)) return "outgoing_pending";
+  if (getPendingIncomingFriendRequests().some(r => String(r.from_profile_id || "") === target)) return "incoming_pending";
+  return "none";
+}
+
+function friendActionButtonMarkup(profileId){
+  const state = getFriendStateForProfile(profileId);
+  if (state === "self") return `<button class="friend-action-btn self" disabled>You</button>`;
+  if (state === "friends") return `<button class="friend-action-btn friends" disabled>Friends</button>`;
+  if (state === "outgoing_pending") return `<button class="friend-action-btn requested" disabled>Requested</button>`;
+  if (state === "incoming_pending"){
+    const req = getPendingIncomingFriendRequests().find(r => String(r.from_profile_id || "") === String(profileId || ""));
+    return req?.id ? `<button class="friend-action-btn accept" onclick="return acceptFriendRequestById('${escapeHtml(String(req.id))}')">Accept</button>` : `<button class="friend-action-btn accept" disabled>Accept</button>`;
+  }
+  if (state === "none") return `<button class="friend-action-btn" onclick="return sendFriendRequestToProfile('${escapeHtml(String(profileId || ""))}')">Add Friend</button>`;
+  return ``;
+}
+
 async function sendFriendRequestToProfile(targetProfileId){
   if (!currentProfile?.id || !targetProfileId) return null;
+  const targetId = String(targetProfileId || "");
+  const isPending = getPendingOutgoingFriendRequests().some(row => String(row.to_profile_id || "") === targetId);
+  const isAlreadyFriend = getAcceptedFriendIdsForCurrentProfile().includes(targetId);
+  if (isPending){
+    showToast("Request already sent");
+    return true;
+  }
+  if (isAlreadyFriend){
+    showToast("Already friends");
+    return true;
+  }
   try{
     const client = await ensureSupabaseClient();
     let ok = false;
@@ -5910,6 +6042,7 @@ async function sendFriendRequestToProfile(targetProfileId){
     if (ok){
       await loadFriendBackendData();
       renderNetworkTab();
+      if (currentProfile) renderProfileDashboard();
       pushNotificationCard({
         type: "request_sent",
         title: "Friend request sent",
@@ -5952,6 +6085,7 @@ async function acceptFriendRequestById(requestId){
     if (ok){
       await loadFriendBackendData();
       renderNetworkTab();
+      if (currentProfile) renderProfileDashboard();
       pushNotificationCard({
         type: "friend_connected",
         title: "Friend added",
@@ -6001,6 +6135,26 @@ function renderNetworkTab(){
   if (!highlightEl || !listEl || !commentsEl) return;
 
   const events = allEvents.length ? allEvents : [];
+  const myId = String(currentProfile?.id || "");
+  const discoverable = Object.values(profilesById || {}).filter(p => String(p?.id || "") !== myId);
+  const suggested = discoverable.slice(0, 4);
+  const searchCard = discoverable.length ? `
+    <div class="network-item">
+      <div class="network-copy">
+        <h4>Find friends</h4>
+        <p>Search and add people in the community.</p>
+      </div>
+      ${suggested.map(p => `
+        <div class="network-row" style="margin-top:10px;">
+          ${avatarMarkup({name:p.name||"Friend", initials:getInitials(p.name||"FR"), photo:p.photo_url})}
+          <div class="network-copy">
+            <h4>${escapeHtml(p.name || "Community member")}</h4>
+            <p>${escapeHtml(p.neighborhood || "Los Angeles")}</p>
+          </div>
+          ${friendActionButtonMarkup(p.id)}
+        </div>
+      `).join("")}
+    </div>` : "";
   const summary = getFriendBackendSummary();
   const acceptedFriendIds = summary.friendIds || [];
   const acceptedProfiles = acceptedFriendIds.map(id => profilesById[String(id)]).filter(Boolean);
@@ -6086,7 +6240,7 @@ function renderNetworkTab(){
         </div>`;
     });
 
-    listEl.innerHTML = [...incomingCards, ...outgoingCards, ...acceptedCards].join("") || `<div class="network-item"><div class="network-copy"><h4>Your network is empty</h4><p>Create a few friend connections and this section will come alive.</p></div></div>`;
+    listEl.innerHTML = [searchCard, ...incomingCards, ...outgoingCards, ...acceptedCards].join("") || `<div class="network-item"><div class="network-copy"><h4>Your network is empty</h4><p>Create a few friend connections and this section will come alive.</p></div></div>`;
     commentsEl.innerHTML = acceptedProfiles.length
       ? acceptedProfiles.slice(0, 3).map(p => `
         <div class="network-item">
@@ -6120,7 +6274,7 @@ function renderNetworkTab(){
       </div>`;
   }
 
-  listEl.innerHTML = friends.map(friend => {
+  listEl.innerHTML = [searchCard, ...friends.map(friend => {
     const e = friend.event;
     const link = e?.rsvp_link || "#";
     return `
@@ -6139,7 +6293,7 @@ function renderNetworkTab(){
           </div>
         </div>
       </div>`;
-  }).join("");
+  })].join("");
 
   commentsEl.innerHTML = friends.slice(1).map(friend => {
     const e = friend.event;
@@ -6513,6 +6667,44 @@ ${inviteUrl}`;
   return false;
 }
 
+async function inviteViaWhatsAppFromFindFriends(ev){
+  if (ev?.preventDefault) ev.preventDefault();
+  if (!requireProfileOrGate()) return false;
+  const inviteCode = await createPersonalInviteCode();
+  const fallbackBase = "https://lajewishtonight.github.io/LiveFeed/";
+  const baseUrl = (window.location?.origin && window.location?.pathname)
+    ? `${window.location.origin}${window.location.pathname}`
+    : fallbackBase;
+  const inviteUrl = inviteCode
+    ? `${baseUrl}?add_friend=1&invite=${encodeURIComponent(inviteCode)}`
+    : `${fallbackBase}?add_friend=1&ref=${encodeURIComponent(currentProfile.id)}`;
+  const firstName = (currentProfile?.name || "I").split(" ")[0];
+  const message = `${firstName} invited you to connect on LA Jewish Tonight.\n\nJoin and add as friends here:\n${inviteUrl}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener");
+  return false;
+}
+
+async function addFriendViaWhatsapp(ev){
+  if (ev?.preventDefault) ev.preventDefault();
+  if (!requireProfileOrGate()) return false;
+  const inviteeName = (window.prompt("Who are you inviting?", "") || "").trim();
+  const inviteCode = await createPersonalInviteCode();
+  if (!inviteCode){
+    showToast("Could not create invite link right now");
+    return false;
+  }
+  const inviteUrl = `https://laj-tonight.vercel.app/?add_friend=1&invite=${encodeURIComponent(inviteCode)}`;
+  const senderName = String(currentProfile?.name || "").trim();
+  const message = senderName
+    ? `${senderName} would like to add you as a friend on LA Jewish Tonight. Join here: ${inviteUrl}`
+    : `Someone from LA Jewish Tonight would like to add you as a friend. Join here: ${inviteUrl}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener");
+  upsertPendingWhatsappInvite({ invite_code: inviteCode, invitee_name: inviteeName });
+  if (currentProfile) renderProfileDashboard();
+  showToast("WhatsApp invite opened");
+  return false;
+}
+
 function buildCalendarLink(event){
   const start = event.start_time ? new Date(event.start_time).toISOString().replace(/[-:]/g,'').replace('.000','') : '';
   const end = event.end_time ? new Date(event.end_time).toISOString().replace(/[-:]/g,'').replace('.000','') : '';
@@ -6564,6 +6756,7 @@ function openEventModal(eventId){
         <div class="facepile">${info.faces}</div>
         <div class="attend-text">${escapeHtml(info.text)}</div>
       </div>
+      ${attendeePeopleRows(event.id)}
       <div class="socialbar${currentProfile ? "" : " gated"}" ${currentProfile ? "" : 'onclick="showGatePop()"'} style="padding-bottom:10px;">
         <div class="stat">❤️ ${info.likes}</div>
         <div class="stat">✅ ${info.rsvps}</div>
@@ -8762,7 +8955,8 @@ window.addEventListener("DOMContentLoaded", () => {
   const urlInvite = new URL(window.location.href);
   if (urlInvite.searchParams.get("add_friend")){
     persistPendingInviteData({
-      target_profile_id: urlInvite.searchParams.get("ref") || null
+      target_profile_id: urlInvite.searchParams.get("ref") || null,
+      invite_code: urlInvite.searchParams.get("invite") || null
     });
   }
   if (currentProfile?.id) {
