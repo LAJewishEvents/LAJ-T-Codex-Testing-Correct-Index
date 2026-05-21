@@ -3613,7 +3613,9 @@ async function processPendingInviteFlow(){
   const ref = url.searchParams.get("ref");
   const stored = readPendingInviteData();
   const targetFromStored = stored?.target_profile_id || null;
-  const targetProfileId = targetFromStored || (invite ? await resolveInviteToProfileId(invite) : null) || ref || null;
+  const inviteFromStored = stored?.invite_code || null;
+  const inviteCode = invite || inviteFromStored || null;
+  const targetProfileId = targetFromStored || (inviteCode ? await resolveInviteToProfileId(inviteCode) : null) || ref || null;
 
   if (!addFriend && !stored) return;
   if (!targetProfileId || String(targetProfileId) === String(currentProfile.id)){
@@ -3622,7 +3624,7 @@ async function processPendingInviteFlow(){
   }
 
   inviteProcessing = true;
-  persistPendingInviteData({ target_profile_id: targetProfileId });
+  persistPendingInviteData({ target_profile_id: targetProfileId, invite_code: inviteCode });
   try{
     const ok = await sendFriendRequestToProfile(targetProfileId);
     if (ok){
@@ -4252,6 +4254,10 @@ function renderProfileFriendDiscovery(){
     return;
   }
   mount.innerHTML = `
+    <div class="pending-request-head" style="margin:0 0 8px;">
+      <h3 class="pending-request-title" style="font-size:16px;">Find friends</h3>
+      <a href="#" class="dashboard-link" onclick="return inviteViaWhatsAppFromFindFriends(event)">Invite via WhatsApp</a>
+    </div>
     <div class="pending-request-head" style="margin:0 0 8px;"><h3 class="pending-request-title" style="font-size:16px;">Find friends</h3></div>
     ${candidates.map(p => `
       <div class="pending-request-row" style="padding:8px 0;border-top:1px solid #eee4d6;">
@@ -6619,6 +6625,23 @@ ${inviteUrl}`;
   return false;
 }
 
+async function inviteViaWhatsAppFromFindFriends(ev){
+  if (ev?.preventDefault) ev.preventDefault();
+  if (!requireProfileOrGate()) return false;
+  const inviteCode = await createPersonalInviteCode();
+  const fallbackBase = "https://lajewishtonight.github.io/LiveFeed/";
+  const baseUrl = (window.location?.origin && window.location?.pathname)
+    ? `${window.location.origin}${window.location.pathname}`
+    : fallbackBase;
+  const inviteUrl = inviteCode
+    ? `${baseUrl}?add_friend=1&invite=${encodeURIComponent(inviteCode)}`
+    : `${fallbackBase}?add_friend=1&ref=${encodeURIComponent(currentProfile.id)}`;
+  const firstName = (currentProfile?.name || "I").split(" ")[0];
+  const message = `${firstName} invited you to connect on LA Jewish Tonight.\n\nJoin and add as friends here:\n${inviteUrl}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener");
+  return false;
+}
+
 function buildCalendarLink(event){
   const start = event.start_time ? new Date(event.start_time).toISOString().replace(/[-:]/g,'').replace('.000','') : '';
   const end = event.end_time ? new Date(event.end_time).toISOString().replace(/[-:]/g,'').replace('.000','') : '';
@@ -8869,7 +8892,8 @@ window.addEventListener("DOMContentLoaded", () => {
   const urlInvite = new URL(window.location.href);
   if (urlInvite.searchParams.get("add_friend")){
     persistPendingInviteData({
-      target_profile_id: urlInvite.searchParams.get("ref") || null
+      target_profile_id: urlInvite.searchParams.get("ref") || null,
+      invite_code: urlInvite.searchParams.get("invite") || null
     });
   }
   if (currentProfile?.id) {
