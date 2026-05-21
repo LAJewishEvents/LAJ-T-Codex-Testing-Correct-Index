@@ -4258,6 +4258,7 @@ function renderProfileFriendDiscovery(){
       <h3 class="pending-request-title" style="font-size:16px;">Find friends</h3>
       <a href="#" class="dashboard-link" onclick="return inviteViaWhatsAppFromFindFriends(event)">Invite via WhatsApp</a>
     </div>
+    <div class="pending-request-head" style="margin:0 0 8px;"><h3 class="pending-request-title" style="font-size:16px;">Find friends</h3></div>
     ${candidates.map(p => `
       <div class="pending-request-row" style="padding:8px 0;border-top:1px solid #eee4d6;">
         ${p.photo_url ? `<div class="network-avatar"><img src="${escapeHtml(p.photo_url)}" alt=""></div>` : `<div class="network-avatar">${escapeHtml(getInitials(p.name || "FR"))}</div>`}
