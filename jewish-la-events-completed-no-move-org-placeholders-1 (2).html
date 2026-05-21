@@ -611,6 +611,9 @@ h1{margin:0;font-size:52px !important;line-height:.92 !important;font-weight:900
 .profile-friends-btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:14px;font-weight:900;text-decoration:none;border:1px solid var(--line);cursor:pointer}
 .profile-friends-btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
 .profile-friends-btn.secondary{background:var(--green);color:#fff;border-color:var(--green)}
+.profile-friend-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.profile-friend-state{display:inline-flex;align-items:center;justify-content:center;padding:7px 11px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid #d9e5ff;background:#eef4ff;color:#234f88}
+.profile-friend-state.accepted{background:#eaf8ee;color:#246739;border-color:rgba(47,123,66,.22)}
 
 
 .feed-refreshing{opacity:.18;transform:translateY(14px) scale(.985);filter:blur(2px);transition:opacity .22s ease, transform .22s ease, filter .22s ease}
@@ -4150,85 +4153,87 @@ function profileFriendAvatarMarkup(profile){
 function renderProfileFriendsCircleCard(){
   const mount = document.getElementById("profileFriendsCircleCard");
   if (!mount || !currentProfile) return;
-  const friends = getAcceptedFriendProfilesForCurrentProfile();
+  const incoming = getPendingIncomingFriendRequests();
+  const outgoing = getPendingOutgoingFriendRequests();
+  const friendIds = getAcceptedFriendIdsForCurrentProfile();
+  const friends = friendIds.map(id => profilesById[String(id)] || { id, name:"Friend" });
   const friendCount = Number(friendCountsByProfile[String(currentProfile.id || "")] || friends.length || 0);
-  if (!friendCount){
-    mount.innerHTML = "";
+  const incomingRows = incoming.map(req => {
+    const sender = profilesById[String(req.from_profile_id)] || {};
+    const name = sender.name || "Someone";
+    const hood = sender.neighborhood || sender.region || "";
+    const avatar = sender.photo_url
+      ? `<div class="network-avatar"><img src="${escapeHtml(sender.photo_url)}" alt=""></div>`
+      : `<div class="network-avatar">${escapeHtml(getInitials(name))}</div>`;
+    return `
+      <div class="pending-request-row" style="padding:10px 0;border-top:1px solid #eee4d6;">
+        ${avatar}
+        <div class="pending-request-copy">
+          <div class="pending-request-name">${escapeHtml(name)}</div>
+          <div class="profile-friend-meta">${escapeHtml(hood || "Los Angeles")}</div>
+        </div>
+        <button class="pending-request-btn accept" onclick="return acceptFriendRequestFromProfile('${escapeHtml(String(req.id || ""))}')">Accept</button>
+      </div>`;
+  }).join("");
+  const outgoingRows = outgoing.map(req => {
+    const to = profilesById[String(req.to_profile_id)] || {};
+    const name = to.name || "Pending friend";
+    const hood = to.neighborhood || to.region || "";
+    const avatar = to.photo_url
+      ? `<div class="network-avatar"><img src="${escapeHtml(to.photo_url)}" alt=""></div>`
+      : `<div class="network-avatar">${escapeHtml(getInitials(name))}</div>`;
+    return `
+      <div class="pending-request-row" style="padding:10px 0;border-top:1px solid #eee4d6;">
+        ${avatar}
+        <div class="pending-request-copy">
+          <div class="pending-request-name">${escapeHtml(name)}</div>
+          <div class="profile-friend-meta">${escapeHtml(hood || "Los Angeles")}</div>
+        </div>
+        <div class="profile-friend-state">Requested</div>
+      </div>`;
+  }).join("");
+  const acceptedRows = friends.map(friend => {
+    const name = friend?.name || "Friend";
+    const hood = friend?.neighborhood || friend?.region || "";
+    return `
+      <div class="pending-request-row" style="padding:10px 0;border-top:1px solid #eee4d6;">
+        ${profileFriendAvatarMarkup(friend)}
+        <div class="pending-request-copy">
+          <div class="pending-request-name">${escapeHtml(name)}</div>
+          <div class="profile-friend-meta">${escapeHtml(hood || "Los Angeles")}</div>
+        </div>
+        <div class="profile-friend-state accepted">Friends</div>
+      </div>`;
+  }).join("");
+  const hasAny = incoming.length || outgoing.length || friendCount;
+  if (!hasAny){
+    mount.innerHTML = `
+      <div class="profile-friends-section">
+        <div class="profile-friends-card">
+          <div style="font-size:18px;font-weight:900;color:var(--navy);margin-bottom:6px;">Friends</div>
+          <div class="profile-sub" style="margin-bottom:0;">No incoming requests, outgoing requests, or accepted friends yet.</div>
+        </div>
+      </div>`;
     return;
   }
-  const visible = friends.slice(0, 6);
-  const mutuals = Math.max(0, Math.min(friendCount - 1, 2));
   mount.innerHTML = `
     <div class="profile-friends-section">
       <div class="dashboard-header" style="margin-bottom:10px;">
         <h3>Friends</h3>
-        
       </div>
       <div class="profile-friends-card">
         <div style="font-size:18px;font-weight:900;color:var(--navy);margin-bottom:6px;">Friends (${friendCount})</div>
-        <div class="profile-sub" style="margin-bottom:0;">Each profile gets a dedicated Friends section with profile circles, mutual friend count, and a View all friends path.</div>
-        <div class="profile-friends-grid">
-          ${visible.map(friend => `
-            <div class="profile-friend-pill">
-              ${profileFriendAvatarMarkup(friend)}
-              <div class="profile-friend-pill-name">${escapeHtml(friend.name || "Friend")}</div>
-            </div>
-          `).join("")}
-        </div>
-        <div class="profile-friends-stats">
-          <div class="profile-friends-stat">
-            <div class="profile-friends-stat-num">${friendCount}</div>
-            <div class="profile-friends-stat-label">Friends</div>
-          </div>
-          <div class="profile-friends-stat">
-            <div class="profile-friends-stat-num">${mutuals}</div>
-            <div class="profile-friends-stat-label">Mutuals</div>
-          </div>
-          <div class="profile-friends-stat">
-            <div class="profile-friends-stat-num">10</div>
-            <div class="profile-friends-stat-label">Unlock goal</div>
-          </div>
-        </div>
-        <div class="profile-friends-actions">
-          <a href="#" class="profile-friends-btn primary" onclick="return false;">See all friends</a>
-          <a href="#" class="profile-friends-btn secondary" onclick="showTonightView(); return false;">Invite Friends</a>
-        </div>
+        <div class="profile-sub" style="margin-bottom:0;">Incoming requests, sent requests, and accepted friends.</div>
+        ${incomingRows ? `<div class="pending-request-head" style="margin-top:8px;"><h3 class="pending-request-title" style="font-size:16px;">Incoming pending requests</h3><div class="pending-request-count">${incoming.length}</div></div>${incomingRows}` : ""}
+        ${outgoingRows ? `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Outgoing requested users</h3><div class="pending-request-count">${outgoing.length}</div></div>${outgoingRows}` : ""}
+        ${acceptedRows ? `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Accepted friends</h3><div class="pending-request-count">${friendCount}</div></div>${acceptedRows}` : ""}
       </div>
     </div>`;
 }
 
 function renderProfilePendingRequestsCard(){
   const mount = document.getElementById("profilePendingRequestsCard");
-  if (!mount || !currentProfile) return;
-  const incoming = getPendingIncomingFriendRequests();
-  if (!incoming.length){
-    mount.innerHTML = "";
-    return;
-  }
-  const req = incoming[0];
-  const sender = profilesById[String(req.from_profile_id)] || {};
-  const senderName = sender.name || "Someone";
-  const senderPhoto = sender.photo_url || "";
-  const senderAvatar = senderPhoto
-    ? `<div class="network-avatar"><img src="${escapeHtml(senderPhoto)}" alt="" loading="eager" decoding="async"></div>`
-    : `<div class="network-avatar">${escapeHtml(getInitials(senderName))}</div>`;
-  mount.innerHTML = `
-    <div class="pending-request-card">
-      <div class="pending-request-head">
-        <h3 class="pending-request-title">Pending friend requests</h3>
-        <div class="pending-request-count">${incoming.length}</div>
-      </div>
-      <div class="pending-request-row">
-        ${senderAvatar}
-        <div class="pending-request-copy">
-          <div class="pending-request-name">${escapeHtml(senderName)} wants to connect</div>
-          <p class="pending-request-sub">Accept to add them to your network.</p>
-          <div class="pending-request-actions">
-            <button class="pending-request-btn accept" onclick="return acceptFriendRequestFromProfile('${escapeHtml(String(req.id || ""))}')">Accept</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
+  if (mount) mount.innerHTML = "";
 }
 
 async function acceptFriendRequestFromProfile(requestId){
@@ -5882,6 +5887,17 @@ function getPendingOutgoingFriendRequests(){
 
 async function sendFriendRequestToProfile(targetProfileId){
   if (!currentProfile?.id || !targetProfileId) return null;
+  const targetId = String(targetProfileId || "");
+  const isPending = getPendingOutgoingFriendRequests().some(row => String(row.to_profile_id || "") === targetId);
+  const isAlreadyFriend = getAcceptedFriendIdsForCurrentProfile().includes(targetId);
+  if (isPending){
+    showToast("Request already sent");
+    return true;
+  }
+  if (isAlreadyFriend){
+    showToast("Already friends");
+    return true;
+  }
   try{
     const client = await ensureSupabaseClient();
     let ok = false;
