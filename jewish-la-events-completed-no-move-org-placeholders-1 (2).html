@@ -2898,7 +2898,6 @@ header h1{
     <div class="plan-view-toggle">
       <button type="button" class="plan-view-btn active" id="planBtnMonth" onclick="setPlanView('month')">Month</button>
       <button type="button" class="plan-view-btn" id="planBtnWeek" onclick="setPlanView('week')">Week</button>
-      <button type="button" class="plan-view-btn" id="planBtnAgenda" onclick="setPlanView('agenda')">Agenda</button>
     </div>
   </div>
   <!-- Plan body (rendered by JS) -->
@@ -4078,8 +4077,10 @@ function getSocialSnapshot(eventId){
   const state = eventActionState(key);
   const commentCount = localCommentList(key).length;
   const useMock = base.rsvps === 0 && base.likes === 0 && !currentProfile;
+  const me = String(currentProfile?.id || "");
+  const baseHasMyRsvp = !!(me && Array.isArray(base.profileIds) && base.profileIds.some(pid => String(pid || "") === me));
   const likes = (useMock ? seeded.likes : base.likes) + (state.liked ? 1 : 0);
-  const rsvps = (useMock ? seeded.rsvps : base.rsvps) + (state.going ? 1 : 0);
+  const rsvps = (useMock ? seeded.rsvps : base.rsvps) + (state.going && !baseHasMyRsvp ? 1 : 0);
   const comments = (useMock ? seeded.comments : 0) + commentCount;
   const viewer = getViewer();
   let faces = "";
@@ -8122,17 +8123,17 @@ function renderAgenda(){
 let _planView = 'month'; // 'month' | 'week' | 'agenda'
 
 function setPlanView(v) {
-  _planView = v;
+  _planView = (v === 'agenda') ? 'month' : v;
   // Update toggle buttons
-  ['month','week','agenda'].forEach(function(m){
+  ['month','week'].forEach(function(m){
     var btn = document.getElementById('planBtn'+m.charAt(0).toUpperCase()+m.slice(1));
-    if(btn) btn.classList.toggle('active', m===v);
+    if(btn) btn.classList.toggle('active', m===_planView);
   });
-  // Show/hide cal nav vs agenda filters
+  // Show calendar nav (agenda removed from calendar page)
   var calNav = document.getElementById('planCalNav');
   var agFilt  = document.getElementById('planAgendaFilters');
-  if(calNav) calNav.style.display = v==='agenda' ? 'none' : '';
-  if(agFilt) agFilt.classList.toggle('hidden', v!=='agenda');
+  if(calNav) calNav.style.display = '';
+  if(agFilt) agFilt.classList.add('hidden');
   renderPlan();
 }
 
@@ -8144,16 +8145,7 @@ function renderPlan() {
   } else if(_planView === 'week') {
     renderCalWeek();
   } else {
-    // Agenda inside planBody
-    body.innerHTML = '<div class="agenda-shell" style="padding-bottom:104px">'
-      +'<div class="agenda-today-strip" id="agendaTodayStrip"></div>'
-      +'<div class="agenda-sort-row">'
-        +'<div class="agenda-count" id="agendaCount">0 events</div>'
-        +'<button type="button" class="agenda-sort-btn" id="agendaSortBtn" onclick="cycleAgendaSort()">'+agendaSortLabel()+'</button>'
-      +'</div>'
-      +'<div id="agendaList"></div>'
-      +'</div>';
-    renderAgenda();
+    renderCalMonth();
   }
 }
 
@@ -8962,7 +8954,7 @@ function renderFeaturedTonight(){
   const eventId = featured.id;
   const actions = (typeof eventActionState === "function") ? eventActionState(eventId) : { going:false, liked:false, saved:false };
   const isGoing = actions.going;
-  const going_count = typeof featured.going_count === "number" ? featured.going_count : 0;
+  const going_count = attendeeInfo(featured.id).rsvps || 0;
   const countText = going_count > 0 ? `${going_count} going` : "";
 
   const featuredFallbackImage = "Placeholder_Social1.png";
