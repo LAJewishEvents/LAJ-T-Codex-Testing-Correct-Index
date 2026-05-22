@@ -6818,6 +6818,7 @@ function closeEventModal(ev){
 window.sendFriendRequestToProfile = sendFriendRequestToProfile;
 window.acceptFriendRequestById = acceptFriendRequestById;
 window.acceptFriendRequestFromProfile = acceptFriendRequestFromProfile;
+window.addFriendViaWhatsapp = addFriendViaWhatsapp;
 
 /* ═══════════════════════════════════════════════
    COUNTDOWN PILL
@@ -8934,7 +8935,8 @@ function renderFeaturedTonight(){
   const going_count = typeof featured.going_count === "number" ? featured.going_count : 0;
   const countText = going_count > 0 ? `${going_count} going` : "";
 
-  const imgSrc = featured.image_url ? escapeHtml(featured.image_url) : "";
+  const featuredFallbackImage = "Placeholder_Social1.png";
+  const imgSrc = escapeHtml(featured.image_url || featured.image || featuredFallbackImage);
   const cat = escapeHtml(featured.category || "Event");
   const org = escapeHtml(featured.organization || "");
   const kickerText = org ? `${cat.toUpperCase()} · ${org.toUpperCase()}` : cat.toUpperCase();
@@ -8955,7 +8957,7 @@ function renderFeaturedTonight(){
   wrap.innerHTML = `
     <div class="featured-tonight-label">Featured Tonight</div>
     <div class="featured-tonight-card" onclick="openEventModal('${escapeHtml(String(eventId))}')">
-      ${imgSrc ? `<img class="featured-tonight-img" src="${imgSrc}" alt="${titleText}" onerror="this.style.display='none'">` : `<div class="featured-tonight-img" style="background:linear-gradient(135deg,#14385a,#254f7d)"></div>`}
+      <img class="featured-tonight-img" src="${imgSrc}" alt="${titleText}" onerror="this.onerror=null;this.src='${featuredFallbackImage}'">
       <div class="featured-tonight-body">
         <div>
           <div class="featured-tonight-kicker">${kickerText}</div>
