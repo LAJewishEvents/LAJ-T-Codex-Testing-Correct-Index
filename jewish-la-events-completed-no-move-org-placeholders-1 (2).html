@@ -6691,7 +6691,6 @@ async function inviteViaWhatsAppFromFindFriends(ev){
 async function addFriendViaWhatsapp(ev){
   if (ev?.preventDefault) ev.preventDefault();
   if (!requireProfileOrGate()) return false;
-  const inviteeName = (window.prompt("Who are you inviting?", "") || "").trim();
   const inviteCode = await createPersonalInviteCode();
   if (!inviteCode){
     showToast("Could not create invite link right now");
@@ -6700,10 +6699,10 @@ async function addFriendViaWhatsapp(ev){
   const inviteUrl = `https://laj-tonight.vercel.app/?add_friend=1&invite=${encodeURIComponent(inviteCode)}`;
   const senderName = String(currentProfile?.name || "").trim();
   const message = senderName
-    ? `${senderName} would like to add you as a friend on LA Jewish Tonight. Join here: ${inviteUrl}`
-    : `Someone from LA Jewish Tonight would like to add you as a friend. Join here: ${inviteUrl}`;
+    ? `${senderName} would like to add you as a friend on LA Jewish Tonight.\n\nJoin here:\n${inviteUrl}`
+    : `Someone from LA Jewish Tonight would like to add you as a friend on LA Jewish Tonight.\n\nJoin here:\n${inviteUrl}`;
   window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener");
-  upsertPendingWhatsappInvite({ invite_code: inviteCode, invitee_name: inviteeName });
+  upsertPendingWhatsappInvite({ invite_code: inviteCode });
   if (currentProfile) renderProfileDashboard();
   showToast("WhatsApp invite opened");
   return false;
