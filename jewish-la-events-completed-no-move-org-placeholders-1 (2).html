@@ -3688,6 +3688,15 @@ function reconcileFriendNotifications(previousRequests, nextRequests){
         body: `${receiver.name || "Someone"} accepted your friend request.`
       });
     }
+    if (String(req.to_profile_id || "") === me && String(req.status || "") === "pending" && (!prev || String(prev?.status || "") !== "pending")){
+      const sender = profilesById[String(req.from_profile_id)] || {};
+      pushNotificationCard({
+        id: `incoming_${id}`,
+        type: "request_received",
+        title: "New friend request",
+        body: `${sender.name || "Someone"} wants to add you as a friend.`
+      });
+    }
   });
 }
 function renderProfileNotificationsCard(){
@@ -5952,6 +5961,7 @@ async function loadFriendBackendData(){
       const rows = await countsRes.value.json().catch(() => []);
       friendCountsByProfile = Object.fromEntries((Array.isArray(rows) ? rows : []).map(r => [String(r.profile_id), Number(r.friend_count || 0)]));
     }
+    refreshNotifDot();
   }catch(err){
     console.error("Friend backend load failed", err);
   }
@@ -5960,25 +5970,41 @@ async function loadFriendBackendData(){
 function getAcceptedFriendIdsForCurrentProfile(){
   if (!currentProfile?.id) return [];
   const me = String(currentProfile.id);
-  return (acceptedFriendshipsCache || []).map(row => {
+  return Array.from(new Set((acceptedFriendshipsCache || []).map(row => {
     const a = String(row.user_a || "");
     const b = String(row.user_b || "");
     if (a === me) return b;
     if (b === me) return a;
     return "";
-  }).filter(Boolean);
+  }).filter(Boolean)));
 }
 
 function getPendingIncomingFriendRequests(){
   if (!currentProfile?.id) return [];
   const me = String(currentProfile.id);
-  return (friendRequestsCache || []).filter(row => String(row.to_profile_id || "") === me && String(row.status || "") === "pending");
+  const seen = new Set();
+  return (friendRequestsCache || []).filter(row => {
+    const id = String(row?.id || "");
+    const ok = String(row.to_profile_id || "") === me && String(row.status || "") === "pending" && String(row.from_profile_id || "") !== me;
+    if (!ok) return false;
+    if (id && seen.has(id)) return false;
+    if (id) seen.add(id);
+    return true;
+  });
 }
 
 function getPendingOutgoingFriendRequests(){
   if (!currentProfile?.id) return [];
   const me = String(currentProfile.id);
-  return (friendRequestsCache || []).filter(row => String(row.from_profile_id || "") === me && String(row.status || "") === "pending");
+  const seen = new Set();
+  return (friendRequestsCache || []).filter(row => {
+    const id = String(row?.id || "");
+    const ok = String(row.from_profile_id || "") === me && String(row.status || "") === "pending" && String(row.to_profile_id || "") !== me;
+    if (!ok) return false;
+    if (id && seen.has(id)) return false;
+    if (id) seen.add(id);
+    return true;
+  });
 }
 
 function getFriendStateForProfile(profileId){
@@ -6008,6 +6034,10 @@ function friendActionButtonMarkup(profileId){
 async function sendFriendRequestToProfile(targetProfileId){
   if (!currentProfile?.id || !targetProfileId) return null;
   const targetId = String(targetProfileId || "");
+  if (targetId === String(currentProfile.id)){
+    showToast("You can’t add yourself");
+    return null;
+  }
   const isPending = getPendingOutgoingFriendRequests().some(row => String(row.to_profile_id || "") === targetId);
   const isAlreadyFriend = getAcceptedFriendIdsForCurrentProfile().includes(targetId);
   if (isPending){
