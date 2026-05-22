@@ -6718,23 +6718,53 @@ async function inviteViaWhatsAppFromFindFriends(ev){
   return false;
 }
 
-async function addFriendViaWhatsapp(ev){
+function createFastLocalInviteCode(){
+  const profileId = String(currentProfile?.id || "guest");
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `${profileId}-${ts}-${rand}`;
+}
+
+function openWhatsAppNative(message){
+  const encoded = encodeURIComponent(message || "");
+  const nativeUrl = `whatsapp://send?text=${encoded}`;
+  const webUrl = `https://wa.me/?text=${encoded}`;
+  let didLeavePage = false;
+  const markLeft = () => {
+    didLeavePage = true;
+    window.removeEventListener("pagehide", markLeft);
+    document.removeEventListener("visibilitychange", onVisibilityChange);
+    window.removeEventListener("blur", markLeft);
+  };
+  const onVisibilityChange = () => { if (document.hidden) markLeft(); };
+  window.addEventListener("pagehide", markLeft, { once: true });
+  document.addEventListener("visibilitychange", onVisibilityChange);
+  window.addEventListener("blur", markLeft, { once: true });
+  window.location.href = nativeUrl;
+  setTimeout(() => {
+    if (!didLeavePage && !document.hidden) window.location.href = webUrl;
+  }, 1500);
+}
+
+function savePendingWhatsappInviteInBackground(inviteCode){
+  setTimeout(() => {
+    upsertPendingWhatsappInvite({ invite_code: inviteCode });
+    if (currentProfile) renderProfileDashboard();
+    showToast("WhatsApp invite opened");
+  }, 0);
+}
+
+function addFriendViaWhatsapp(ev){
   if (ev?.preventDefault) ev.preventDefault();
   if (!requireProfileOrGate()) return false;
-  const inviteCode = await createPersonalInviteCode();
-  if (!inviteCode){
-    showToast("Could not create invite link right now");
-    return false;
-  }
+  const inviteCode = createFastLocalInviteCode();
   const inviteUrl = `https://laj-tonight.vercel.app/?add_friend=1&invite=${encodeURIComponent(inviteCode)}`;
   const senderName = String(currentProfile?.name || "").trim();
   const message = senderName
     ? `${senderName} would like to add you as a friend on LA Jewish Tonight.\n\nJoin here:\n${inviteUrl}`
     : `Someone from LA Jewish Tonight would like to add you as a friend on LA Jewish Tonight.\n\nJoin here:\n${inviteUrl}`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener");
-  upsertPendingWhatsappInvite({ invite_code: inviteCode });
-  if (currentProfile) renderProfileDashboard();
-  showToast("WhatsApp invite opened");
+  openWhatsAppNative(message);
+  savePendingWhatsappInviteInBackground(inviteCode);
   return false;
 }
 function buildCalendarLink(event){
