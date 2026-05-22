@@ -33,7 +33,7 @@ button:active{transform:scale(.98)}
 .app{width:100%;max-width:460px;min-height:100vh;padding-bottom:98px;margin:0 auto;overflow-x:hidden;overflow-y:visible}
 .top{position:sticky;top:0;z-index:40;padding:18px;background:rgba(248,242,232,.96);backdrop-filter:blur(8px);border-bottom:1px solid rgba(231,220,200,.8)}
 .eyebrow{color:var(--gold);font-weight:800;text-transform:uppercase;letter-spacing:.12em;font-size:11px;margin-bottom:8px}
-h1{margin:0;font-size:52px !important;line-height:.92 !important;font-weight:900;letter-spacing:-.05em;color:var(--navy)}
+h1{margin:0;font-size:46px !important;line-height:.92 !important;font-weight:900;letter-spacing:-.05em;color:var(--navy)}
 .sub{margin-top:8px;color:var(--muted);font-size:15px;line-height:1.45}
 .search{margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:16px;display:flex;align-items:center;gap:10px;padding:13px 14px;box-shadow:var(--shadow)}
 .search input{border:0;background:transparent;outline:none;width:100%;font-size:15px;color:var(--text)}
@@ -2155,6 +2155,29 @@ header h1{
   border:1px solid var(--line) !important;
   color:var(--navy) !important;
 }
+#organizationsView.orgs-coming-soon-locked{
+  position:relative;
+  height:calc(100dvh - 98px);
+  min-height:calc(100dvh - 98px);
+  overflow:hidden !important;
+}
+#organizationsView.orgs-coming-soon-locked .orgs-top,
+#organizationsView.orgs-coming-soon-locked .orgs-shell{
+  filter:blur(4px) brightness(.75);
+  pointer-events:none;
+  user-select:none;
+}
+.orgs-coming-soon-overlay{
+  position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+  padding:24px;pointer-events:auto;
+}
+.orgs-coming-soon-card{
+  width:min(100%,420px);background:linear-gradient(160deg,rgba(16,50,82,.95),rgba(20,56,90,.92));
+  color:#fffaf0;border:1px solid rgba(232,196,106,.5);border-radius:22px;padding:20px 18px;text-align:center;
+  box-shadow:0 20px 44px rgba(0,0,0,.35);
+}
+.orgs-coming-soon-card h3{margin:0 0 8px;font-size:28px;line-height:1;font-weight:900;letter-spacing:-.02em}
+.orgs-coming-soon-card p{margin:0;color:rgba(248,243,232,.82);font-size:14px;line-height:1.5}
 
 /* Feature section — remove the placeholder section header */
 #organizationsView .orgs-section:has(#featuredOrganizationCard) > .orgs-section-title{
@@ -2505,7 +2528,7 @@ header h1{
   </div>
 </div>
 
-<div class="app hidden orgs-view" id="organizationsView">
+<div class="app hidden orgs-view orgs-coming-soon-locked" id="organizationsView">
   <div class="orgs-top">
     <div class="orgs-head-row">
       <div>
@@ -2547,6 +2570,12 @@ header h1{
       <div class="orgs-section-title"><h2 id="upcomingFromOrgsTitle">Upcoming from your orgs</h2><button class="orgs-section-link" type="button" onclick="focusUpcomingOrganizations()">View all</button></div>
       <div class="orgs-card orgs-upcoming-list" id="orgUpcomingList" tabindex="0"></div>
     </section>
+  </div>
+  <div class="orgs-coming-soon-overlay" aria-live="polite">
+    <div class="orgs-coming-soon-card">
+      <h3>Coming Soon 😎</h3>
+      <p>Organization pages are almost ready. Follow, discover, and explore LA Jewish orgs soon.</p>
+    </div>
   </div>
 </div>
 
@@ -2898,7 +2927,6 @@ header h1{
     <div class="plan-view-toggle">
       <button type="button" class="plan-view-btn active" id="planBtnMonth" onclick="setPlanView('month')">Month</button>
       <button type="button" class="plan-view-btn" id="planBtnWeek" onclick="setPlanView('week')">Week</button>
-      <button type="button" class="plan-view-btn" id="planBtnAgenda" onclick="setPlanView('agenda')">Agenda</button>
     </div>
   </div>
   <!-- Plan body (rendered by JS) -->
@@ -3042,6 +3070,7 @@ const COMMENTS_STORAGE_KEY = "livefeed_comments_v1";
 const VIEWER_STORAGE_KEY = "livefeed_viewer_v1";
 const NOTIFICATIONS_STORAGE_KEY = "livefeed_notifications_v1";
 const PENDING_INVITE_STORAGE_KEY = "livefeed_pending_invite_v1";
+const FRIEND_ACTIVITY_STORAGE_KEY = "livefeed_friend_activity_v1";
 const ORG_FOLLOWS_STORAGE_KEY = "lajt_followed_org_ids";
 const ORG_SEEN_EVENTS_STORAGE_KEY = "lajt_seen_org_event_ids";
 const ORG_SYNC_HASH_STORAGE_KEY = "lajt_last_org_sync_hash";
@@ -3079,6 +3108,7 @@ let friendCountsByProfile = {};
 let localActions = {};
 let localComments = {};
 let localNotifications = [];
+let friendActivityLog = [];
 let orgEventNotifications = [];
 let orgEventNotificationsLoadedProfileId = '';
 let orgEventNotificationsLoadPromise = null;
@@ -3344,6 +3374,25 @@ function loadLocalNotifications(){
 }
 function saveLocalNotifications(){
   localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(localNotifications));
+}
+function loadFriendActivityLog(){
+  try{ friendActivityLog = JSON.parse(localStorage.getItem(FRIEND_ACTIVITY_STORAGE_KEY) || "[]") || []; }catch(e){ friendActivityLog = []; }
+}
+function saveFriendActivityLog(){
+  localStorage.setItem(FRIEND_ACTIVITY_STORAGE_KEY, JSON.stringify(friendActivityLog || []));
+}
+function pushFriendActivity(item){
+  if (!item || !item.body) return;
+  const row = {
+    id: item.id || `fa_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    type: item.type || "friend_update",
+    body: String(item.body),
+    event_id: item.event_id || null,
+    created_at: item.created_at || new Date().toISOString()
+  };
+  if ((friendActivityLog || []).some(existing => String(existing.id || "") === String(row.id || ""))) return;
+  friendActivityLog = [row].concat(friendActivityLog || []).slice(0, 40);
+  saveFriendActivityLog();
 }
 function pushNotificationCard(notification){
   if (!notification) return;
@@ -3681,11 +3730,26 @@ function reconcileFriendNotifications(previousRequests, nextRequests){
     if (!me) return;
     if (String(req.from_profile_id || "") === me && String(req.status || "") === "accepted" && String(prev?.status || "") !== "accepted"){
       const receiver = profilesById[String(req.to_profile_id)] || {};
+      pushFriendActivity({
+        id: `act_accept_${id}`,
+        type: "accepted",
+        body: `${receiver.name || "Someone"} accepted your friend request.`,
+        created_at: new Date().toISOString()
+      });
       pushNotificationCard({
         id: `accepted_${id}`,
         type: "request_accepted",
         title: "Friend request accepted",
         body: `${receiver.name || "Someone"} accepted your friend request.`
+      });
+    }
+    if (String(req.to_profile_id || "") === me && String(req.status || "") === "pending" && (!prev || String(prev?.status || "") !== "pending")){
+      const sender = profilesById[String(req.from_profile_id)] || {};
+      pushNotificationCard({
+        id: `incoming_${id}`,
+        type: "request_received",
+        title: "New friend request",
+        body: `${sender.name || "Someone"} wants to add you as a friend.`
       });
     }
   });
@@ -3987,6 +4051,12 @@ async function handleGoing(eventId, btn){
     var ev = getProfileEventSource().find(function(e){ return String(e.id) === String(eventId); }) ||
              allEvents.find(function(e){ return String(e.id) === String(eventId); }) ||
              tonightEventsCache.find(function(e){ return String(e.id) === String(eventId); });
+    pushFriendActivity({
+      type: "going",
+      event_id: String(eventId),
+      body: `You’re going to ${ev?.title || "an event"}.`,
+      created_at: new Date().toISOString()
+    });
     setTimeout(function(){ showInviteModal(ev); }, 600);
   }
 
@@ -4069,8 +4139,10 @@ function getSocialSnapshot(eventId){
   const state = eventActionState(key);
   const commentCount = localCommentList(key).length;
   const useMock = base.rsvps === 0 && base.likes === 0 && !currentProfile;
+  const me = String(currentProfile?.id || "");
+  const baseHasMyRsvp = !!(me && Array.isArray(base.profileIds) && base.profileIds.some(pid => String(pid || "") === me));
   const likes = (useMock ? seeded.likes : base.likes) + (state.liked ? 1 : 0);
-  const rsvps = (useMock ? seeded.rsvps : base.rsvps) + (state.going ? 1 : 0);
+  const rsvps = (useMock ? seeded.rsvps : base.rsvps) + (state.going && !baseHasMyRsvp ? 1 : 0);
   const comments = (useMock ? seeded.comments : 0) + commentCount;
   const viewer = getViewer();
   let faces = "";
@@ -4191,10 +4263,7 @@ function renderProfileFriendsCircleCard(){
   if (!mount || !currentProfile) return;
   const incoming = getPendingIncomingFriendRequests();
   const outgoing = getPendingOutgoingFriendRequests();
-<<<<<<< codex/integrate-friend-request-system-into-profile-page-bon0ts
   const pendingInvites = getPendingWhatsappInvitesForCurrentProfile();
-=======
->>>>>>> main
   const friendIds = getAcceptedFriendIdsForCurrentProfile();
   const friends = friendIds.map(id => profilesById[String(id)] || { id, name:"Friend" });
   const friendCount = Number(friendCountsByProfile[String(currentProfile.id || "")] || friends.length || 0);
@@ -4245,49 +4314,54 @@ function renderProfileFriendsCircleCard(){
         <div class="profile-friend-state accepted">Friends</div>
       </div>`;
   }).join("");
-<<<<<<< codex/integrate-friend-request-system-into-profile-page-bon0ts
   const pendingInviteRows = pendingInvites.map(item => `
     <div class="pending-request-row" style="padding:10px 0;border-top:1px solid #eee4d6;">
       <div class="network-avatar">WA</div>
       <div class="pending-request-copy">
-        <div class="pending-request-name">${escapeHtml(item.invitee_name ? `Pending request to ${item.invitee_name}` : "Pending WhatsApp friend invite")}</div>
+        <div class="pending-request-name">${escapeHtml(item.invitee_name || "Pending invite via WhatsApp")}</div>
         <div class="profile-friend-meta">Invite sent via WhatsApp</div>
       </div>
       <div class="profile-friend-state">Requested</div>
     </div>
   `).join("");
   const hasAny = incoming.length || outgoing.length || friendCount || pendingInvites.length;
-=======
-  const hasAny = incoming.length || outgoing.length || friendCount;
->>>>>>> main
+  const recentActivity = buildRecentFriendActivity(4);
+  const recentActivityHtml = recentActivity.length
+    ? `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Recent Friend Activity</h3></div>
+      ${recentActivity.map(item => `<div class="pending-request-row" style="padding:10px 0;border-top:1px solid #eee4d6;"><div class="network-avatar">•</div><div class="pending-request-copy"><div class="pending-request-name">${escapeHtml(item.body || "")}</div></div></div>`).join("")}`
+    : `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Recent Friend Activity</h3></div>
+      <div class="profile-sub" style="margin:8px 0 2px;">Add friends to see what your community is doing.</div>`;
   if (!hasAny){
     mount.innerHTML = `
       <div class="profile-friends-section">
         <div class="profile-friends-card">
-          <div style="font-size:18px;font-weight:900;color:var(--navy);margin-bottom:6px;">Friends</div>
-          <div class="profile-sub" style="margin-bottom:0;">No incoming requests, outgoing requests, or accepted friends yet.</div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:18px;font-weight:900;color:var(--navy);margin-bottom:6px;">Friends &amp; Community</div>
+              <div class="profile-sub" style="margin-bottom:0;">Add friends, manage requests, and see who’s in your LAJT circle.</div>
+            </div>
+            <a href="#" class="profile-friends-btn primary" onclick="return addFriendViaWhatsapp(event)">Add a Friend</a>
+          </div>
+          <div class="profile-sub" style="margin:12px 0 0;">You haven’t added friends yet.<br>Invite someone to connect on LA Jewish Tonight.</div>
+          ${recentActivityHtml}
         </div>
       </div>`;
     return;
   }
   mount.innerHTML = `
     <div class="profile-friends-section">
-      <div class="dashboard-header" style="margin-bottom:10px;">
-        <h3>Friends</h3>
-      </div>
       <div class="profile-friends-card">
-        <div style="font-size:18px;font-weight:900;color:var(--navy);margin-bottom:6px;">Friends (${friendCount})</div>
-        <div class="profile-sub" style="margin-bottom:0;">Incoming requests, sent requests, and accepted friends.</div>
-<<<<<<< codex/integrate-friend-request-system-into-profile-page-bon0ts
-        <div style="margin-top:10px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:18px;font-weight:900;color:var(--navy);margin-bottom:6px;">Friends &amp; Community</div>
+            <div class="profile-sub" style="margin-bottom:0;">Add friends, manage requests, and see who’s in your LAJT circle.</div>
+          </div>
           <a href="#" class="profile-friends-btn primary" onclick="return addFriendViaWhatsapp(event)">Add a Friend</a>
         </div>
-        ${pendingInviteRows ? `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Pending WhatsApp invites</h3><div class="pending-request-count">${pendingInvites.length}</div></div>${pendingInviteRows}` : ""}
-=======
->>>>>>> main
-        ${incomingRows ? `<div class="pending-request-head" style="margin-top:8px;"><h3 class="pending-request-title" style="font-size:16px;">Incoming pending requests</h3><div class="pending-request-count">${incoming.length}</div></div>${incomingRows}` : ""}
-        ${outgoingRows ? `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Outgoing requested users</h3><div class="pending-request-count">${outgoing.length}</div></div>${outgoingRows}` : ""}
-        ${acceptedRows ? `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Accepted friends</h3><div class="pending-request-count">${friendCount}</div></div>${acceptedRows}` : ""}
+        ${incomingRows ? `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Pending Requests</h3><div class="pending-request-count">${incoming.length}</div></div>${incomingRows}` : ""}
+        ${(outgoingRows || pendingInviteRows) ? `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Sent Requests</h3><div class="pending-request-count">${outgoing.length + pendingInvites.length}</div></div>${outgoingRows}${pendingInviteRows}` : ""}
+        ${acceptedRows ? `<div class="pending-request-head" style="margin-top:10px;"><h3 class="pending-request-title" style="font-size:16px;">Your Friends</h3><div class="pending-request-count">${friendCount}</div></div>${acceptedRows}` : ""}
+        ${recentActivityHtml}
       </div>
     </div>`;
 }
@@ -4308,13 +4382,9 @@ function renderProfileFriendDiscovery(){
   }
   mount.innerHTML = `
     <div class="pending-request-head" style="margin:0 0 8px;">
-      <h3 class="pending-request-title" style="font-size:16px;">Find friends</h3>
+      <h3 class="pending-request-title" style="font-size:16px;">Discover People</h3>
       <a href="#" class="dashboard-link" onclick="return inviteViaWhatsAppFromFindFriends(event)">Invite via WhatsApp</a>
     </div>
-<<<<<<< codex/integrate-friend-request-system-into-profile-page-bon0ts
-=======
-    <div class="pending-request-head" style="margin:0 0 8px;"><h3 class="pending-request-title" style="font-size:16px;">Find friends</h3></div>
->>>>>>> main
     ${candidates.map(p => `
       <div class="pending-request-row" style="padding:8px 0;border-top:1px solid #eee4d6;">
         ${p.photo_url ? `<div class="network-avatar"><img src="${escapeHtml(p.photo_url)}" alt=""></div>` : `<div class="network-avatar">${escapeHtml(getInitials(p.name || "FR"))}</div>`}
@@ -4699,6 +4769,50 @@ function commentAvatarHtml(profile){
 function attendeeInfo(eventId){
   return getSocialSnapshot(eventId);
 }
+function getFriendGoingProfilesForEvent(eventId){
+  const me = String(currentProfile?.id || "");
+  const friendIds = (typeof getAcceptedFriendIdsForCurrentProfile === "function" ? getAcceptedFriendIdsForCurrentProfile() : []).map(String);
+  if (!me || !friendIds.length) return [];
+  const ids = Array.from(new Set((((countsByEvent[String(eventId)] || {}).profileIds) || []).map(String)));
+  return ids.filter(id => id !== me && friendIds.includes(id)).map(id => profilesById[String(id)] || { id, name: "Friend" });
+}
+function friendGoingContextLine(event){
+  if (!currentProfile?.id || !event?.id) return "";
+  const info = attendeeInfo(event.id);
+  const friendsGoing = getFriendGoingProfilesForEvent(event.id);
+  if (!friendsGoing.length) return "";
+  const first = friendsGoing[0]?.name || "A friend";
+  const second = friendsGoing[1]?.name || "Friend";
+  let text = `${friendsGoing.length} friends going`;
+  if (friendsGoing.length === 1) text = `${first} is going`;
+  else if (friendsGoing.length === 2) text = `${first} + ${second} are going`;
+  if (info?.state?.going) text = `You and ${first} are both going`;
+  return `<div class="profile-friend-meta" style="margin:6px 0 2px;">${escapeHtml(text)}</div>`;
+}
+function buildRecentFriendActivity(limit){
+  const max = Number(limit || 4);
+  const rows = [];
+  const seen = new Set();
+  (friendActivityLog || []).forEach(item => {
+    const key = `${item.type}|${item.body}|${item.event_id || ""}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    rows.push(item);
+  });
+  const friendIds = (typeof getAcceptedFriendIdsForCurrentProfile === "function" ? getAcceptedFriendIdsForCurrentProfile() : []).map(String);
+  if (friendIds.length){
+    friendRequestsCache.filter(req => String(req.status || "") === "accepted").forEach(req => {
+      const fromId = String(req.from_profile_id || "");
+      const toId = String(req.to_profile_id || "");
+      const me = String(currentProfile?.id || "");
+      if (fromId !== me && toId !== me) return;
+      const otherId = fromId === me ? toId : fromId;
+      const friend = profilesById[otherId] || {};
+      rows.push({ id: `accepted_${req.id}`, type: "accepted", body: `${friend.name || "Someone"} accepted your friend request.`, created_at: req.updated_at || req.created_at || new Date().toISOString() });
+    });
+  }
+  return rows.sort((a,b) => safeTimeMs(b.created_at, 0) - safeTimeMs(a.created_at, 0)).slice(0, max);
+}
 function attendeePeopleRows(eventId){
   const ids = Array.from(new Set(((countsByEvent[String(eventId)]?.profileIds) || []).map(String)));
   const rows = ids.map(id => profilesById[String(id)]).filter(Boolean).slice(0, 5).map(p => `
@@ -4848,7 +4962,9 @@ function filterEventsByChip(list, chip){
   });
 }
 function getVisibleEvents(query){
-  let searched = filterEvents(query || "");
+  const q = String(query || "").trim();
+  if (q) return filterEvents(q);
+  let searched = filterEvents("");
   if (_shabbatActive){
     searched = searched.filter(function(e){
       return safeTimeMs(e.start_time, 0) >= Date.now() && isShabbatLikeEvent(e);
@@ -5660,6 +5776,7 @@ function eventCard(event){
     <div class="vibe-row">${vibeChips.map(chip => `<div class="vibe-chip">${escapeHtml(chip)}</div>`).join("")}</div>
     ${getSocialProofBanner(event, info)}
     ${(function(){var cd=getCountdownText(event);return cd?'<div class="countdown-wrap"><div class="countdown-pill"><span class="cd-dot"></span>'+cd+'</div></div>':''})()}
+    ${friendGoingContextLine(event)}
     <div class="socialbar${gatedClass}"${gatedClick}>
       <div class="stat">✅ ${info.rsvps}</div>
       <div class="stat">❤️ ${info.likes}</div>
@@ -5686,15 +5803,23 @@ function renderFeed(events){
   feed.innerHTML = cards || `<div class="empty">Events loaded, but no cards could be rendered yet.</div>`;
 }
 function filterEvents(query){
-  const q = query.trim().toLowerCase();
+  const q = String(query || "").trim().toLowerCase();
   if (!q) return allEvents;
-  return allEvents.filter(e =>
-    (e.title || "").toLowerCase().includes(q) ||
-    (e.organization || "").toLowerCase().includes(q) ||
-    (e.location || "").toLowerCase().includes(q) ||
-    (e.category || "").toLowerCase().includes(q) ||
-    (e.region || "").toLowerCase().includes(q)
-  ).sort((a,b) => safeTimeMs(a.start_time, Number.MAX_SAFE_INTEGER) - safeTimeMs(b.start_time, Number.MAX_SAFE_INTEGER));
+  const toPieces = value => {
+    if (value === null || value === undefined) return [];
+    if (Array.isArray(value)) return value.flatMap(toPieces);
+    if (typeof value === "object") return Object.values(value).flatMap(toPieces);
+    return [String(value)];
+  };
+  const eventSearchText = e => toPieces([
+    e?.title, e?.name, e?.organization, e?.org, e?.organizer, e?.source,
+    e?.description, e?.location, e?.region, e?.category, e?.subcategory, e?.tags,
+    e?.start_time, e?.end_time, formatDate(e?.start_time), e?.rsvp_link, e?.url,
+    e?.venue, e?.address, e?.full_address, e?.calendar_name, e?.calendarName,
+    e?.metadata, e?.meta
+  ]).join(" ").toLowerCase();
+  return allEvents.filter(e => eventSearchText(e).includes(q))
+    .sort((a,b) => safeTimeMs(a.start_time, Number.MAX_SAFE_INTEGER) - safeTimeMs(b.start_time, Number.MAX_SAFE_INTEGER));
 }
 async function fetchJson(path){
   const joiner = path.includes("?") ? "&" : "?";
@@ -5962,6 +6087,7 @@ async function loadFriendBackendData(){
       const rows = await countsRes.value.json().catch(() => []);
       friendCountsByProfile = Object.fromEntries((Array.isArray(rows) ? rows : []).map(r => [String(r.profile_id), Number(r.friend_count || 0)]));
     }
+    refreshNotifDot();
   }catch(err){
     console.error("Friend backend load failed", err);
   }
@@ -5970,25 +6096,41 @@ async function loadFriendBackendData(){
 function getAcceptedFriendIdsForCurrentProfile(){
   if (!currentProfile?.id) return [];
   const me = String(currentProfile.id);
-  return (acceptedFriendshipsCache || []).map(row => {
+  return Array.from(new Set((acceptedFriendshipsCache || []).map(row => {
     const a = String(row.user_a || "");
     const b = String(row.user_b || "");
     if (a === me) return b;
     if (b === me) return a;
     return "";
-  }).filter(Boolean);
+  }).filter(Boolean)));
 }
 
 function getPendingIncomingFriendRequests(){
   if (!currentProfile?.id) return [];
   const me = String(currentProfile.id);
-  return (friendRequestsCache || []).filter(row => String(row.to_profile_id || "") === me && String(row.status || "") === "pending");
+  const seen = new Set();
+  return (friendRequestsCache || []).filter(row => {
+    const id = String(row?.id || "");
+    const ok = String(row.to_profile_id || "") === me && String(row.status || "") === "pending" && String(row.from_profile_id || "") !== me;
+    if (!ok) return false;
+    if (id && seen.has(id)) return false;
+    if (id) seen.add(id);
+    return true;
+  });
 }
 
 function getPendingOutgoingFriendRequests(){
   if (!currentProfile?.id) return [];
   const me = String(currentProfile.id);
-  return (friendRequestsCache || []).filter(row => String(row.from_profile_id || "") === me && String(row.status || "") === "pending");
+  const seen = new Set();
+  return (friendRequestsCache || []).filter(row => {
+    const id = String(row?.id || "");
+    const ok = String(row.from_profile_id || "") === me && String(row.status || "") === "pending" && String(row.to_profile_id || "") !== me;
+    if (!ok) return false;
+    if (id && seen.has(id)) return false;
+    if (id) seen.add(id);
+    return true;
+  });
 }
 
 function getFriendStateForProfile(profileId){
@@ -6018,6 +6160,10 @@ function friendActionButtonMarkup(profileId){
 async function sendFriendRequestToProfile(targetProfileId){
   if (!currentProfile?.id || !targetProfileId) return null;
   const targetId = String(targetProfileId || "");
+  if (targetId === String(currentProfile.id)){
+    showToast("You can’t add yourself");
+    return null;
+  }
   const isPending = getPendingOutgoingFriendRequests().some(row => String(row.to_profile_id || "") === targetId);
   const isAlreadyFriend = getAcceptedFriendIdsForCurrentProfile().includes(targetId);
   if (isPending){
@@ -6062,6 +6208,12 @@ async function sendFriendRequestToProfile(targetProfileId){
         title: "Friend request sent",
         body: "They will appear once they accept."
       });
+      const targetProfile = profilesById[String(targetProfileId)] || {};
+      pushFriendActivity({
+        type: "request_sent",
+        body: `You sent a friend request to ${targetProfile.name || "someone"}.`,
+        created_at: new Date().toISOString()
+      });
       renderProfileNotificationsCard();
       showToast("Friend request sent");
       return true;
@@ -6104,6 +6256,14 @@ async function acceptFriendRequestById(requestId){
         type: "friend_connected",
         title: "Friend added",
         body: "You are now connected."
+      });
+      const acceptedReq = (friendRequestsCache || []).find(req => String(req.id || "") === String(requestId || ""));
+      const otherId = String(acceptedReq?.from_profile_id || "") === String(currentProfile?.id || "") ? String(acceptedReq?.to_profile_id || "") : String(acceptedReq?.from_profile_id || "");
+      const other = profilesById[otherId] || {};
+      pushFriendActivity({
+        type: "friend_added",
+        body: `${other.name || "Someone"} is now your friend.`,
+        created_at: new Date().toISOString()
       });
       renderProfileNotificationsCard();
       showToast("Friend request accepted");
@@ -6640,7 +6800,7 @@ async function shareTonightWithFriends(ev){
     : fallbackBase;
   const inviteUrl = inviteCode
     ? `${baseUrl}?invite=${encodeURIComponent(inviteCode)}&add_friend=1`
-    : `${fallbackBase}?ref=${encodeURIComponent(currentProfile.id)}&add_friend=1`;
+    : `https://laj-tonight.vercel.app/?add_friend=1&invite=${encodeURIComponent(`fallback-${Date.now()}`)}`;
 
   const firstName = (currentProfile?.name || "I").split(" ")[0];
   const message = `${firstName} invited you to join them on Jewish Tonight.
@@ -6691,37 +6851,62 @@ async function inviteViaWhatsAppFromFindFriends(ev){
     : fallbackBase;
   const inviteUrl = inviteCode
     ? `${baseUrl}?add_friend=1&invite=${encodeURIComponent(inviteCode)}`
-    : `${fallbackBase}?add_friend=1&ref=${encodeURIComponent(currentProfile.id)}`;
+    : `https://laj-tonight.vercel.app/?add_friend=1&invite=${encodeURIComponent(`fallback-${Date.now()}`)}`;
   const firstName = (currentProfile?.name || "I").split(" ")[0];
   const message = `${firstName} invited you to connect on LA Jewish Tonight.\n\nJoin and add as friends here:\n${inviteUrl}`;
   window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener");
   return false;
 }
 
-<<<<<<< codex/integrate-friend-request-system-into-profile-page-bon0ts
-async function addFriendViaWhatsapp(ev){
+function createFastLocalInviteCode(){
+  const profileId = String(currentProfile?.id || "guest");
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `${profileId}-${ts}-${rand}`;
+}
+
+function openWhatsAppNative(message){
+  const encoded = encodeURIComponent(message || "");
+  const nativeUrl = `whatsapp://send?text=${encoded}`;
+  const webUrl = `https://wa.me/?text=${encoded}`;
+  let didLeavePage = false;
+  const markLeft = () => {
+    didLeavePage = true;
+    window.removeEventListener("pagehide", markLeft);
+    document.removeEventListener("visibilitychange", onVisibilityChange);
+    window.removeEventListener("blur", markLeft);
+  };
+  const onVisibilityChange = () => { if (document.hidden) markLeft(); };
+  window.addEventListener("pagehide", markLeft, { once: true });
+  document.addEventListener("visibilitychange", onVisibilityChange);
+  window.addEventListener("blur", markLeft, { once: true });
+  window.location.href = nativeUrl;
+  setTimeout(() => {
+    if (!didLeavePage && !document.hidden) window.location.href = webUrl;
+  }, 1500);
+}
+
+function savePendingWhatsappInviteInBackground(inviteCode){
+  setTimeout(() => {
+    upsertPendingWhatsappInvite({ invite_code: inviteCode });
+    if (currentProfile) renderProfileDashboard();
+    showToast("WhatsApp invite opened");
+  }, 0);
+}
+
+function addFriendViaWhatsapp(ev){
   if (ev?.preventDefault) ev.preventDefault();
   if (!requireProfileOrGate()) return false;
-  const inviteeName = (window.prompt("Who are you inviting?", "") || "").trim();
-  const inviteCode = await createPersonalInviteCode();
-  if (!inviteCode){
-    showToast("Could not create invite link right now");
-    return false;
-  }
+  const inviteCode = createFastLocalInviteCode();
   const inviteUrl = `https://laj-tonight.vercel.app/?add_friend=1&invite=${encodeURIComponent(inviteCode)}`;
   const senderName = String(currentProfile?.name || "").trim();
   const message = senderName
-    ? `${senderName} would like to add you as a friend on LA Jewish Tonight. Join here: ${inviteUrl}`
-    : `Someone from LA Jewish Tonight would like to add you as a friend. Join here: ${inviteUrl}`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener");
-  upsertPendingWhatsappInvite({ invite_code: inviteCode, invitee_name: inviteeName });
-  if (currentProfile) renderProfileDashboard();
-  showToast("WhatsApp invite opened");
+    ? `${senderName} would like to add you as a friend on LA Jewish Tonight.\n\nJoin here:\n${inviteUrl}`
+    : `Someone from LA Jewish Tonight would like to add you as a friend on LA Jewish Tonight.\n\nJoin here:\n${inviteUrl}`;
+  openWhatsAppNative(message);
+  savePendingWhatsappInviteInBackground(inviteCode);
   return false;
 }
-
-=======
->>>>>>> main
 function buildCalendarLink(event){
   const start = event.start_time ? new Date(event.start_time).toISOString().replace(/[-:]/g,'').replace('.000','') : '';
   const end = event.end_time ? new Date(event.end_time).toISOString().replace(/[-:]/g,'').replace('.000','') : '';
@@ -6803,6 +6988,7 @@ function closeEventModal(ev){
 window.sendFriendRequestToProfile = sendFriendRequestToProfile;
 window.acceptFriendRequestById = acceptFriendRequestById;
 window.acceptFriendRequestFromProfile = acceptFriendRequestFromProfile;
+window.addFriendViaWhatsapp = addFriendViaWhatsapp;
 
 /* ═══════════════════════════════════════════════
    COUNTDOWN PILL
@@ -8076,17 +8262,17 @@ function renderAgenda(){
 let _planView = 'month'; // 'month' | 'week' | 'agenda'
 
 function setPlanView(v) {
-  _planView = v;
+  _planView = (v === 'agenda') ? 'month' : v;
   // Update toggle buttons
-  ['month','week','agenda'].forEach(function(m){
+  ['month','week'].forEach(function(m){
     var btn = document.getElementById('planBtn'+m.charAt(0).toUpperCase()+m.slice(1));
-    if(btn) btn.classList.toggle('active', m===v);
+    if(btn) btn.classList.toggle('active', m===_planView);
   });
-  // Show/hide cal nav vs agenda filters
+  // Show calendar nav (agenda removed from calendar page)
   var calNav = document.getElementById('planCalNav');
   var agFilt  = document.getElementById('planAgendaFilters');
-  if(calNav) calNav.style.display = v==='agenda' ? 'none' : '';
-  if(agFilt) agFilt.classList.toggle('hidden', v!=='agenda');
+  if(calNav) calNav.style.display = '';
+  if(agFilt) agFilt.classList.add('hidden');
   renderPlan();
 }
 
@@ -8098,16 +8284,7 @@ function renderPlan() {
   } else if(_planView === 'week') {
     renderCalWeek();
   } else {
-    // Agenda inside planBody
-    body.innerHTML = '<div class="agenda-shell" style="padding-bottom:104px">'
-      +'<div class="agenda-today-strip" id="agendaTodayStrip"></div>'
-      +'<div class="agenda-sort-row">'
-        +'<div class="agenda-count" id="agendaCount">0 events</div>'
-        +'<button type="button" class="agenda-sort-btn" id="agendaSortBtn" onclick="cycleAgendaSort()">'+agendaSortLabel()+'</button>'
-      +'</div>'
-      +'<div id="agendaList"></div>'
-      +'</div>';
-    renderAgenda();
+    renderCalMonth();
   }
 }
 
@@ -8916,10 +9093,11 @@ function renderFeaturedTonight(){
   const eventId = featured.id;
   const actions = (typeof eventActionState === "function") ? eventActionState(eventId) : { going:false, liked:false, saved:false };
   const isGoing = actions.going;
-  const going_count = typeof featured.going_count === "number" ? featured.going_count : 0;
+  const going_count = attendeeInfo(featured.id).rsvps || 0;
   const countText = going_count > 0 ? `${going_count} going` : "";
 
-  const imgSrc = featured.image_url ? escapeHtml(featured.image_url) : "";
+  const featuredFallbackImage = "Placeholder_Social1.png";
+  const imgSrc = escapeHtml(featured.image_url || featured.image || featuredFallbackImage);
   const cat = escapeHtml(featured.category || "Event");
   const org = escapeHtml(featured.organization || "");
   const kickerText = org ? `${cat.toUpperCase()} · ${org.toUpperCase()}` : cat.toUpperCase();
@@ -8940,7 +9118,7 @@ function renderFeaturedTonight(){
   wrap.innerHTML = `
     <div class="featured-tonight-label">Featured Tonight</div>
     <div class="featured-tonight-card" onclick="openEventModal('${escapeHtml(String(eventId))}')">
-      ${imgSrc ? `<img class="featured-tonight-img" src="${imgSrc}" alt="${titleText}" onerror="this.style.display='none'">` : `<div class="featured-tonight-img" style="background:linear-gradient(135deg,#14385a,#254f7d)"></div>`}
+      <img class="featured-tonight-img" src="${imgSrc}" alt="${titleText}" onerror="this.onerror=null;this.src='${featuredFallbackImage}'">
       <div class="featured-tonight-body">
         <div>
           <div class="featured-tonight-kicker">${kickerText}</div>
@@ -8967,6 +9145,7 @@ window.addEventListener("DOMContentLoaded", () => {
   loadLocalProfile();
   loadLocalActions();
   loadLocalComments();
+  loadFriendActivityLog();
   loadLocalNotifications();
   setTimeout(refreshEventImagesFromLinks, 150); setTimeout(refreshEventImagesFromLinks, 1800);
   const urlInvite = new URL(window.location.href);
