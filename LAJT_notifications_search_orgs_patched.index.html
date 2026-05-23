@@ -1009,6 +1009,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 .hood-chip.hot .hood-chip-dot{background:#e63946}
 .hood-chip.warm .hood-chip-dot{background:var(--gold)}
 .hood-chip .hood-chip-dot{background:var(--muted)}
+.hood-chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.hood-chip.active .hood-chip-dot{background:#fff}
 
 /* ══ NOTIFICATION BELL ══ */
 .notif-bell{position:relative;width:36px;height:36px;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:18px;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.06)}
@@ -2163,13 +2165,14 @@ header h1{
 }
 #organizationsView.orgs-coming-soon-locked .orgs-top,
 #organizationsView.orgs-coming-soon-locked .orgs-shell{
-  filter:blur(4px) brightness(.75);
+  filter:blur(10px) brightness(.42);
   pointer-events:none;
   user-select:none;
 }
 .orgs-coming-soon-overlay{
   position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
   padding:24px;pointer-events:auto;
+  background:rgba(6,21,35,.45);
 }
 .orgs-coming-soon-card{
   width:min(100%,420px);background:linear-gradient(160deg,rgba(16,50,82,.95),rgba(20,56,90,.92));
@@ -2636,8 +2639,7 @@ header h1{
             <button type="button" class="profile-edit-btn" id="editProfileBtn">✏️ Edit Profile</button>
           </div>
           <div class="profile-sub" id="profileBioBlock" style="margin-bottom:8px;"></div>
-          <div id="profileNotificationsCard"></div>
-          <div id="profilePendingRequestsCard"></div>
+                    <div id="profilePendingRequestsCard"></div>
           <div id="profileFriendsCircleCard"></div>
 
           <div class="dashboard-section">
@@ -3067,6 +3069,7 @@ const ORG_SYNC_AT_STORAGE_KEY = "lajt_last_org_sync_at";
 let allEvents = [];
 let activeQuickFilter = 'all';
 let activeOrgFilter = 'all';
+let activeHoodFilter = '';
 let selectedOrganizationId = '';
 let expandedOrgId = '';
 let allOrganizationsCache = [];
@@ -3398,10 +3401,82 @@ function pushNotificationCard(notification){
     : [next, ...(localNotifications || [])].slice(0, 20);
   saveLocalNotifications();
 }
+function notificationDedupeExists(dedupeKey){
+  const key = String(dedupeKey || "");
+  if (!key) return false;
+  return (localNotifications || []).some(n => String(n?.dedupeKey || "") === key);
+}
+function automatedNotificationCountToday(userId){
+  const day = new Date().toISOString().slice(0,10);
+  return (localNotifications || []).filter(n => String(n?.userId || "") === String(userId || "") && !n?.manual && String(n?.createdAt || n?.created_at || "").slice(0,10) === day).length;
+}
+function maybeCreateNotification(payload){
+  try{
+    if (!payload?.message || !currentProfile?.id) return false;
+    const dedupeKey = String(payload.dedupeKey || "");
+    if (dedupeKey && notificationDedupeExists(dedupeKey)) return false;
+    const bypass = !!payload.bypassCap;
+    if (!bypass && automatedNotificationCountToday(currentProfile.id) >= 3) return false;
+    pushNotificationCard({
+      id: payload.id || `note_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+      userId: currentProfile.id,
+      type: payload.type || "nearby_event",
+      event_id: payload.eventId || null,
+      eventTitle: payload.eventTitle || "",
+      friendId: payload.friendId || null,
+      friendName: payload.friendName || "",
+      region: payload.region || "",
+      eventTime: payload.eventTime || null,
+      dedupeKey,
+      priority: payload.priority || 10,
+      message: payload.message,
+      title: payload.title || "Notification",
+      body: payload.message,
+      read: false,
+      manual: !!payload.manual,
+      createdAt: new Date().toISOString()
+    });
+    return true;
+  }catch(err){ console.warn("Notification creation skipped safely", err); return false; }
+}
+function generateSmartNotifications(){
+  if (!currentProfile?.id || !Array.isArray(allEvents) || !allEvents.length) return;
+  const now = new Date();
+  const today = now.toDateString();
+  const region = currentProfile?.neighborhood || inferNeighborhoodFromZip(getUserZip()) || "Los Angeles";
+  const myGoingIds = new Set(Object.entries(localActions || {}).filter(([_,v]) => v?.going).map(([k]) => String(k)));
+  const mySavedIds = new Set(Object.entries(localActions || {}).filter(([_,v]) => v?.saved && !v?.going).map(([k]) => String(k)));
+  const tonight = allEvents.filter(e => safeDateValue(e?.start_time)?.toDateString() === today).slice(0, 40);
+  if (tonight.length){
+    maybeCreateNotification({ type:"tonight_near_you", title:"Tonight near you", message:`Tonight near you: ${tonight[0]?.title || "Events"}${tonight.length > 1 ? ` and ${tonight.length-1} more events` : ""}.`, dedupeKey:`tonight_near_you:${currentProfile.id}:${now.toISOString().slice(0,10)}:${region}`, region, priority:3 });
+  }
+  const day = now.getDay();
+  if (day === 4 || day === 5){
+    const week = `${now.getUTCFullYear()}-${Math.ceil((((now - new Date(Date.UTC(now.getUTCFullYear(),0,1))) / 86400000) + new Date(Date.UTC(now.getUTCFullYear(),0,1)).getUTCDay()+1)/7)}`;
+    const weekend = allEvents.filter(e => { const d = safeDateValue(e?.start_time); if (!d) return false; const n = d.getDay(); return n >= 4 && n <= 0 ? false : n === 4 || n === 5 || n === 6 || n === 0; });
+    if (weekend.length) maybeCreateNotification({ type:"weekend_preview", title:"Weekend preview", message:`Your Jewish LA weekend is filling up: ${weekend.length} events, including ${weekend[0]?.title || "new picks"}.`, dedupeKey:`weekend_preview:${currentProfile.id}:${week}`, region, priority:4 });
+  }
+  for (const e of allEvents.slice(0, 120)){
+    const c = Number(countsByEvent?.[String(e.id)]?.rsvps || 0);
+    const threshold = [50,20,10,5].find(t => c >= t);
+    if (threshold) maybeCreateNotification({ type:"event_momentum", title:"Event momentum", message:`${e.title || "This event"} is getting popular: ${c} people are going.`, eventId:e.id, eventTitle:e.title, dedupeKey:`event_momentum:${e.id}:${threshold}`, priority:8 });
+  }
+  for (const eventId of mySavedIds){
+    const e = allEvents.find(x => String(x.id) === String(eventId)); if (!e) continue;
+    const ms = safeTimeMs(e.start_time, -1) - Date.now();
+    if (ms > 0 && ms <= 24*3600*1000) maybeCreateNotification({ type:"saved_event_reminder", title:"Saved event reminder", message:`Reminder: your saved event ${e.title || "event"} is tomorrow.`, eventId:e.id, dedupeKey:`saved_event_reminder:${currentProfile.id}:${e.id}:24h`, bypassCap:true, priority:6 });
+  }
+  if (myGoingIds.size){
+    for (const eventId of myGoingIds){
+      const e = allEvents.find(x => String(x.id) === String(eventId)); if (!e) continue;
+      const ms = safeTimeMs(e.start_time, -1) - Date.now();
+      if (ms > 0 && ms <= 12*3600*1000) maybeCreateNotification({ type:"upcoming_event", title:"Upcoming event", message:`There’s still time to join ${e.title || "your event"} tonight.`, eventId:e.id, dedupeKey:`upcoming_event:${currentProfile.id}:${e.id}:same_day`, bypassCap:true, priority:2 });
+    }
+  }
+}
 function dismissNotificationCard(id){
   localNotifications = (localNotifications || []).map(item => String(item.id) === String(id) ? { ...item, dismissed: true } : item);
   saveLocalNotifications();
-  renderProfileNotificationsCard();
   refreshNotifDot();
   return false;
 }
@@ -3455,7 +3530,6 @@ async function markNotificationRead(notificationId){
   if (!id) return false;
   const readAt = new Date().toISOString();
   orgEventNotifications = (orgEventNotifications || []).map(item => String(item.id) === id ? { ...item, read_at: item.read_at || readAt } : item);
-  renderProfileNotificationsCard();
   refreshNotifDot();
   try{
     const client = await ensureSupabaseClient();
@@ -3469,7 +3543,7 @@ async function markNotificationRead(notificationId){
 }
 function markAllOrgNotificationsRead(){
   const unread = (orgEventNotifications || []).filter(item => !item.read_at).map(item => String(item.id || "")).filter(Boolean);
-  Promise.all(unread.map(markNotificationRead)).then(() => { renderProfileNotificationsCard(); refreshNotifDot(); });
+  Promise.all(unread.map(markNotificationRead)).then(() => { refreshNotifDot(); });
   return false;
 }
 function handleOrgNotificationClick(notificationId){
@@ -3520,7 +3594,6 @@ function renderOrgNotificationHtml(item){
     </div>`;
 }
 function renderNotificationPanel(){
-  renderProfileNotificationsCard();
 }
 function readSeenOrgEventCache(){
   try{
@@ -3703,7 +3776,6 @@ async function processPendingInviteFlow(){
       url.searchParams.delete("invite");
       url.searchParams.delete("ref");
       window.history.replaceState({}, "", url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : ""));
-      renderProfileNotificationsCard();
     }
   }finally{
     inviteProcessing = false;
@@ -3726,7 +3798,8 @@ function reconcileFriendNotifications(previousRequests, nextRequests){
       });
       pushNotificationCard({
         id: `accepted_${id}`,
-        type: "request_accepted",
+        type: "friend_request",
+        dedupeKey: `friend_request:${me}:${id}:accepted`,
         title: "Friend request accepted",
         body: `${receiver.name || "Someone"} accepted your friend request.`
       });
@@ -3735,48 +3808,14 @@ function reconcileFriendNotifications(previousRequests, nextRequests){
       const sender = profilesById[String(req.from_profile_id)] || {};
       pushNotificationCard({
         id: `incoming_${id}`,
-        type: "request_received",
+        type: "friend_request",
+        dedupeKey: `friend_request:${me}:${id}`,
         title: "New friend request",
         body: `${sender.name || "Someone"} wants to add you as a friend.`
       });
     }
   });
 }
-function renderProfileNotificationsCard(){
-  const mount = document.getElementById("profileNotificationsCard");
-  if (!mount || !currentProfile) return;
-  const orgVisible = (orgEventNotifications || []).slice(0, 5);
-  const remoteOrgEventIds = new Set(orgVisible.map(item => String(item?.event_id || '')).filter(Boolean));
-  const visible = (localNotifications || [])
-    .filter(item => !item.dismissed && !(item?.type === 'org_new_event' && remoteOrgEventIds.has(String(item?.event_id || ''))))
-    .slice(0, 2);
-  if (!visible.length && !orgVisible.length){
-    mount.innerHTML = "";
-    return;
-  }
-  const orgUnread = orgVisible.some(item => !item.read_at);
-  const header = orgVisible.length ? `<div class="pending-request-head" style="margin-bottom:10px"><h3 class="pending-request-title" style="font-size:17px;">Notifications</h3>${orgUnread ? '<a href="#" class="dashboard-link" onclick="return markAllOrgNotificationsRead()">Mark all read</a>' : ''}</div>` : "";
-  const localHtml = visible.map(item => {
-    const isLocalOrg = item?.type === 'org_new_event';
-    return `
-    <div class="pending-request-card" style="background:#fffaf1;border-color:#edd9b1;">
-      <div class="pending-request-head">
-        <h3 class="pending-request-title" style="font-size:17px;">${escapeHtml(item.title || "Notification")}</h3>
-        <a href="#" class="dashboard-link" onclick="return dismissNotificationCard('${escapeHtml(String(item.id || ""))}')">Dismiss</a>
-      </div>
-      <div class="pending-request-row">
-        <div class="network-avatar" style="background:linear-gradient(135deg,#9a7a34,#d6b164);">${isLocalOrg ? '•' : '✓'}</div>
-        <div class="pending-request-copy">
-          <div class="pending-request-name">${escapeHtml(item.body || "")}</div>
-          ${isLocalOrg ? `<div class="pending-request-actions"><button class="pending-request-btn accept" onclick="return handleLocalOrgNotificationClick('${escapeHtml(String(item.id || ''))}')">Details</button></div>` : ''}
-        </div>
-      </div>
-    </div>
-  `;
-  }).join("");
-  mount.innerHTML = header + orgVisible.map(renderOrgNotificationHtml).join("") + localHtml;
-}
-
 function requireProfileOrGate(){
   if (!currentProfile){
     showGatePop();
@@ -4045,6 +4084,15 @@ async function handleGoing(eventId, btn){
       body: `You’re going to ${ev?.title || "an event"}.`,
       created_at: new Date().toISOString()
     });
+    maybeCreateNotification({
+      type: "friend_activity",
+      title: "Going update",
+      message: `You are going to ${ev?.title || "an event"}.`,
+      eventId: eventId,
+      eventTitle: ev?.title || "",
+      dedupeKey: `friend_activity:${currentProfile?.id}:${currentProfile?.id}:${eventId}:going`,
+      priority: 4
+    });
     setTimeout(function(){ showInviteModal(ev); }, 600);
   }
 
@@ -4062,6 +4110,10 @@ function handleSaveEvent(eventId, btn){
   bumpCardButton(btn);
   syncViews();
   if (currentProfile) renderProfileDashboard();
+  if (state.saved){
+    const ev = getProfileEventSource().find(e => String(e.id) === key) || allEvents.find(e => String(e.id) === key);
+    maybeCreateNotification({ type:"similar_event", title:"Saved", message:`Still thinking about ${ev?.title || "this event"}? It’s coming up soon.`, eventId:key, dedupeKey:`similar_event:${currentProfile?.id}:${key}:saved`, priority:9 });
+  }
   showToast(state.saved ? "Saved to profile ✨" : "Removed from saved");
   return false;
 }
@@ -4404,7 +4456,6 @@ function renderProfileDashboard(){
   if (!dashboard || !currentProfile) return;
 
   bioEl.textContent = currentProfile.bio || "Community builder, Shabbat dinners, beach hangs, and meeting new people.";
-  renderProfileNotificationsCard();
   renderProfilePendingRequestsCard();
   renderProfileFriendsCircleCard();
   renderProfileFriendDiscovery();
@@ -4431,8 +4482,8 @@ function handleNotificationBellClick(ev){
   if (ev && ev.stopPropagation) ev.stopPropagation();
   const pop = document.getElementById('notificationPopover');
   if (!pop) return false;
-  const visibleLocal = (localNotifications || []).filter(item => !item.dismissed).slice(0, 4);
-  const visibleOrg = (orgEventNotifications || []).filter(item => !item.read_at).slice(0, 4);
+  const visibleLocal = (localNotifications || []).filter(item => !item.dismissed).slice(0, 12);
+  const visibleOrg = (orgEventNotifications || []).filter(item => !item.read_at).slice(0, 12);
   const items = visibleOrg.map(item => `<div class="notification-popover-item"><strong>${escapeHtml(item.title || 'Notification')}</strong><br>${escapeHtml(item.body || '')}</div>`).join('')
     + visibleLocal.map(item => `<div class="notification-popover-item"><strong>${escapeHtml(item.title || 'Notification')}</strong><br>${escapeHtml(item.body || '')}</div>`).join('');
   pop.innerHTML = items ? `<h3>Notifications</h3>${items}` : `<h3>No current notifications</h3><p>You’re all caught up.</p>`;
@@ -4959,7 +5010,20 @@ function getVisibleEvents(query){
     });
   }
   const chipFiltered = filterEventsByChip(searched, activeQuickFilter);
-  return filterCommunityFeedEventsByDay(chipFiltered, selectedCommunityFeedDay);
+  const dayFiltered = filterCommunityFeedEventsByDay(chipFiltered, selectedCommunityFeedDay);
+  if (!activeHoodFilter) return dayFiltered;
+  const hood = String(activeHoodFilter).toLowerCase();
+  return dayFiltered.filter(e => {
+    const loc = String(e?.location || e?.region || "").toLowerCase();
+    if (hood === "westside") return /santa monica|westside|west side|venice|brentwood|west la|westwood|beverly hills|pico|fairfax/.test(loc);
+    if (hood === "mid-city") return /pico|fairfax|beverly/.test(loc);
+    if (hood === "weho") return /west hollywood|weho|melrose/.test(loc);
+    if (hood === "the valley") return /studio city|valley|sherman/.test(loc);
+    if (hood === "eastside") return /silver lake|los feliz|echo/.test(loc);
+    if (hood === "downtown") return /downtown|dtla/.test(loc);
+    if (hood === "la") return /los angeles|la/.test(loc) || !!loc;
+    return loc.includes(hood);
+  });
 }
 function applyCurrentFilters(){
   const q = document.getElementById("searchInput")?.value || "";
@@ -5917,6 +5981,7 @@ async function loadEvents(){
     renderNeighborhoodHeat();
     renderFomoStrip();
     renderFeaturedTonight();
+    try{ generateSmartNotifications(); }catch(err){ console.warn("Notification generation skipped safely", err); }
     if (currentProfile) renderProfileDashboard();
     if (_feedSubTab === 'agenda') renderAgenda();
     if (!document.getElementById('organizationsView')?.classList.contains('hidden')) renderOrganizationsView();
@@ -6202,7 +6267,6 @@ async function sendFriendRequestToProfile(targetProfileId){
         body: `You sent a friend request to ${targetProfile.name || "someone"}.`,
         created_at: new Date().toISOString()
       });
-      renderProfileNotificationsCard();
       showToast("Friend request sent");
       return true;
     }
@@ -6253,7 +6317,6 @@ async function acceptFriendRequestById(requestId){
         body: `${other.name || "Someone"} is now your friend.`,
         created_at: new Date().toISOString()
       });
-      renderProfileNotificationsCard();
       showToast("Friend request accepted");
       return true;
     }
@@ -8430,17 +8493,15 @@ function renderNeighborhoodHeat(){
     var n = counts[hood];
     var cls = i===0?'hot':(n/max>0.6?'warm':'');
     var icon = i===0?'🔥':' ';
-    return `<div class="hood-chip ${cls}" onclick="filterByHood('${escapeHtml(hood)}')"><span class="hood-chip-dot"></span>${icon}${escapeHtml(hood)} <strong>${n}</strong></div>`;
+    var active = String(activeHoodFilter||'').toLowerCase() === String(hood||'').toLowerCase() ? ' active' : '';
+    return `<div class="hood-chip ${cls}${active}" onclick="filterByHood('${escapeHtml(hood)}')"><span class="hood-chip-dot"></span>${icon}${escapeHtml(hood)} <strong>${n}</strong></div>`;
   }).join('');
 }
 
 function filterByHood(hood){
-  var q = document.getElementById('searchInput');
-  if(q){ q.value = hood; }
-  activeQuickFilter = 'all';
-  document.querySelectorAll('#quickFilters .filter-chip').forEach(function(c){ c.classList.remove('active'); });
-  var allChip = document.querySelector('#quickFilters .filter-chip[data-filter="all"]');
-  if(allChip) allChip.classList.add('active');
+  const clicked = String(hood || '').trim();
+  activeHoodFilter = String(activeHoodFilter || '').toLowerCase() === clicked.toLowerCase() ? '' : clicked;
+  renderNeighborhoodHeat();
   applyCurrentFilters();
   showFeedView();
 }
@@ -9137,6 +9198,8 @@ window.addEventListener("DOMContentLoaded", () => {
   loadLocalComments();
   loadFriendActivityLog();
   loadLocalNotifications();
+  activeHoodFilter = "";
+  document.querySelectorAll('[data-region], [data-region-filter], .region-chip, .neighborhood-chip').forEach(btn => btn.classList.remove("active"));
   setTimeout(refreshEventImagesFromLinks, 150); setTimeout(refreshEventImagesFromLinks, 1800);
   const urlInvite = new URL(window.location.href);
   if (urlInvite.searchParams.get("add_friend")){
