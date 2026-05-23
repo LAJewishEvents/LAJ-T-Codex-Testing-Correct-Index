@@ -1009,6 +1009,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offse
 .hood-chip.hot .hood-chip-dot{background:#e63946}
 .hood-chip.warm .hood-chip-dot{background:var(--gold)}
 .hood-chip .hood-chip-dot{background:var(--muted)}
+.hood-chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.hood-chip.active .hood-chip-dot{background:#fff}
 
 /* ══ NOTIFICATION BELL ══ */
 .notif-bell{position:relative;width:36px;height:36px;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:18px;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.06)}
@@ -2163,13 +2165,14 @@ header h1{
 }
 #organizationsView.orgs-coming-soon-locked .orgs-top,
 #organizationsView.orgs-coming-soon-locked .orgs-shell{
-  filter:blur(4px) brightness(.75);
+  filter:blur(10px) brightness(.42);
   pointer-events:none;
   user-select:none;
 }
 .orgs-coming-soon-overlay{
   position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
   padding:24px;pointer-events:auto;
+  background:rgba(6,21,35,.45);
 }
 .orgs-coming-soon-card{
   width:min(100%,420px);background:linear-gradient(160deg,rgba(16,50,82,.95),rgba(20,56,90,.92));
@@ -3067,6 +3070,7 @@ const ORG_SYNC_AT_STORAGE_KEY = "lajt_last_org_sync_at";
 let allEvents = [];
 let activeQuickFilter = 'all';
 let activeOrgFilter = 'all';
+let activeHoodFilter = '';
 let selectedOrganizationId = '';
 let expandedOrgId = '';
 let allOrganizationsCache = [];
@@ -5047,7 +5051,20 @@ function getVisibleEvents(query){
     });
   }
   const chipFiltered = filterEventsByChip(searched, activeQuickFilter);
-  return filterCommunityFeedEventsByDay(chipFiltered, selectedCommunityFeedDay);
+  const dayFiltered = filterCommunityFeedEventsByDay(chipFiltered, selectedCommunityFeedDay);
+  if (!activeHoodFilter) return dayFiltered;
+  const hood = String(activeHoodFilter).toLowerCase();
+  return dayFiltered.filter(e => {
+    const loc = String(e?.location || e?.region || "").toLowerCase();
+    if (hood === "westside") return /santa monica|westside|west side|venice|brentwood|west la|westwood|beverly hills|pico|fairfax/.test(loc);
+    if (hood === "mid-city") return /pico|fairfax|beverly/.test(loc);
+    if (hood === "weho") return /west hollywood|weho|melrose/.test(loc);
+    if (hood === "the valley") return /studio city|valley|sherman/.test(loc);
+    if (hood === "eastside") return /silver lake|los feliz|echo/.test(loc);
+    if (hood === "downtown") return /downtown|dtla/.test(loc);
+    if (hood === "la") return /los angeles|la/.test(loc) || !!loc;
+    return loc.includes(hood);
+  });
 }
 function applyCurrentFilters(){
   const q = document.getElementById("searchInput")?.value || "";
@@ -8519,17 +8536,15 @@ function renderNeighborhoodHeat(){
     var n = counts[hood];
     var cls = i===0?'hot':(n/max>0.6?'warm':'');
     var icon = i===0?'🔥':' ';
-    return `<div class="hood-chip ${cls}" onclick="filterByHood('${escapeHtml(hood)}')"><span class="hood-chip-dot"></span>${icon}${escapeHtml(hood)} <strong>${n}</strong></div>`;
+    var active = String(activeHoodFilter||'').toLowerCase() === String(hood||'').toLowerCase() ? ' active' : '';
+    return `<div class="hood-chip ${cls}${active}" onclick="filterByHood('${escapeHtml(hood)}')"><span class="hood-chip-dot"></span>${icon}${escapeHtml(hood)} <strong>${n}</strong></div>`;
   }).join('');
 }
 
 function filterByHood(hood){
-  var q = document.getElementById('searchInput');
-  if(q){ q.value = hood; }
-  activeQuickFilter = 'all';
-  document.querySelectorAll('#quickFilters .filter-chip').forEach(function(c){ c.classList.remove('active'); });
-  var allChip = document.querySelector('#quickFilters .filter-chip[data-filter="all"]');
-  if(allChip) allChip.classList.add('active');
+  const clicked = String(hood || '').trim();
+  activeHoodFilter = String(activeHoodFilter || '').toLowerCase() === clicked.toLowerCase() ? '' : clicked;
+  renderNeighborhoodHeat();
   applyCurrentFilters();
   showFeedView();
 }
