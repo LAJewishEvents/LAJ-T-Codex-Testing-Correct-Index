@@ -2639,8 +2639,7 @@ header h1{
             <button type="button" class="profile-edit-btn" id="editProfileBtn">✏️ Edit Profile</button>
           </div>
           <div class="profile-sub" id="profileBioBlock" style="margin-bottom:8px;"></div>
-          <div id="profileNotificationsCard"></div>
-          <div id="profilePendingRequestsCard"></div>
+                    <div id="profilePendingRequestsCard"></div>
           <div id="profileFriendsCircleCard"></div>
 
           <div class="dashboard-section">
@@ -3478,7 +3477,6 @@ function generateSmartNotifications(){
 function dismissNotificationCard(id){
   localNotifications = (localNotifications || []).map(item => String(item.id) === String(id) ? { ...item, dismissed: true } : item);
   saveLocalNotifications();
-  renderProfileNotificationsCard();
   refreshNotifDot();
   return false;
 }
@@ -3532,7 +3530,6 @@ async function markNotificationRead(notificationId){
   if (!id) return false;
   const readAt = new Date().toISOString();
   orgEventNotifications = (orgEventNotifications || []).map(item => String(item.id) === id ? { ...item, read_at: item.read_at || readAt } : item);
-  renderProfileNotificationsCard();
   refreshNotifDot();
   try{
     const client = await ensureSupabaseClient();
@@ -3546,7 +3543,7 @@ async function markNotificationRead(notificationId){
 }
 function markAllOrgNotificationsRead(){
   const unread = (orgEventNotifications || []).filter(item => !item.read_at).map(item => String(item.id || "")).filter(Boolean);
-  Promise.all(unread.map(markNotificationRead)).then(() => { renderProfileNotificationsCard(); refreshNotifDot(); });
+  Promise.all(unread.map(markNotificationRead)).then(() => { refreshNotifDot(); });
   return false;
 }
 function handleOrgNotificationClick(notificationId){
@@ -3597,7 +3594,6 @@ function renderOrgNotificationHtml(item){
     </div>`;
 }
 function renderNotificationPanel(){
-  renderProfileNotificationsCard();
 }
 function readSeenOrgEventCache(){
   try{
@@ -3780,7 +3776,6 @@ async function processPendingInviteFlow(){
       url.searchParams.delete("invite");
       url.searchParams.delete("ref");
       window.history.replaceState({}, "", url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : ""));
-      renderProfileNotificationsCard();
     }
   }finally{
     inviteProcessing = false;
@@ -3821,41 +3816,6 @@ function reconcileFriendNotifications(previousRequests, nextRequests){
     }
   });
 }
-function renderProfileNotificationsCard(){
-  const mount = document.getElementById("profileNotificationsCard");
-  if (!mount || !currentProfile) return;
-  const orgVisible = (orgEventNotifications || []).slice(0, 5);
-  const remoteOrgEventIds = new Set(orgVisible.map(item => String(item?.event_id || '')).filter(Boolean));
-  const visible = (localNotifications || [])
-    .filter(item => !item.dismissed && !(item?.type === 'org_new_event' && remoteOrgEventIds.has(String(item?.event_id || ''))))
-    .slice(0, 2);
-  if (!visible.length && !orgVisible.length){
-    mount.innerHTML = "";
-    return;
-  }
-  const orgUnread = orgVisible.some(item => !item.read_at);
-  const header = orgVisible.length ? `<div class="pending-request-head" style="margin-bottom:10px"><h3 class="pending-request-title" style="font-size:17px;">Notifications</h3>${orgUnread ? '<a href="#" class="dashboard-link" onclick="return markAllOrgNotificationsRead()">Mark all read</a>' : ''}</div>` : "";
-  const localHtml = visible.map(item => {
-    const isLocalOrg = item?.type === 'org_new_event';
-    return `
-    <div class="pending-request-card" style="background:#fffaf1;border-color:#edd9b1;">
-      <div class="pending-request-head">
-        <h3 class="pending-request-title" style="font-size:17px;">${escapeHtml(item.title || "Notification")}</h3>
-        <a href="#" class="dashboard-link" onclick="return dismissNotificationCard('${escapeHtml(String(item.id || ""))}')">Dismiss</a>
-      </div>
-      <div class="pending-request-row">
-        <div class="network-avatar" style="background:linear-gradient(135deg,#9a7a34,#d6b164);">${isLocalOrg ? '•' : '✓'}</div>
-        <div class="pending-request-copy">
-          <div class="pending-request-name">${escapeHtml(item.body || "")}</div>
-          ${isLocalOrg ? `<div class="pending-request-actions"><button class="pending-request-btn accept" onclick="return handleLocalOrgNotificationClick('${escapeHtml(String(item.id || ''))}')">Details</button></div>` : ''}
-        </div>
-      </div>
-    </div>
-  `;
-  }).join("");
-  mount.innerHTML = header + orgVisible.map(renderOrgNotificationHtml).join("") + localHtml;
-}
-
 function requireProfileOrGate(){
   if (!currentProfile){
     showGatePop();
@@ -4496,7 +4456,6 @@ function renderProfileDashboard(){
   if (!dashboard || !currentProfile) return;
 
   bioEl.textContent = currentProfile.bio || "Community builder, Shabbat dinners, beach hangs, and meeting new people.";
-  renderProfileNotificationsCard();
   renderProfilePendingRequestsCard();
   renderProfileFriendsCircleCard();
   renderProfileFriendDiscovery();
@@ -4523,8 +4482,8 @@ function handleNotificationBellClick(ev){
   if (ev && ev.stopPropagation) ev.stopPropagation();
   const pop = document.getElementById('notificationPopover');
   if (!pop) return false;
-  const visibleLocal = (localNotifications || []).filter(item => !item.dismissed).slice(0, 4);
-  const visibleOrg = (orgEventNotifications || []).filter(item => !item.read_at).slice(0, 4);
+  const visibleLocal = (localNotifications || []).filter(item => !item.dismissed).slice(0, 12);
+  const visibleOrg = (orgEventNotifications || []).filter(item => !item.read_at).slice(0, 12);
   const items = visibleOrg.map(item => `<div class="notification-popover-item"><strong>${escapeHtml(item.title || 'Notification')}</strong><br>${escapeHtml(item.body || '')}</div>`).join('')
     + visibleLocal.map(item => `<div class="notification-popover-item"><strong>${escapeHtml(item.title || 'Notification')}</strong><br>${escapeHtml(item.body || '')}</div>`).join('');
   pop.innerHTML = items ? `<h3>Notifications</h3>${items}` : `<h3>No current notifications</h3><p>You’re all caught up.</p>`;
@@ -6308,7 +6267,6 @@ async function sendFriendRequestToProfile(targetProfileId){
         body: `You sent a friend request to ${targetProfile.name || "someone"}.`,
         created_at: new Date().toISOString()
       });
-      renderProfileNotificationsCard();
       showToast("Friend request sent");
       return true;
     }
@@ -6359,7 +6317,6 @@ async function acceptFriendRequestById(requestId){
         body: `${other.name || "Someone"} is now your friend.`,
         created_at: new Date().toISOString()
       });
-      renderProfileNotificationsCard();
       showToast("Friend request accepted");
       return true;
     }
@@ -9241,6 +9198,8 @@ window.addEventListener("DOMContentLoaded", () => {
   loadLocalComments();
   loadFriendActivityLog();
   loadLocalNotifications();
+  activeHoodFilter = "";
+  document.querySelectorAll('[data-region], [data-region-filter], .region-chip, .neighborhood-chip').forEach(btn => btn.classList.remove("active"));
   setTimeout(refreshEventImagesFromLinks, 150); setTimeout(refreshEventImagesFromLinks, 1800);
   const urlInvite = new URL(window.location.href);
   if (urlInvite.searchParams.get("add_friend")){
