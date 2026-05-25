@@ -2171,30 +2171,6 @@ header h1{
   border:1px solid var(--line) !important;
   color:var(--navy) !important;
 }
-#organizationsView.orgs-coming-soon-locked{
-  position:relative;
-  height:calc(100dvh - 98px);
-  min-height:calc(100dvh - 98px);
-  overflow:hidden !important;
-}
-#organizationsView.orgs-coming-soon-locked .orgs-top,
-#organizationsView.orgs-coming-soon-locked .orgs-shell{
-  filter:blur(10px) brightness(.42);
-  pointer-events:none;
-  user-select:none;
-}
-.orgs-coming-soon-overlay{
-  position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
-  padding:24px;pointer-events:auto;
-  background:rgba(6,21,35,.45);
-}
-.orgs-coming-soon-card{
-  width:min(100%,420px);background:linear-gradient(160deg,rgba(16,50,82,.95),rgba(20,56,90,.92));
-  color:#fffaf0;border:1px solid rgba(232,196,106,.5);border-radius:22px;padding:20px 18px;text-align:center;
-  box-shadow:0 20px 44px rgba(0,0,0,.35);
-}
-.orgs-coming-soon-card h3{margin:0 0 8px;font-size:28px;line-height:1;font-weight:900;letter-spacing:-.02em}
-.orgs-coming-soon-card p{margin:0;color:rgba(248,243,232,.82);font-size:14px;line-height:1.5}
 
 /* Feature section — remove the placeholder section header */
 #organizationsView .orgs-section:has(#featuredOrganizationCard) > .orgs-section-title{
@@ -2508,9 +2484,6 @@ header h1{
     <div class="hood-heat-row" id="hoodHeatRow"></div>
     <!-- FOMO strip -->
     <div id="fomoStripWrap"></div>
-    <div class="section" style="padding-top:8px;padding-bottom:0;">
-      <div id="socialHomepageStack" class="social-stack"></div>
-    </div>
     <!-- Featured Tonight section -->
     <div id="featuredTonightWrap" class="featured-tonight-wrap"></div>
     <div class="section feed-below-featured" style="padding-top:4px">
@@ -2536,7 +2509,7 @@ header h1{
   </div>
 </div>
 
-<div class="app hidden orgs-view orgs-coming-soon-locked" id="organizationsView">
+<div class="app hidden orgs-view" id="organizationsView">
   <div class="orgs-top">
     <div class="orgs-head-row">
       <div>
@@ -2578,12 +2551,6 @@ header h1{
       <div class="orgs-section-title"><h2 id="upcomingFromOrgsTitle">Upcoming from your orgs</h2><button class="orgs-section-link" type="button" onclick="focusUpcomingOrganizations()">View all</button></div>
       <div class="orgs-card orgs-upcoming-list" id="orgUpcomingList" tabindex="0"></div>
     </section>
-  </div>
-  <div class="orgs-coming-soon-overlay" aria-live="polite">
-    <div class="orgs-coming-soon-card">
-      <h3>Coming Soon 😎</h3>
-      <p>Organization pages are almost ready. Follow, discover, and explore LA Jewish orgs soon.</p>
-    </div>
   </div>
 </div>
 
@@ -6027,7 +5994,6 @@ async function loadEvents(){
     renderTheMoveHero();
     renderNeighborhoodHeat();
     renderFomoStrip();
-    renderSocialHomepageStack();
     renderFeaturedTonight();
     try{ generateSmartNotifications(); }catch(err){ console.warn("Notification generation skipped safely", err); }
     if (currentProfile) renderProfileDashboard();
@@ -6710,7 +6676,6 @@ function showFeedView(){
   restorePageScroll();
   hideMainViews();
   document.getElementById("feedView").classList.remove("hidden");
-  renderSocialHomepageStack();
   setActiveTab("feed");
   updateTabAria("tabFeed");
   // Re-render agenda if that sub-tab is active
