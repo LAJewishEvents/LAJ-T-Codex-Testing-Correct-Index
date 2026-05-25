@@ -51,6 +51,19 @@ h1{margin:0;font-size:46px !important;line-height:.92 !important;font-weight:900
 .section-title{display:flex;justify-content:space-between;align-items:end;margin-bottom:14px;gap:12px}
 .section-title h2{margin:0;font-size:23px;letter-spacing:-.03em;color:var(--navy)}
 .section-title span{color:var(--blue);font-size:13px;font-weight:800;text-align:right}
+.social-stack{display:grid;gap:12px;margin:6px 0 14px}
+.social-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:var(--shadow)}
+.social-card h3{margin:0 0 8px;font-size:16px;color:var(--navy)}
+.social-pills{display:flex;gap:8px;overflow:auto;scrollbar-width:none}
+.social-pills::-webkit-scrollbar{display:none}
+.social-pill{flex:0 0 auto;background:#f6f8fc;color:#173c62;border:1px solid #dce7f8;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800}
+.people-row{display:grid;gap:8px}
+.person-item{display:flex;align-items:center;gap:10px;border-top:1px solid #eee4d6;padding-top:8px}
+.person-item:first-child{border-top:0;padding-top:0}
+.person-meta{min-width:0;flex:1}
+.person-name{font-size:13px;font-weight:900;color:var(--navy)}
+.person-sub{font-size:12px;color:var(--muted)}
+.social-cta-row{display:flex;gap:8px;flex-wrap:wrap}
 .feed{display:grid;gap:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:var(--shadow)}
 .card-head{display:flex;align-items:center;gap:12px;padding:14px 14px 10px}
@@ -2434,7 +2447,7 @@ header h1{
           🔔<div class="notif-dot" id="notifDot"></div>
         </button>
       </div>
-      <div class="header-sub-desc">Find events, save plans, and see what&apos;s happening tonight.</div>
+      <div class="header-sub-desc">See what&apos;s happening, who&apos;s going, and where your community is showing up tonight.</div>
 
       <!-- Live traction strip — what UCLA wants to see above the fold -->
       <div class="traction-strip">
@@ -2495,11 +2508,14 @@ header h1{
     <div class="hood-heat-row" id="hoodHeatRow"></div>
     <!-- FOMO strip -->
     <div id="fomoStripWrap"></div>
+    <div class="section" style="padding-top:8px;padding-bottom:0;">
+      <div id="socialHomepageStack" class="social-stack"></div>
+    </div>
     <!-- Featured Tonight section -->
     <div id="featuredTonightWrap" class="featured-tonight-wrap"></div>
     <div class="section feed-below-featured" style="padding-top:4px">
       <div class="section-title">
-        <h2>Community feed</h2>
+        <h2>Events People Are Going To</h2>
         <span id="statusText">Loading…</span>
       </div>
       <div class="community-day-browser" id="communityDayBrowser" aria-label="Community feed day filter"></div>
@@ -4860,6 +4876,42 @@ function buildRecentFriendActivity(limit){
   }
   return rows.sort((a,b) => safeTimeMs(b.created_at, 0) - safeTimeMs(a.created_at, 0)).slice(0, max);
 }
+function renderSocialHomepageStack(){
+  const mount = document.getElementById("socialHomepageStack");
+  if (!mount) return;
+  const goingWeek = (allEvents || []).filter(e => {
+    const ms = safeTimeMs(e?.start_time, -1);
+    return ms >= Date.now() && ms <= Date.now() + 7*86400000;
+  }).reduce((n,e) => n + Number(countsByEvent?.[String(e.id)]?.rsvps || 0), 0);
+  const friendsGoing = (typeof getAcceptedFriendIdsForCurrentProfile === "function" ? getAcceptedFriendIdsForCurrentProfile() : []).length;
+  const pendingRequests = (typeof getPendingIncomingFriendRequests === "function" ? getPendingIncomingFriendRequests().length : 0);
+  const pulse = [];
+  if (goingWeek > 0) pulse.push(`${goingWeek} RSVPs across this week`);
+  if (friendsGoing > 0) pulse.push(`${friendsGoing} friends in your circle`);
+  if (pendingRequests > 0) pulse.push(`${pendingRequests} new friend requests waiting`);
+  const trending = (allEvents || []).slice().sort((a,b) => Number(countsByEvent?.[String(b.id)]?.rsvps || 0)-Number(countsByEvent?.[String(a.id)]?.rsvps || 0))[0];
+  if (trending && Number(countsByEvent?.[String(trending.id)]?.rsvps || 0) > 0) pulse.push(`Trending tonight: ${trending.title || "Event"}`);
+  const pulseHtml = pulse.length ? pulse.map(t => `<div class="social-pill">${escapeHtml(t)}</div>`).join("") : `<div class="person-sub">Add friends and RSVP to events to see your community pulse.</div>`;
+
+  const myId = String(currentProfile?.id || "");
+  const people = Object.values(profilesById || {}).filter(p => String(p?.id || "") !== myId).slice(0,3);
+  const peopleHtml = people.length ? people.map(p => `
+    <div class="person-item">
+      ${p.photo_url ? `<div class="network-avatar"><img src="${escapeHtml(p.photo_url)}" alt=""></div>` : `<div class="network-avatar">${escapeHtml(getInitials(p.name || "FR"))}</div>`}
+      <div class="person-meta"><div class="person-name">${escapeHtml(p.name || "Community member")}</div><div class="person-sub">${escapeHtml(p.neighborhood || p.region || "Los Angeles")}</div></div>
+      ${friendActionButtonMarkup(p.id)}
+    </div>`).join("") : `<div class="person-sub">Create your profile to find people going to the same events.</div>`;
+
+  const activity = buildRecentFriendActivity(3);
+  const activityHtml = activity.length ? activity.map(a => `<div class="person-item"><div class="network-avatar">•</div><div class="person-meta"><div class="person-sub">${escapeHtml(a.body || "")}</div></div></div>`).join("") : `<div class="person-sub">Add friends to see what they’re going to.</div>`;
+
+  mount.innerHTML = `
+    <div class="social-card"><h3>Community Pulse</h3><div class="social-pills">${pulseHtml}</div></div>
+    <div class="social-card"><h3>Find Your People</h3><div class="people-row">${peopleHtml}</div></div>
+    <div class="social-card"><h3>Friend Activity</h3><div class="people-row">${activityHtml}</div></div>
+    <div class="social-card"><h3>Looking for plans?</h3><div class="social-cta-row"><button class="btn-secondary" onclick="showTonightView()">Find events tonight</button><button class="btn-secondary" onclick="showNetworkView()">See who’s going</button><button class="btn-secondary" onclick="return addFriendViaWhatsapp(event)">Invite a friend</button></div></div>
+  `;
+}
 function attendeePeopleRows(eventId){
   const ids = Array.from(new Set(((countsByEvent[String(eventId)]?.profileIds) || []).map(String)));
   const rows = ids.map(id => profilesById[String(id)]).filter(Boolean).slice(0, 5).map(p => `
@@ -5975,6 +6027,7 @@ async function loadEvents(){
     renderTheMoveHero();
     renderNeighborhoodHeat();
     renderFomoStrip();
+    renderSocialHomepageStack();
     renderFeaturedTonight();
     try{ generateSmartNotifications(); }catch(err){ console.warn("Notification generation skipped safely", err); }
     if (currentProfile) renderProfileDashboard();
@@ -6657,6 +6710,7 @@ function showFeedView(){
   restorePageScroll();
   hideMainViews();
   document.getElementById("feedView").classList.remove("hidden");
+  renderSocialHomepageStack();
   setActiveTab("feed");
   updateTabAria("tabFeed");
   // Re-render agenda if that sub-tab is active
