@@ -2473,7 +2473,7 @@ header h1{
   <!-- ── Feed sub-tabs ── -->
   <div class="feed-page-tabs" id="feedPageTabs">
     <button class="feed-page-tab active" id="feedSubFeed" onclick="setFeedSubTab('feed')">Community Feed</button>
-    <button class="feed-page-tab" id="feedSubAgenda" onclick="setFeedSubTab('agenda')">Your Events</button>
+    <button class="feed-page-tab" id="feedSubAgenda" onclick="setFeedSubTab('agenda')">Network</button>
   </div>
 
   <!-- ── Feed section ── -->
@@ -2496,7 +2496,7 @@ header h1{
     </div>
   </div>
 
-  <!-- ── Your Events Agenda section ── -->
+  <!-- ── Network section (reuses agendaSection id for compatibility) ── -->
   <div class="feed-section" id="agendaSection">
     <div class="agenda-shell" style="padding-bottom:104px">
       <div class="agenda-today-strip" id="agendaTodayStrip"></div>
@@ -3433,6 +3433,15 @@ function generateSmartNotifications(){
   const tonight = allEvents.filter(e => safeDateValue(e?.start_time)?.toDateString() === today).slice(0, 40);
   if (tonight.length){
     maybeCreateNotification({ type:"tonight_near_you", title:"Tonight near you", message:`Tonight near you: ${tonight[0]?.title || "Events"}${tonight.length > 1 ? ` and ${tonight.length-1} more events` : ""}.`, dedupeKey:`tonight_near_you:${currentProfile.id}:${now.toISOString().slice(0,10)}:${region}`, region, priority:3 });
+    maybeCreateNotification({ type:"happening_tonight", title:"Happening tonight", message:`${tonight[0]?.title || "An event"} is tonight.`, eventId:tonight[0]?.id, dedupeKey:`happening_tonight:${currentProfile.id}:${String(tonight[0]?.id||'')}:${now.toISOString().slice(0,10)}`, priority:2 });
+  }
+  const tomorrowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const tomorrow = allEvents.filter(e => {
+    const d = safeDateValue(e?.start_time); if (!d) return false;
+    return d.toDateString() === tomorrowDate.toDateString();
+  }).slice(0, 3);
+  if (tomorrow.length){
+    maybeCreateNotification({ type:"coming_tomorrow", title:"Coming up tomorrow", message:`${tomorrow[0]?.title || "An event"} is tomorrow.`, eventId:tomorrow[0]?.id, dedupeKey:`coming_tomorrow:${currentProfile.id}:${String(tomorrow[0]?.id||'')}:${now.toISOString().slice(0,10)}`, priority:3 });
   }
   const day = now.getDay();
   if (day === 4 || day === 5){
@@ -3457,6 +3466,11 @@ function generateSmartNotifications(){
       if (ms > 0 && ms <= 12*3600*1000) maybeCreateNotification({ type:"upcoming_event", title:"Upcoming event", message:`There’s still time to join ${e.title || "your event"} tonight.`, eventId:e.id, dedupeKey:`upcoming_event:${currentProfile.id}:${e.id}:same_day`, bypassCap:true, priority:2 });
     }
   }
+  const newUsers = Object.values(profilesById || {}).slice(0, 2);
+  newUsers.forEach(u => {
+    if (!u?.id || String(u.id) === String(currentProfile?.id || '')) return;
+    maybeCreateNotification({ type:"new_user", title:"New person joined", message:`${u.name || "Someone"} joined LA Jewish Tonight.`, user_id:u.id, dedupeKey:`new_user:${currentProfile.id}:${u.id}`, priority:9 });
+  });
 }
 function dismissNotificationCard(id){
   localNotifications = (localNotifications || []).map(item => String(item.id) === String(id) ? { ...item, dismissed: true } : item);
@@ -4016,7 +4030,7 @@ function syncViews(){
   const planOpenEl = document.getElementById("planView");
   if (planOpenEl && !planOpenEl.classList.contains("hidden")) renderPlan();
   // Refresh feed sub-tab agenda if active
-  if (_feedSubTab === "agenda") renderAgenda();
+  if (_feedSubTab === "agenda") renderNetworkActivitySection();
   const overlay = document.getElementById("eventModalOverlay");
   if (!overlay || !overlay.style.display || overlay.style.display === "none") return;
   if (currentModalEventId) openEventModal(currentModalEventId);
@@ -4467,14 +4481,32 @@ function handleNotificationBellClick(ev){
   if (!pop) return false;
   const visibleLocal = (localNotifications || []).filter(item => !item.dismissed).slice(0, 12);
   const visibleOrg = (orgEventNotifications || []).filter(item => !item.read_at).slice(0, 12);
-  const items = visibleOrg.map(item => `<div class="notification-popover-item"><strong>${escapeHtml(item.title || 'Notification')}</strong><br>${escapeHtml(item.body || '')}</div>`).join('')
-    + visibleLocal.map(item => `<div class="notification-popover-item"><strong>${escapeHtml(item.title || 'Notification')}</strong><br>${escapeHtml(item.body || '')}</div>`).join('');
+  const items = visibleOrg.map(item => `<button class="notification-popover-item" style="display:block;width:100%;text-align:left;background:none;border:0;cursor:pointer;" onclick="return handleNotificationItemClick('org','${escapeHtml(String(item.id||''))}')"><strong>${escapeHtml(item.title || 'Notification')}</strong><br>${escapeHtml(item.body || '')}</button>`).join('')
+    + visibleLocal.map(item => `<button class="notification-popover-item" style="display:block;width:100%;text-align:left;background:none;border:0;cursor:pointer;" onclick="return handleNotificationItemClick('local','${escapeHtml(String(item.id||''))}')"><strong>${escapeHtml(item.title || 'Notification')}</strong><br>${escapeHtml(item.body || '')}</button>`).join('');
   pop.innerHTML = items ? `<h3>Notifications</h3>${items}` : `<h3>No current notifications</h3><p>You’re all caught up.</p>`;
-  localNotifications = (localNotifications || []).map(item => item?.dismissed ? item : ({ ...item, read:true }));
-  saveLocalNotifications();
-  markAllOrgNotificationsRead();
   pop.classList.toggle('open');
   refreshNotifDot();
+  return false;
+}
+function handleNotificationItemClick(source, id){
+  if (source === 'org'){
+    const n = (orgEventNotifications || []).find(item => String(item?.id||'') === String(id||''));
+    if (n){
+      markNotificationRead(n.id);
+      if (n.event_id) openNotificationEventDetails(n.event_id);
+    }
+  }else{
+    const n = (localNotifications || []).find(item => String(item?.id||'') === String(id||''));
+    if (n){
+      localNotifications = (localNotifications || []).map(item => String(item.id||'') === String(id||'') ? { ...item, read:true } : item);
+      saveLocalNotifications();
+      if (n.event_id) openNotificationEventDetails(n.event_id);
+      else if (n.type === 'friend_request' || n.type === 'request_received' || n.type === 'request_accepted'){ showProfileView(); }
+      else if (n.friendId || n.user_id) showToast(n.body || 'Notification opened');
+    }
+  }
+  refreshNotifDot();
+  closeNotificationPopover();
   return false;
 }
 function refreshNotifDot(){
@@ -5042,11 +5074,18 @@ function getVisibleEvents(query){
 function applyCurrentFilters(){
   const q = document.getElementById("searchInput")?.value || "";
   const statusText = document.getElementById("statusText");
-  const filtered = getVisibleEvents(q);
+  let filtered = getVisibleEvents(q);
+  let usedTonightFallback = false;
+  if (!String(q || "").trim() && selectedCommunityFeedDay === 'tonight' && !filtered.length){
+    filtered = sortEventsFutureFirst((allEvents || []).filter(e => safeTimeMs(e?.start_time, -1) > Date.now())).slice(0,5);
+    usedTonightFallback = filtered.length > 0;
+  }
   renderCommunityFeedDayPills();
   renderHero(filtered[0] || allEvents[0]);
   renderFeed(filtered);
-  if (statusText) statusText.textContent = `${filtered.length} ${activeFilterLabel().toLowerCase()} · ${selectedCommunityFeedDay === 'tonight' ? 'tonight' : selectedCommunityFeedDay === 'tomorrow' ? 'tomorrow' : selectedCommunityFeedDay === 'weekend' ? 'weekend' : 'day'}`;
+  if (statusText) statusText.textContent = usedTonightFallback
+    ? `No events listed for tonight yet — here are the next 5 upcoming events.`
+    : `${filtered.length} ${activeFilterLabel().toLowerCase()} · ${selectedCommunityFeedDay === 'tonight' ? 'tonight' : selectedCommunityFeedDay === 'tomorrow' ? 'tomorrow' : selectedCommunityFeedDay === 'weekend' ? 'weekend' : 'day'}`;
   // Only animate on explicit filter changes, not on load
   if (allEvents.length) animateFeedRefresh();
   scheduleOrgNewEventDetection();
@@ -5997,7 +6036,7 @@ async function loadEvents(){
     renderFeaturedTonight();
     try{ generateSmartNotifications(); }catch(err){ console.warn("Notification generation skipped safely", err); }
     if (currentProfile) renderProfileDashboard();
-    if (_feedSubTab === 'agenda') renderAgenda();
+    if (_feedSubTab === 'agenda') renderNetworkActivitySection();
     if (!document.getElementById('organizationsView')?.classList.contains('hidden')) renderOrganizationsView();
     if (_leafletMap && !document.getElementById('mapView')?.classList.contains('hidden')) {
       renderMapPins(getAllUpcomingEventsForMap());
@@ -6679,7 +6718,7 @@ function showFeedView(){
   setActiveTab("feed");
   updateTabAria("tabFeed");
   // Re-render agenda if that sub-tab is active
-  if (_feedSubTab === "agenda") renderAgenda();
+  if (_feedSubTab === "agenda") renderNetworkActivitySection();
 }
 function showNetworkView(){
   restorePageScroll();
@@ -8318,6 +8357,39 @@ function renderAgenda(){
   });
   listEl.innerHTML = html;
 }
+function renderNetworkActivitySection(){
+  const listEl = document.getElementById('agendaList');
+  const countEl = document.getElementById('agendaCount');
+  const stripEl = document.getElementById('agendaTodayStrip');
+  const sortBtn = document.getElementById('agendaSortBtn');
+  if (!listEl) return;
+  if (stripEl) stripEl.innerHTML = '';
+  if (sortBtn) sortBtn.style.display = 'none';
+  if (countEl) countEl.textContent = 'Network';
+  const activity = buildRecentFriendActivity(12);
+  const newUsers = Object.values(profilesById || {}).filter(p => p && String(p.id||'') !== String(currentProfile?.id||'')).slice(0,4)
+    .map(p => ({ id:`join_${p.id}`, type:'new_user', body:`${p.name || 'Someone'} joined LA Jewish Tonight.`, profile:p, created_at:new Date().toISOString() }));
+  const rows = [...activity, ...newUsers].slice(0, 14);
+  if (!rows.length){
+    listEl.innerHTML = `<div class="agenda-empty"><div class="agenda-empty-icon">🤝</div><div class="agenda-empty-text"><strong>Your Network</strong><br>Add friends and RSVP to events to see what your community is doing.</div><div style="margin-top:10px;"><a href="#" class="profile-friends-btn primary" onclick="return addFriendViaWhatsapp(event)">Add a Friend</a></div></div>`;
+    return;
+  }
+  listEl.innerHTML = rows.map(item => {
+    const text = String(item.body || '');
+    const match = (allEvents || []).find(e => text.includes(String(e?.title || '')));
+    const eventId = match?.id ? String(match.id) : '';
+    const who = item.profile || null;
+    const avatar = who?.photo_url ? `<div class="network-avatar"><img src="${escapeHtml(who.photo_url)}" alt=""></div>` : `<div class="network-avatar">${escapeHtml(getInitials((who?.name || 'FR')))}</div>`;
+    return `<div class="pending-request-row" style="padding:10px 0;border-top:1px solid #eee4d6;">
+      ${avatar}
+      <div class="pending-request-copy">
+        <div class="pending-request-name">${escapeHtml(text)}</div>
+        <div class="profile-friend-meta">${escapeHtml(formatNotificationTime(item.created_at))}${eventId ? ` · ${escapeHtml(formatDate(match.start_time))}` : ''}</div>
+      </div>
+      ${eventId ? `<button class="pending-request-btn accept" onclick="return openEventModal('${escapeHtml(eventId)}')">Details</button>` : `<button class="pending-request-btn" onclick="return showNetworkView()">View</button>`}
+    </div>`;
+  }).join('');
+}
 
 /* showAgendaView is now an alias to showPlanView — defined above */
 
@@ -8583,7 +8655,7 @@ function setFeedSubTab(tab) {
   document.getElementById('feedSubAgenda').classList.toggle('active', tab === 'agenda');
   document.getElementById('feedSection').classList.toggle('active', tab === 'feed');
   document.getElementById('agendaSection').classList.toggle('active', tab === 'agenda');
-  if (tab === 'agenda') renderAgenda();
+  if (tab === 'agenda') renderNetworkActivitySection();
 }
 
 /* ══════════════════════════════════════════════════
