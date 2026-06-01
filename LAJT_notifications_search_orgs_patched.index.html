@@ -5083,6 +5083,12 @@ function applyCurrentFilters(){
   renderCommunityFeedDayPills();
   renderHero(filtered[0] || allEvents[0]);
   renderFeed(filtered);
+  if (usedTonightFallback){
+    const feedEl = document.getElementById("feed");
+    if (feedEl){
+      feedEl.insertAdjacentHTML("afterbegin", `<div class="empty" style="margin-bottom:10px;"><strong>No events listed for tonight yet — here are the next 5 upcoming events.</strong><br><span style="font-size:12px;color:var(--muted);">Check back later as more events get added.</span></div>`);
+    }
+  }
   if (statusText) statusText.textContent = usedTonightFallback
     ? `No events listed for tonight yet — here are the next 5 upcoming events.`
     : `${filtered.length} ${activeFilterLabel().toLowerCase()} · ${selectedCommunityFeedDay === 'tonight' ? 'tonight' : selectedCommunityFeedDay === 'tomorrow' ? 'tomorrow' : selectedCommunityFeedDay === 'weekend' ? 'weekend' : 'day'}`;
@@ -8370,8 +8376,18 @@ function renderNetworkActivitySection(){
   const newUsers = Object.values(profilesById || {}).filter(p => p && String(p.id||'') !== String(currentProfile?.id||'')).slice(0,4)
     .map(p => ({ id:`join_${p.id}`, type:'new_user', body:`${p.name || 'Someone'} joined LA Jewish Tonight.`, profile:p, created_at:new Date().toISOString() }));
   const rows = [...activity, ...newUsers].slice(0, 14);
-  if (!rows.length){
-    listEl.innerHTML = `<div class="agenda-empty"><div class="agenda-empty-icon">🤝</div><div class="agenda-empty-text"><strong>Your Network</strong><br>Add friends and RSVP to events to see what your community is doing.</div><div style="margin-top:10px;"><a href="#" class="profile-friends-btn primary" onclick="return addFriendViaWhatsapp(event)">Add a Friend</a></div></div>`;
+  const hasRealNetwork = activity.length > 0;
+  if (!hasRealNetwork){
+    const mockRows = [
+      { initials:'SC', text:'Sarah Cohen is going to Shabbat Dinner in Pico-Robertson', meta:'Preview · Tonight 7:30 PM' },
+      { initials:'DL', text:'David Levy saved Rooftop Havdalah', meta:'Preview · Tomorrow 8:00 PM' },
+      { initials:'MR', text:'Maya Rosen liked Israeli Music Night', meta:'Preview · This week' },
+      { initials:'BR', text:'Ben and 2 others are interested in Young Professionals Mixer', meta:'Preview · This Friday' },
+      { initials:'RJ', text:'Rachel joined LA Jewish Tonight', meta:'Preview · New in your community' }
+    ];
+    listEl.innerHTML = `<div class="agenda-empty" style="text-align:left;"><div class="agenda-empty-text"><strong>Network Activity</strong><br>Add friends to see real updates from your LAJT circle. Here’s a preview of what your network feed will feel like.</div></div>`
+      + mockRows.map(item => `<div class="pending-request-row" style="padding:10px 0;border-top:1px solid #eee4d6;"><div class="network-avatar">${escapeHtml(item.initials)}</div><div class="pending-request-copy"><div class="pending-request-name">${escapeHtml(item.text)}</div><div class="profile-friend-meta">${escapeHtml(item.meta)}</div></div><div class="profile-friend-state">Demo</div></div>`).join('')
+      + `<div class="profile-sub" style="margin-top:10px;">Real friend updates will appear here once you add friends.</div><div style="margin-top:10px;"><a href="#" class="profile-friends-btn primary" onclick="return addFriendViaWhatsapp(event)">Add a Friend</a></div>`;
     return;
   }
   listEl.innerHTML = rows.map(item => {
