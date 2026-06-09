@@ -1275,9 +1275,9 @@ html.runtime-desktop .app, html.runtime-desktop .bottom { max-width: 680px; }
 
 /* ── DESKTOP SIDEBAR ── */
 @media (min-width: 768px) {
-  #feedView { max-width: none !important; }
-  .feed-desktop-layout { display: grid; grid-template-columns: 1fr 280px; gap: 24px; padding: 0 24px; max-width: 1060px; margin: 0 auto; }
-  .feed-sidebar { display: flex; flex-direction: column; gap: 14px; padding-top: 16px; }
+  #feedView { width: 100%; max-width: 100vw !important; }
+  .feed-desktop-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 280px); gap: 24px; padding: 0 clamp(16px, 3vw, 24px); width: min(100%, 1060px); max-width: calc(100vw - 24px); margin: 0 auto; }
+  .feed-sidebar { display: flex; flex-direction: column; gap: 14px; padding-top: 16px; min-width: 0; }
   .sidebar-card { background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px; box-shadow: var(--shadow-sm); }
   .sidebar-card-title { font-size: 10px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; font-family: var(--sans); }
   .sidebar-card-title::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
@@ -1293,7 +1293,7 @@ html.runtime-desktop .app, html.runtime-desktop .bottom { max-width: 680px; }
   .sidebar-cta { width: 100%; background: var(--navy); color: #fff; border: none; border-radius: 10px; padding: 11px 0; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--sans); text-align: center; display: block; text-decoration: none; margin-top: 4px; }
   .sidebar-cta:hover { opacity: .88; }
   .sidebar-wa { background: rgba(37,211,102,.12) !important; color: #1a9e4e !important; border: 1px solid rgba(37,211,102,.2) !important; }
-  .feed-desktop-main { min-width: 0; }
+  .feed-desktop-main { min-width: 0; width: 100%; }
   #feedView .top { padding: 0 !important; }
   .top-inner { max-width: 1060px; margin: 0 auto; padding: 14px 24px 0 !important; }
 }
@@ -1665,9 +1665,9 @@ html.runtime-desktop .app, html.runtime-desktop .bottom { max-width: 680px; }
 .soon-rsvp-btn.active{background:#e8f8ee;color:var(--green,#1e7a46);border:1px solid rgba(30,122,70,.2);}
 /* Desktop: keep sidebar working with compact header */
 @media(min-width:768px){
-  .top-compact-bar{padding:12px 24px 8px;}
-  .top-search-row{padding:0 24px 10px;}
-  .filter-panel-inner{padding:10px 24px 0;}
+  .top-compact-bar{padding:12px clamp(16px,3vw,24px) 8px;max-width:1060px;margin:0 auto;}
+  .top-search-row{padding:0 clamp(16px,3vw,24px) 10px;max-width:1060px;margin:0 auto;}
+  .filter-panel-inner{padding:10px clamp(16px,3vw,24px) 0;max-width:1060px;margin:0 auto;}
 }
 
 
@@ -2672,10 +2672,33 @@ let orgFollowsLoadedProfileId = '';
 let orgFollowsLoadPromise = null;
 let _feedSubTab = 'feed';
 let feedEvents = [];
+let filteredEvents = [];
 let selectedCommunityFeedDay = 'tonight';
 let communityFeedFallbackNotice = '';
 let tonightEventsCache = [];
 let thisWeekEventsCache = [];
+function syncEventGlobals(){
+  try{
+    window.allEvents = Array.isArray(allEvents) ? allEvents : [];
+    window.feedEvents = Array.isArray(feedEvents) ? feedEvents : [];
+    window.filteredEvents = Array.isArray(filteredEvents) ? filteredEvents : [];
+    window.tonightEventsCache = Array.isArray(tonightEventsCache) ? tonightEventsCache : [];
+    window.thisWeekEventsCache = Array.isArray(thisWeekEventsCache) ? thisWeekEventsCache : [];
+  }catch(err){
+    console.warn('Event global sync skipped', err);
+  }
+}
+function adoptWindowEventGlobals(){
+  try{
+    if ((!Array.isArray(allEvents) || !allEvents.length) && Array.isArray(window.allEvents) && window.allEvents.length) allEvents = window.allEvents;
+    if ((!Array.isArray(feedEvents) || !feedEvents.length) && Array.isArray(window.feedEvents) && window.feedEvents.length) feedEvents = window.feedEvents;
+    if ((!Array.isArray(filteredEvents) || !filteredEvents.length) && Array.isArray(window.filteredEvents) && window.filteredEvents.length) filteredEvents = window.filteredEvents;
+    if ((!Array.isArray(tonightEventsCache) || !tonightEventsCache.length) && Array.isArray(window.tonightEventsCache) && window.tonightEventsCache.length) tonightEventsCache = window.tonightEventsCache;
+    if ((!Array.isArray(thisWeekEventsCache) || !thisWeekEventsCache.length) && Array.isArray(window.thisWeekEventsCache) && window.thisWeekEventsCache.length) thisWeekEventsCache = window.thisWeekEventsCache;
+  }catch(err){
+    console.warn('Event global adoption skipped', err);
+  }
+}
 let countsByEvent = {};
 let profilesById = {};
 let currentProfile = null;
@@ -2686,6 +2709,7 @@ let rsvpCountsRefreshInFlight = false;
 let friendRequestsCache = [];
 let acceptedFriendshipsCache = [];
 let friendCountsByProfile = {};
+syncEventGlobals();
 let localActions = {};
 let localComments = {};
 let localNotifications = [];
@@ -4762,25 +4786,39 @@ function getNextUpcomingEvents(limit){
     .sort((a,b) => safeTimeMs(a?.start_time, Number.MAX_SAFE_INTEGER) - safeTimeMs(b?.start_time, Number.MAX_SAFE_INTEGER))
     .slice(0, limit || 5);
 }
+function getDefaultFeedFallbackEvents(limit){
+  const upcoming = getNextUpcomingEvents(limit || 5);
+  if (upcoming.length) return upcoming;
+  return dedupeEvents(allEvents || [])
+    .sort((a,b) => safeTimeMs(b?.start_time, 0) - safeTimeMs(a?.start_time, 0))
+    .slice(0, limit || 5);
+}
 function applyCurrentFilters(){
   const q = document.getElementById("searchInput")?.value || "";
   const statusText = document.getElementById("statusText");
   const filtered = getVisibleEvents(q);
-  let displayEvents = filtered;
+  filteredEvents = Array.isArray(filtered) ? filtered : [];
+  let displayEvents = filteredEvents;
   communityFeedFallbackNotice = '';
   const _noQ = !String(q || '').trim();
   const _noF = !activeQuickFilter || activeQuickFilter === 'all';
-  if (_noQ && _noF && !filtered.length){
-    displayEvents = getNextUpcomingEvents(5);
+  if (_noQ && _noF && !filteredEvents.length){
+    displayEvents = getDefaultFeedFallbackEvents(5);
     const _dayLbl = selectedCommunityFeedDay === 'tonight' ? 'tonight'
       : selectedCommunityFeedDay === 'tomorrow' ? 'tomorrow'
       : selectedCommunityFeedDay === 'weekend' ? 'this weekend' : 'that day';
-    if (displayEvents.length) communityFeedFallbackNotice = `No events for ${_dayLbl} yet — showing the next ${displayEvents.length} upcoming.`;
+    if (displayEvents.length) {
+      const hasUpcoming = getNextUpcomingEvents(1).length > 0;
+      communityFeedFallbackNotice = hasUpcoming
+        ? `No events for ${_dayLbl} yet — showing the next ${displayEvents.length} upcoming.`
+        : `No events for ${_dayLbl} yet — showing ${displayEvents.length} recently loaded event${displayEvents.length === 1 ? '' : 's'}.`;
+    }
   }
+  syncEventGlobals();
   renderCommunityFeedDayPills();
   renderHero(displayEvents[0] || allEvents[0]);
   renderFeed(displayEvents);
-  if (statusText) statusText.textContent = communityFeedFallbackNotice ? `${displayEvents.length} upcoming · none tonight` : `${filtered.length} ${activeFilterLabel().toLowerCase()} · ${selectedCommunityFeedDay === 'tonight' ? 'tonight' : selectedCommunityFeedDay === 'tomorrow' ? 'tomorrow' : selectedCommunityFeedDay === 'weekend' ? 'weekend' : 'day'}`;
+  if (statusText) statusText.textContent = communityFeedFallbackNotice ? `${displayEvents.length} loaded · fallback` : `${filteredEvents.length} ${activeFilterLabel().toLowerCase()} · ${selectedCommunityFeedDay === 'tonight' ? 'tonight' : selectedCommunityFeedDay === 'tomorrow' ? 'tomorrow' : selectedCommunityFeedDay === 'weekend' ? 'weekend' : 'day'}`;
   // Only animate on explicit filter changes, not on load
   if (allEvents.length) animateFeedRefresh();
   scheduleOrgNewEventDetection();
@@ -5590,6 +5628,7 @@ function eventCard(event){
 }
 
 function renderFeed(events){
+  adoptWindowEventGlobals();
   const feed = document.getElementById("feed");
   if (!feed) return;
   const safeEvents = Array.isArray(events) ? events.filter(Boolean) : [];
@@ -5600,9 +5639,11 @@ function renderFeed(events){
     if (hasData && hasActiveFilter){
       feed.innerHTML = `<div class="smart-empty"><div class="smart-empty-icon">&#x1F50D;</div><div class="smart-empty-title">Nothing matches</div><div class="smart-empty-sub">Try a different vibe or clear your filters</div><div class="smart-empty-suggestions"><button class="smart-empty-pill" onclick="window._clearFeedFilter('shabbat')">&#x1F56F; Shabbat</button><button class="smart-empty-pill" onclick="window._clearFeedFilter('social')">&#x1F378; Social</button><button class="smart-empty-pill" onclick="window._clearFeedFilter('learning')">&#x1F4DA; Learning</button><button class="smart-empty-pill" onclick="window._clearFeedFilter('culture')">&#x1F3AD; Culture</button><button class="smart-empty-pill" onclick="window._clearFeedFilter('all')">Show all</button></div></div>`;
     } else if (hasData){
-      const upcoming = typeof getNextUpcomingEvents === 'function' ? getNextUpcomingEvents(5) : [];
+      const upcoming = typeof getDefaultFeedFallbackEvents === 'function' ? getDefaultFeedFallbackEvents(5) : (typeof getNextUpcomingEvents === 'function' ? getNextUpcomingEvents(5) : []);
       if (upcoming.length){
-        const notice2 = `<div class="empty" style="font-weight:700;color:var(--navy);font-size:13px;">No events for this day yet &#x2014; here are the next upcoming:</div>`;
+        const hasUpcomingFallback = typeof getNextUpcomingEvents === 'function' && getNextUpcomingEvents(1).length > 0;
+        const noticeText = hasUpcomingFallback ? 'No events for this day yet &#x2014; here are the next upcoming:' : 'No events for this day yet &#x2014; here are recently loaded events:';
+        const notice2 = `<div class="empty" style="font-weight:700;color:var(--navy);font-size:13px;">${noticeText}</div>`;
         const arr2 = upcoming.slice(0,5).map(ev=>{ try{ return eventCard(ev); }catch(e){ return ''; } }).filter(Boolean);
         if (typeof window._buildVibeSlot === 'function') arr2.splice(0,0,window._buildVibeSlot());
         if (typeof window._buildForYouSlot === 'function' && arr2.length >= 4) arr2.splice(4,0,window._buildForYouSlot());
@@ -5611,6 +5652,7 @@ function renderFeed(events){
         feed.innerHTML = `<div class="empty">No upcoming events found &#x2014; check back soon.</div>`;
       }
     }
+    try{ window.dispatchEvent(new CustomEvent('lajt:events-rendered')); }catch(_){ }
     return;
   }
   const arr = safeEvents.slice(0,24).map(event => {
@@ -5621,6 +5663,7 @@ function renderFeed(events){
   if (typeof window._buildForYouSlot === 'function' && arr.length >= 4) arr.splice(4,0,window._buildForYouSlot());
   const notice = communityFeedFallbackNotice ? `<div class="empty" style="font-weight:700;color:var(--navy);font-size:13px;">${escapeHtml(communityFeedFallbackNotice)}</div>` : '';
   feed.innerHTML = arr.length ? notice + arr.join("") : `<div class="empty">Events loaded but no cards could render.</div>`;
+  try{ window.dispatchEvent(new CustomEvent('lajt:events-rendered')); }catch(_){ }
 }
 function filterEvents(query){
   const q = String(query || "").trim().toLowerCase();
@@ -5734,6 +5777,7 @@ function eventWindowsFrom(list){
   };
 }
 async function loadEvents(){
+  adoptWindowEventGlobals();
   const statusText = document.getElementById("statusText");
   const searchValue = document.getElementById("searchInput")?.value || "";
   const baseFields = "id,title,description,start_time,end_time,location,image_url,rsvp_link,category,region,organization,public_event_url,event_url,google_event_url,google_calendar_url,source_url,url";
@@ -5759,9 +5803,15 @@ async function loadEvents(){
     }
     if (statusText) {
       const visibleCount = getVisibleEvents(query).length;
-      statusText.textContent = visibleCount
-        ? `${visibleCount} ${activeFilterLabel().toLowerCase()}${sourceLabel ? ` · ${sourceLabel}` : ''}`
-        : 'No matching events';
+      if (communityFeedFallbackNotice) {
+        const fallbackCount = (typeof getDefaultFeedFallbackEvents === 'function' ? getDefaultFeedFallbackEvents(5).length : (typeof getNextUpcomingEvents === 'function' ? getNextUpcomingEvents(5).length : 0));
+        const hasUpcomingFallback = typeof getNextUpcomingEvents === 'function' && getNextUpcomingEvents(1).length > 0;
+        statusText.textContent = fallbackCount ? `${fallbackCount} ${hasUpcomingFallback ? 'upcoming' : 'loaded'} · none for selected day${sourceLabel ? ` · ${sourceLabel}` : ''}` : 'No matching events';
+      } else {
+        statusText.textContent = visibleCount
+          ? `${visibleCount} ${activeFilterLabel().toLowerCase()}${sourceLabel ? ` · ${sourceLabel}` : ''}`
+          : 'No matching events';
+      }
     }
   }
 
@@ -8666,6 +8716,8 @@ function detectRuntimeEnvironment(){
   const shellMax = width >= 1280 ? 680 : width >= 768 ? 560 : 460;
   root.style.setProperty('--app-shell-max', `${shellMax}px`);
 }
+window.addEventListener('resize', detectRuntimeEnvironment, { passive:true });
+window.addEventListener('orientationchange', detectRuntimeEnvironment, { passive:true });
 function readEventImageCache(){
   if (_eventImageCache) return _eventImageCache;
   try{
@@ -9249,11 +9301,62 @@ window.addEventListener("load", function(){
 <script>
 /* ── Desktop sidebar: inject after DOM ready ── */
 (function injectDesktopSidebar(){
+  function getLoadedEvents(){
+    try{
+      if (typeof adoptWindowEventGlobals === 'function') adoptWindowEventGlobals();
+      if (Array.isArray(window.filteredEvents) && window.filteredEvents.length) return window.filteredEvents;
+      if (Array.isArray(window.feedEvents) && window.feedEvents.length) return window.feedEvents;
+      if (Array.isArray(window.allEvents) && window.allEvents.length) return window.allEvents;
+      if (typeof feedEvents !== 'undefined' && Array.isArray(feedEvents) && feedEvents.length) return feedEvents;
+      if (typeof allEvents !== 'undefined' && Array.isArray(allEvents) && allEvents.length) return allEvents;
+    }catch(_){ }
+    return [];
+  }
+
+  function renderAfterLayout(){
+    try{
+      const feed = document.getElementById('feed');
+      if (!feed) return;
+      if (typeof applyCurrentFilters === 'function') applyCurrentFilters();
+      else if (typeof renderFeed === 'function') renderFeed(getLoadedEvents());
+    }catch(err){
+      console.warn('Desktop feed render skipped safely', err);
+    }
+  }
+
+  function updateCount(){
+    const cards = document.querySelectorAll('#feed .card');
+    const el = document.getElementById('sb-events');
+    if(el) el.textContent = cards.length ? cards.length + ' events' : (getLoadedEvents().length || 'Loading…');
+  }
+
+  function unwrap(feedSection){
+    const wrapper = feedSection && feedSection.querySelector(':scope > .feed-desktop-layout');
+    if(!wrapper) return;
+    const main = wrapper.querySelector(':scope > .feed-desktop-main');
+    if(main){
+      while(main.firstChild) feedSection.insertBefore(main.firstChild, wrapper);
+    }
+    wrapper.remove();
+    feedSection.dataset.sidebarDone = '';
+  }
+
   function build(){
-    if(window.innerWidth < 768) return;
     const feedSection = document.getElementById('feedSection');
-    if(!feedSection || feedSection.dataset.sidebarDone) return;
-    feedSection.dataset.sidebarDone = '1';
+    if(!feedSection) return;
+
+    if(window.innerWidth < 768){
+      unwrap(feedSection);
+      return;
+    }
+
+    const existing = feedSection.querySelector(':scope > .feed-desktop-layout');
+    if(existing){
+      feedSection.dataset.sidebarDone = '1';
+      renderAfterLayout();
+      updateCount();
+      return;
+    }
 
     const wrapper = document.createElement('div');
     wrapper.className = 'feed-desktop-layout';
@@ -9261,27 +9364,11 @@ window.addEventListener("load", function(){
     const main = document.createElement('div');
     main.className = 'feed-desktop-main';
 
-    // CRITICAL FIX: Store reference to feed element before moving
-    const feedElement = document.getElementById('feed');
-    
-    // Move feedSection children into main
     while(feedSection.firstChild){ main.appendChild(feedSection.firstChild); }
     feedSection.appendChild(wrapper);
     wrapper.appendChild(main);
-    
-    // CRITICAL FIX: Ensure feed is still in DOM and trigger a re-render
-    setTimeout(() => {
-      const feed = document.getElementById('feed');
-      const loadedEvents = (window.allEvents && window.allEvents.length) ? window.allEvents : (typeof allEvents !== 'undefined' ? allEvents : []);
-      if (feed && loadedEvents && loadedEvents.length > 0) {
-        console.log('Desktop sidebar built, re-rendering feed with', loadedEvents.length, 'events');
-        if (typeof applyCurrentFilters === 'function') {
-          applyCurrentFilters();
-        }
-      }
-    }, 100);
+    feedSection.dataset.sidebarDone = '1';
 
-    // Build sidebar
     const sidebar = document.createElement('div');
     sidebar.className = 'feed-sidebar';
     sidebar.innerHTML = `
@@ -9330,23 +9417,22 @@ window.addEventListener("load", function(){
       </div>`;
     wrapper.appendChild(sidebar);
 
-    // Live event count from DOM
-    function updateCount(){
-      const cards = document.querySelectorAll('#feed .card');
-      const el = document.getElementById('sb-events');
-      if(el && cards.length) el.textContent = cards.length + ' events';
-    }
-    setTimeout(updateCount, 2000);
-    setTimeout(updateCount, 4000);
+    renderAfterLayout();
+    setTimeout(updateCount, 250);
+    setTimeout(updateCount, 1200);
   }
+
+  let resizeTimer = null;
+  function scheduleBuild(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(build, 80);
+  }
+
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
   else build();
-  window.addEventListener('resize', function(){
-    if(window.innerWidth >= 768){
-      const feedSection = document.getElementById('feedSection');
-      if(feedSection) { feedSection.dataset.sidebarDone = ''; build(); }
-    }
-  }, {passive:true});
+  window.addEventListener('resize', scheduleBuild, {passive:true});
+  window.addEventListener('orientationchange', scheduleBuild, {passive:true});
+  window.addEventListener('lajt:events-rendered', updateCount);
 })();
 </script>
 
