@@ -2676,6 +2676,26 @@ let selectedCommunityFeedDay = 'tonight';
 let communityFeedFallbackNotice = '';
 let tonightEventsCache = [];
 let thisWeekEventsCache = [];
+function syncEventGlobals(){
+  try{
+    window.allEvents = Array.isArray(allEvents) ? allEvents : [];
+    window.feedEvents = Array.isArray(feedEvents) ? feedEvents : [];
+    window.tonightEventsCache = Array.isArray(tonightEventsCache) ? tonightEventsCache : [];
+    window.thisWeekEventsCache = Array.isArray(thisWeekEventsCache) ? thisWeekEventsCache : [];
+  }catch(err){
+    console.warn('Event global sync skipped', err);
+  }
+}
+function adoptWindowEventGlobals(){
+  try{
+    if ((!Array.isArray(allEvents) || !allEvents.length) && Array.isArray(window.allEvents) && window.allEvents.length) allEvents = window.allEvents;
+    if ((!Array.isArray(feedEvents) || !feedEvents.length) && Array.isArray(window.feedEvents) && window.feedEvents.length) feedEvents = window.feedEvents;
+    if ((!Array.isArray(tonightEventsCache) || !tonightEventsCache.length) && Array.isArray(window.tonightEventsCache) && window.tonightEventsCache.length) tonightEventsCache = window.tonightEventsCache;
+    if ((!Array.isArray(thisWeekEventsCache) || !thisWeekEventsCache.length) && Array.isArray(window.thisWeekEventsCache) && window.thisWeekEventsCache.length) thisWeekEventsCache = window.thisWeekEventsCache;
+  }catch(err){
+    console.warn('Event global adoption skipped', err);
+  }
+}
 let countsByEvent = {};
 let profilesById = {};
 let currentProfile = null;
@@ -2686,6 +2706,7 @@ let rsvpCountsRefreshInFlight = false;
 let friendRequestsCache = [];
 let acceptedFriendshipsCache = [];
 let friendCountsByProfile = {};
+syncEventGlobals();
 let localActions = {};
 let localComments = {};
 let localNotifications = [];
@@ -5590,6 +5611,7 @@ function eventCard(event){
 }
 
 function renderFeed(events){
+  adoptWindowEventGlobals();
   const feed = document.getElementById("feed");
   if (!feed) return;
   const safeEvents = Array.isArray(events) ? events.filter(Boolean) : [];
@@ -5734,6 +5756,7 @@ function eventWindowsFrom(list){
   };
 }
 async function loadEvents(){
+  adoptWindowEventGlobals();
   const statusText = document.getElementById("statusText");
   const searchValue = document.getElementById("searchInput")?.value || "";
   const baseFields = "id,title,description,start_time,end_time,location,image_url,rsvp_link,category,region,organization,public_event_url,event_url,google_event_url,google_calendar_url,source_url,url";
@@ -5759,9 +5782,14 @@ async function loadEvents(){
     }
     if (statusText) {
       const visibleCount = getVisibleEvents(query).length;
-      statusText.textContent = visibleCount
-        ? `${visibleCount} ${activeFilterLabel().toLowerCase()}${sourceLabel ? ` · ${sourceLabel}` : ''}`
-        : 'No matching events';
+      if (communityFeedFallbackNotice) {
+        const fallbackCount = (typeof getNextUpcomingEvents === 'function' ? getNextUpcomingEvents(5).length : 0);
+        statusText.textContent = fallbackCount ? `${fallbackCount} upcoming · none for selected day${sourceLabel ? ` · ${sourceLabel}` : ''}` : 'No matching events';
+      } else {
+        statusText.textContent = visibleCount
+          ? `${visibleCount} ${activeFilterLabel().toLowerCase()}${sourceLabel ? ` · ${sourceLabel}` : ''}`
+          : 'No matching events';
+      }
     }
   }
 
@@ -8666,6 +8694,8 @@ function detectRuntimeEnvironment(){
   const shellMax = width >= 1280 ? 680 : width >= 768 ? 560 : 460;
   root.style.setProperty('--app-shell-max', `${shellMax}px`);
 }
+window.addEventListener('resize', detectRuntimeEnvironment, { passive:true });
+window.addEventListener('orientationchange', detectRuntimeEnvironment, { passive:true });
 function readEventImageCache(){
   if (_eventImageCache) return _eventImageCache;
   try{
