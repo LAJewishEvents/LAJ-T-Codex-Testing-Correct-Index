@@ -5807,6 +5807,8 @@ async function loadEvents(){
         const fallbackCount = (typeof getDefaultFeedFallbackEvents === 'function' ? getDefaultFeedFallbackEvents(5).length : (typeof getNextUpcomingEvents === 'function' ? getNextUpcomingEvents(5).length : 0));
         const hasUpcomingFallback = typeof getNextUpcomingEvents === 'function' && getNextUpcomingEvents(1).length > 0;
         statusText.textContent = fallbackCount ? `${fallbackCount} ${hasUpcomingFallback ? 'upcoming' : 'loaded'} · none for selected day${sourceLabel ? ` · ${sourceLabel}` : ''}` : 'No matching events';
+        const fallbackCount = (typeof getNextUpcomingEvents === 'function' ? getNextUpcomingEvents(5).length : 0);
+        statusText.textContent = fallbackCount ? `${fallbackCount} upcoming · none for selected day${sourceLabel ? ` · ${sourceLabel}` : ''}` : 'No matching events';
       } else {
         statusText.textContent = visibleCount
           ? `${visibleCount} ${activeFilterLabel().toLowerCase()}${sourceLabel ? ` · ${sourceLabel}` : ''}`
