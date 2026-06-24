@@ -478,6 +478,30 @@ button, a { cursor: pointer; }
 }
 .saved-btn.active { background: #fff8e8; color: #8a5f00; border-color: rgba(196,154,60,.3); }
 
+
+.sms-demo-btn {
+  background: #fff7e6; color: #7a5200;
+  border: 1.5px solid rgba(196,154,60,.32); border-radius: 12px;
+  padding: 9px 14px; font-size: 13px; font-weight: 700;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--sans); transition: background .15s;
+}
+.sms-demo-btn:hover { background: #fff0cf; }
+.sms-modal-backdrop { position: fixed; inset: 0; z-index: 90; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(15,45,79,.42); backdrop-filter: blur(6px); }
+.sms-modal-backdrop.open { display: flex; }
+.sms-modal { width: min(420px, 100%); background: #fff; border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow-lg); padding: 18px; }
+.sms-modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.sms-modal-title { margin:0; color:var(--navy); font-family:var(--serif); font-size:24px; font-weight:400; line-height:1.05; }
+.sms-modal-close { border:0; background:#f6efe4; color:var(--navy); border-radius:999px; width:32px; height:32px; font-weight:900; cursor:pointer; }
+.sms-preview { background:#faf7f2; border:1px solid var(--line); border-radius:14px; padding:11px 12px; color:var(--muted); font-size:12px; line-height:1.45; margin-bottom:12px; }
+.sms-form-row { display:grid; gap:6px; margin-bottom:10px; }
+.sms-form-row label { font-size:11px; font-weight:800; color:var(--navy); text-transform:uppercase; letter-spacing:.06em; }
+.sms-form-row input { width:100%; border:1.5px solid var(--line2); border-radius:12px; padding:10px 12px; color:var(--text); background:#fff; }
+.sms-modal-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.sms-status { min-height:18px; margin-top:10px; font-size:12px; font-weight:700; color:var(--muted); }
+.sms-status.success { color:var(--green); }
+.sms-status.error { color:var(--red); }
+
 /* Legacy aliases */
 .primary-btn { background: var(--navy); color: #fff; border: 0; border-radius: 12px; padding: 11px 16px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: var(--sans); }
 .secondary-btn { background: #fff; color: var(--navy); border: 1.5px solid var(--line2); border-radius: 12px; padding: 11px 16px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: var(--sans); }
@@ -2521,6 +2545,34 @@ html.runtime-desktop .app, html.runtime-desktop .bottom { max-width: 680px; }
   </div>
 </div>
 
+
+<!-- Twilio SMS demo modal -->
+<div class="sms-modal-backdrop" id="smsModalBackdrop" onclick="if(event.target===this) closeSmsModal()" aria-hidden="true">
+  <div class="sms-modal" role="dialog" aria-modal="true" aria-labelledby="smsModalTitle">
+    <div class="sms-modal-head">
+      <div>
+        <h2 class="sms-modal-title" id="smsModalTitle">Text this event</h2>
+        <div class="meta">Send a reminder or invite a friend by SMS.</div>
+      </div>
+      <button class="sms-modal-close" type="button" onclick="closeSmsModal()" aria-label="Close SMS modal">×</button>
+    </div>
+    <div class="sms-preview" id="smsEventPreview">Choose an event to text.</div>
+    <div class="sms-form-row">
+      <label for="smsUserPhone">Your phone</label>
+      <input id="smsUserPhone" type="tel" inputmode="tel" placeholder="(310) 555-0199" autocomplete="tel">
+    </div>
+    <div class="sms-form-row">
+      <label for="smsFriendPhone">Friend phone (optional)</label>
+      <input id="smsFriendPhone" type="tel" inputmode="tel" placeholder="(323) 555-0123" autocomplete="tel">
+    </div>
+    <div class="sms-modal-actions">
+      <button class="primary-btn" type="button" onclick="sendSmsReminder()">Send me reminder</button>
+      <button class="secondary-btn" type="button" onclick="sendSmsInvite()">Invite friend</button>
+    </div>
+    <div class="sms-status" id="smsStatus" role="status" aria-live="polite"></div>
+  </div>
+</div>
+
 <footer style="text-align:center;font-size:11px;color:#9b8f7a;padding:10px 18px 92px;font-weight:600;letter-spacing:.02em;">© 2026 LA Jewish Tonight. All rights reserved.</footer>
 
 <div class="bottom">
@@ -2815,6 +2867,72 @@ function showToast(text){
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => el.style.display = "none", 2400);
 }
+
+function smsEventPayload(event){
+  if (!event) return null;
+  return {
+    id: event.id || '',
+    title: event.title || 'LAJT event',
+    start_time: event.start_time || '',
+    location: event.location || '',
+    region: event.region || '',
+    rsvp_link: event.rsvp_link || '',
+    public_event_url: event.public_event_url || event.event_url || event.google_event_url || ''
+  };
+}
+function normalizeClientPhone(phone){
+  const cleaned = String(phone || '').trim().replace(/[\s().-]/g, '');
+  if (/^\+[1-9]\d{7,14}$/.test(cleaned)) return cleaned;
+  if (/^1\d{10}$/.test(cleaned)) return `+${cleaned}`;
+  if (/^\d{10}$/.test(cleaned)) return `+1${cleaned}`;
+  return '';
+}
+function setSmsStatus(message, type){
+  const el = document.getElementById('smsStatus');
+  if (!el) return;
+  el.textContent = message || '';
+  el.className = `sms-status ${type || ''}`.trim();
+}
+function openSmsModal(eventId){
+  const selected = (allEvents || []).find(e => String(e.id || '') === String(eventId || '')) || (feedEvents || []).find(e => String(e.id || '') === String(eventId || ''));
+  window._smsSelectedEvent = smsEventPayload(selected);
+  const backdrop = document.getElementById('smsModalBackdrop');
+  const preview = document.getElementById('smsEventPreview');
+  if (preview && selected) preview.innerHTML = `<strong>${escapeHtml(selected.title || 'Event')}</strong><br>${escapeHtml(formatDate(selected.start_time))} · ${escapeHtml(selected.location || selected.region || 'Los Angeles')}`;
+  setSmsStatus('', '');
+  if (backdrop){ backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden', 'false'); }
+  setTimeout(() => document.getElementById('smsUserPhone')?.focus(), 30);
+  return false;
+}
+function closeSmsModal(){
+  const backdrop = document.getElementById('smsModalBackdrop');
+  if (backdrop){ backdrop.classList.remove('open'); backdrop.setAttribute('aria-hidden', 'true'); }
+}
+async function postSmsDemo(path, payload){
+  const resp = await fetch(path, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok || data.ok === false) throw new Error(data.error || 'SMS demo request failed');
+  return data;
+}
+async function sendSmsReminder(){
+  const event = window._smsSelectedEvent;
+  const phone = normalizeClientPhone(document.getElementById('smsUserPhone')?.value || '');
+  if (!phone) return setSmsStatus('Enter a valid phone number.', 'error');
+  if (!event) return setSmsStatus('Choose an event first.', 'error');
+  setSmsStatus('Sending reminder…', '');
+  try{ await postSmsDemo('/api/twilio/send-reminder', { phone, event }); setSmsStatus('Reminder text sent.', 'success'); }
+  catch(err){ setSmsStatus(err.message || 'SMS demo not configured.', 'error'); }
+}
+async function sendSmsInvite(){
+  const event = window._smsSelectedEvent;
+  const friendPhone = normalizeClientPhone(document.getElementById('smsFriendPhone')?.value || '');
+  if (!friendPhone) return setSmsStatus('Enter a valid friend phone number.', 'error');
+  if (!event) return setSmsStatus('Choose an event first.', 'error');
+  setSmsStatus('Sending invite…', '');
+  try{ await postSmsDemo('/api/twilio/invite-friend', { friendPhone, event, inviterName: currentProfile?.name || 'A friend' }); setSmsStatus('Friend invite sent.', 'success'); }
+  catch(err){ setSmsStatus(err.message || 'SMS demo not configured.', 'error'); }
+}
+
 function randomId(){
   return "lf_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
@@ -5621,6 +5739,7 @@ function eventCard(event){
       <div class="stat">💬 ${info.comments}</div>
       <button class="rsvp going-btn ${info.state.going ? "active" : ""}" onclick="event.stopPropagation(); return handleGoing('${escapeHtml(String(event.id || ""))}', this)" aria-label="${info.state.going ? 'Remove RSVP' : 'RSVP to this event'}">${info.state.going ? "Going ✓" : "Going"}</button>
       <button class="like-btn ${info.state.liked ? "active" : ""}" onclick="event.stopPropagation(); return handleLike('${escapeHtml(String(event.id || ""))}', this)" aria-label="${info.state.liked ? 'Unlike' : 'Like this event'}">${info.state.liked ? "Liked" : "Like"}</button>
+      <button class="sms-demo-btn" onclick="event.stopPropagation(); return openSmsModal('${escapeHtml(String(event.id || ""))}')" aria-label="Text reminder or invite by SMS">Text</button>
       <button class="like-btn" onclick="event.stopPropagation(); return openSendToFriend('${escapeHtml(String(event.id || ""))}')" aria-label="Invite someone to this event">Invite</button>
       <button class="open-btn" onclick="event.stopPropagation(); openEventModal('${escapeHtml(String(event.id || ""))}'); return false;" aria-label="Open full event details">Details</button>
     </div>
