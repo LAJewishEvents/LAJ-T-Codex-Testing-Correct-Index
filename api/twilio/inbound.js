@@ -2,7 +2,7 @@ const { json, twiml, parseBody, smsLine, selectEvents, loadEvents, eventTime, ev
 
 const sessions = new Map();
 
-async function handle(event) {
+exports.handler = async (event) => {
   if (event.httpMethod && event.httpMethod !== 'POST') return json(405, { ok:false, error:'Method not allowed' });
   try{
     const body = parseBody(event);
@@ -30,19 +30,5 @@ async function handle(event) {
   }catch(err){
     return twiml('Sorry, LAJT SMS is having trouble loading events right now. Please try again soon.');
   }
-}
-
-function fromVercelReq(req){
-  const body = typeof req.body === 'string' ? req.body : new URLSearchParams(req.body || {}).toString();
-  return { httpMethod:req.method, headers:req.headers || {}, body };
-}
-
-async function vercelHandler(req, res){
-  const result = await handle(fromVercelReq(req));
-  Object.entries(result.headers || {}).forEach(([key, value]) => res.setHeader(key, value));
-  res.status(result.statusCode).send(result.body);
-}
-
-module.exports = vercelHandler;
-module.exports.handler = handle;
+};
 module.exports._test = { selectEvents };

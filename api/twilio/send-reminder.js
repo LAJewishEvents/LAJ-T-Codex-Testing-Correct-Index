@@ -1,6 +1,6 @@
 const { json, parseBody, normalizePhone, eventTime, eventPlace, eventLink, sendSms } = require('./_shared');
 
-async function handle(event) {
+exports.handler = async (event) => {
   if (event.httpMethod && event.httpMethod !== 'POST') return json(405, { ok:false, error:'Method not allowed' });
   try{
     const body = parseBody(event);
@@ -10,22 +10,9 @@ async function handle(event) {
     if (!selected.title) return json(400, { ok:false, error:'Missing event details.' });
     const message = `LAJT reminder: You're interested in ${selected.title} — ${eventTime(selected)} — ${eventPlace(selected)}. Details: ${eventLink(selected)}`;
     const result = await sendSms(to, message);
-    if (!result.configured) return json(503, { ok:false, configured:false, error:'SMS demo not configured yet.' });
+    if (!result.configured) return json(503, { ok:false, configured:false, error:'SMS demo not configured. Add Twilio environment variables.' });
     return json(200, { ok:true, sid:result.sid });
   }catch(err){
     return json(500, { ok:false, error:err.message || 'SMS reminder failed' });
   }
-}
-
-function fromVercelReq(req){
-  return { httpMethod:req.method, headers:req.headers || {}, body: typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {}) };
-}
-
-async function vercelHandler(req, res){
-  const result = await handle(fromVercelReq(req));
-  Object.entries(result.headers || {}).forEach(([key, value]) => res.setHeader(key, value));
-  res.status(result.statusCode).send(result.body);
-}
-
-module.exports = vercelHandler;
-module.exports.handler = handle;
+};
