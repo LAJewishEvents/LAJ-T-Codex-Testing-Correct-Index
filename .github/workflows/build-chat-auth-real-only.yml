@@ -1,0 +1,19 @@
+name: Build authenticated real-data-only chat artifact
+
+on:
+  push:
+    branches:
+      - chat-auth-real-data-only-20260721
+    paths:
+      - .github/workflows/build-chat-auth-real-only.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chat-auth-real-data-only-20260721
