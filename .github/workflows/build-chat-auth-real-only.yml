@@ -17,3 +17,289 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: chat-auth-real-data-only-20260721
+
+      - name: Patch authenticated real-data-only mode
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          src = Path('index.html')
+          out = Path('index-15_google_auth_real_data_only.index.html')
+          html = src.read_text(encoding='utf-8')
+
+          patch = r'''
+<!-- LAJT PATCH 2026-07-21: authenticated users are real-data-only; all mock/demo data is forbidden after Google Auth -->
+<style id="lajt-auth-real-data-only-css">
+html.lajt-real-auth-only [data-mock-user="true"],
+html.lajt-real-auth-only .profile-mock-label,
+html.lajt-real-auth-only .mock-user-label,
+html.lajt-real-auth-only .mock-preview,
+html.lajt-real-auth-only [class*="mock-preview"]{display:none!important;}
+</style>
+<script id="lajt-auth-real-data-only-js">
+(function(){
+  'use strict';
+  const PATCH_ID = 'lajt-auth-real-data-only-v1';
+  if (window[PATCH_ID]) return;
+  window[PATCH_ID] = true;
+
+  let realAuthOnly = false;
+  let scrubQueued = false;
+
+  const textOf = value => {
+    try {
+      if (value == null) return '';
+      if (typeof value === 'string' || typeof value === 'number') return String(value);
+      return JSON.stringify(value);
+    } catch (_) { return String(value || ''); }
+  };
+
+  function idOf(value){
+    if (value == null) return '';
+    if (typeof value === 'string' || typeof value === 'number') return String(value);
+    return String(value.id || value.profile_id || value.user_id || value.actor_profile_id || value.from_profile_id || value.to_profile_id || value.sender_id || '');
+  }
+
+  function isMockId(value){
+    const id = idOf(value).trim();
+    return /^(mock|demo|hub)[_:-]/i.test(id) || /^mock$/i.test(id);
+  }
+
+  function isMockValue(value){
+    if (!value) return false;
+    try {
+      if (typeof isLajtMockUser === 'function' && typeof value === 'object' && isLajtMockUser(value)) return true;
+    } catch (_) {}
+    if (isMockId(value)) return true;
+    if (typeof value === 'object') {
+      if (value.is_mock === true || value.mock === true || value.demo === true || value.is_demo === true) return true;
+      const ids = [value.id,value.profile_id,value.user_id,value.actor_profile_id,value.from_profile_id,value.to_profile_id,value.sender_id,value.user_a,value.user_b,value.peer_id];
+      if (ids.some(isMockId)) return true;
+    }
+    return /\bMOCK USER\b|\bmock preview\b|\bdemo profile\b/i.test(textOf(value));
+  }
+
+  function profileIsMockById(id){
+    const key = String(id || '');
+    if (!key) return false;
+    if (isMockId(key)) return true;
+    try { return isMockValue((profilesById || {})[key]); } catch (_) { return false; }
+  }
+
+  function itemReferencesMock(item){
+    if (isMockValue(item)) return true;
+    if (!item || typeof item !== 'object') return false;
+    const refs = [item.profile_id,item.actor_profile_id,item.from_profile_id,item.to_profile_id,item.sender_id,item.user_a,item.user_b,item.peer_id,item.inviter_profile_id,item.invitee_profile_id];
+    return refs.some(profileIsMockById);
+  }
+
+  function filterArray(name, predicate){
+    try {
+      const value = eval(name);
+      if (!Array.isArray(value)) return;
+      const clean = value.filter(predicate);
+      eval(name + ' = clean');
+      try { window[name] = clean; } catch (_) {}
+    } catch (_) {}
+  }
+
+  function purgeObjectMap(name){
+    try {
+      const map = eval(name);
+      if (!map || typeof map !== 'object') return;
+      Object.keys(map).forEach(key => {
+        if (isMockId(key) || isMockValue(map[key])) delete map[key];
+      });
+    } catch (_) {}
+  }
+
+  function purgeMockState(){
+    if (!realAuthOnly) return;
+    document.documentElement.classList.add('lajt-real-auth-only');
+    window.__LAJT_REAL_AUTH_ONLY__ = true;
+
+    // Profiles and social graph.
+    purgeObjectMap('profilesById');
+    filterArray('friendRequestsCache', row => !itemReferencesMock(row));
+    filterArray('acceptedFriendshipsCache', row => !itemReferencesMock(row));
+    filterArray('friendActivityLog', row => !itemReferencesMock(row));
+    filterArray('localComments', row => !itemReferencesMock(row));
+
+    // Messages and conversations.
+    filterArray('conversationsCache', row => !itemReferencesMock(row));
+    purgeObjectMap('messagesByConversation');
+    try {
+      Object.keys(messagesByConversation || {}).forEach(key => {
+        const rows = messagesByConversation[key];
+        if (isMockId(key) || (Array.isArray(rows) && rows.some(itemReferencesMock))) delete messagesByConversation[key];
+      });
+    } catch (_) {}
+    try { if (isMockId(activeConversationId) || profileIsMockById(activeConversationPeerId)) { activeConversationId = null; activeConversationPeerId = null; } } catch (_) {}
+
+    // Notifications and feed activity.
+    filterArray('durableNotifications', row => !itemReferencesMock(row));
+    filterArray('localNotifications', row => !itemReferencesMock(row));
+    filterArray('orgEventNotifications', row => !itemReferencesMock(row));
+
+    // Disable every known demo/mock generator after authentication.
+    try { ensureMockMessagingDemoData = function(){ return false; }; window.ensureMockMessagingDemoData = ensureMockMessagingDemoData; } catch (_) {}
+    try { lajtMockFriendProfiles = function(){ return []; }; window.lajtMockFriendProfiles = lajtMockFriendProfiles; } catch (_) {}
+    try { fbHomeDemoProfiles = function(){ return []; }; window.fbHomeDemoProfiles = fbHomeDemoProfiles; } catch (_) {}
+    try { window.DISCOVERY_PEOPLE = []; } catch (_) {}
+
+    // Clear browser-persisted demo/request state without touching real auth or real user preferences.
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (/mock|demo|native_friend_requests/i.test(key)) localStorage.removeItem(key);
+      });
+    } catch (_) {}
+
+    scrubRenderedMockUI();
+    refreshRealOnlyViews();
+  }
+
+  function closestRemovable(el){
+    if (!el || !el.closest) return el;
+    return el.closest(
+      '.notification-popover-item,.conversation-row,.premium-activity-card,.network-row,.network-item,' +
+      '.profile-friend-mini-card,.profile-request-row,.pending-request-row,.lajt-native-person-row,' +
+      '.status-card,.comment-row,.hubs-person-card,.friend-card,.person-card,.activity-card'
+    ) || el;
+  }
+
+  function scrubRenderedMockUI(){
+    if (!realAuthOnly) return;
+    const selectors = [
+      '[data-profile-id^="mock_"]','[data-profile-id^="demo_"]','[data-profile-id^="hub_"]',
+      '[data-user-id^="mock_"]','[data-user-id^="demo_"]','[data-user-id^="hub_"]',
+      '[data-person-id^="mock_"]','[data-person-id^="demo_"]','[data-person-id^="hub_"]',
+      '[data-peer-id^="mock_"]','[data-peer-id^="demo_"]','[data-peer-id^="hub_"]',
+      '[data-mock-user="true"]'
+    ];
+    document.querySelectorAll(selectors.join(',')).forEach(el => closestRemovable(el)?.remove());
+
+    document.querySelectorAll('body *').forEach(el => {
+      if (el.children.length > 12) return;
+      const own = String(el.textContent || '');
+      if (/\bMOCK USER\b|\bMock preview\b/i.test(own)) closestRemovable(el)?.remove();
+    });
+
+    // Static demo unread badges must never survive authenticated mode.
+    document.querySelectorAll('span').forEach(el => {
+      if (/^\s*3\s+unread\s*$/i.test(el.textContent || '')) el.remove();
+    });
+  }
+
+  function refreshRealOnlyViews(){
+    try { refreshNotifDot?.(); } catch (_) {}
+    try { renderNetworkTab?.(); } catch (_) {}
+    try { renderFacebookInspiredHome?.(); } catch (_) {}
+    try { if (currentProfile?.id) renderProfileDashboard?.(); } catch (_) {}
+    try {
+      const open = document.getElementById('notificationPopover')?.classList.contains('open');
+      if (open) { closeNotificationPopover?.(); }
+    } catch (_) {}
+  }
+
+  function queueScrub(){
+    if (!realAuthOnly || scrubQueued) return;
+    scrubQueued = true;
+    requestAnimationFrame(() => {
+      scrubQueued = false;
+      purgeMockState();
+    });
+  }
+
+  async function activateFromSession(session){
+    if (!session?.user) return false;
+    realAuthOnly = true;
+    window.__LAJT_REAL_AUTH_ONLY__ = true;
+    purgeMockState();
+    [0,80,250,700,1600].forEach(ms => setTimeout(purgeMockState, ms));
+    return true;
+  }
+
+  async function checkAuth(){
+    try {
+      const client = await ensureSupabaseClient();
+      if (!client?.auth?.getSession) return false;
+      const result = await client.auth.getSession();
+      return activateFromSession(result?.data?.session);
+    } catch (_) { return false; }
+  }
+
+  // Filter notifications at the final render boundary too.
+  try {
+    const originalBell = handleNotificationBellClick;
+    handleNotificationBellClick = function(ev){
+      if (realAuthOnly) purgeMockState();
+      const result = originalBell.apply(this, arguments);
+      if (realAuthOnly) queueScrub();
+      return result;
+    };
+    window.handleNotificationBellClick = handleNotificationBellClick;
+  } catch (_) {}
+
+  // Filter messages every time the portal opens.
+  try {
+    const originalMessages = openConversationsList;
+    openConversationsList = async function(){
+      if (realAuthOnly) purgeMockState();
+      const result = await originalMessages.apply(this, arguments);
+      if (realAuthOnly) purgeMockState();
+      return result;
+    };
+    window.openConversationsList = openConversationsList;
+  } catch (_) {}
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    await checkAuth();
+    try {
+      const client = await ensureSupabaseClient();
+      client?.auth?.onAuthStateChange?.((event, session) => {
+        if (session?.user) activateFromSession(session);
+        else if (event === 'SIGNED_OUT') {
+          realAuthOnly = false;
+          window.__LAJT_REAL_AUTH_ONLY__ = false;
+          document.documentElement.classList.remove('lajt-real-auth-only');
+        }
+      });
+    } catch (_) {}
+
+    const observer = new MutationObserver(queueScrub);
+    observer.observe(document.body, {childList:true,subtree:true,characterData:true});
+  });
+
+  window.addEventListener('pageshow', checkAuth);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkAuth(); });
+  window.lajtPurgeAllMockDataForAuthenticatedUser = purgeMockState;
+})();
+</script>
+'''
+
+          marker = '<!-- LAJT PATCH 2026-07-21: authenticated users are real-data-only; all mock/demo data is forbidden after Google Auth -->'
+          if marker in html:
+              raise SystemExit('Patch marker already exists')
+          if '</body>' not in html:
+              raise SystemExit('Missing </body>')
+          html = html.replace('</body>', patch + '\n</body>', 1)
+          out.write_text(html, encoding='utf-8')
+          print(f'Wrote {out} ({out.stat().st_size} bytes)')
+          PY
+
+      - name: Commit generated file
+        shell: bash
+        run: |
+          git config user.name "LAJT Chat Artifact Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index-15_google_auth_real_data_only.index.html
+          git commit -m "Add authenticated real-data-only LAJT index"
+          git push origin HEAD:chat-auth-real-data-only-20260721
+
+      - name: Upload generated file
+        uses: actions/upload-artifact@v4
+        with:
+          name: index-15-google-auth-real-data-only
+          path: index-15_google_auth_real_data_only.index.html
+          if-no-files-found: error
