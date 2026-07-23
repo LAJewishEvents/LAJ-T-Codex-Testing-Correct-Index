@@ -1,0 +1,215 @@
+name: Patch WhatsApp friend invite flow
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-whatsapp-friend-invite.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          helper = r'''
+const LAJT_CANONICAL_APP_URL = "https://lajewishtonight.com/";
+function buildPersonalFriendInviteUrl(inviteCode, inviterProfileId){
+  const url = new URL(LAJT_CANONICAL_APP_URL);
+  url.searchParams.set("add_friend", "1");
+  if (inviteCode) url.searchParams.set("invite", String(inviteCode));
+  if (inviterProfileId) url.searchParams.set("ref", String(inviterProfileId));
+  return url.toString();
+}
+
+'''
+          if 'const LAJT_CANONICAL_APP_URL = "https://lajewishtonight.com/";' not in text:
+              marker = 'async function shareTonightWithFriends(ev){'
+              if marker not in text:
+                  raise SystemExit('shareTonightWithFriends marker not found')
+              text = text.replace(marker, helper + marker, 1)
+
+          text = re.sub(
+              r'''  const fallbackBase = "https://lajewishtonight\.com/";\n  const baseUrl = \(window\.location\?\.origin && window\.location\?\.pathname\)\n    \? `\$\{window\.location\.origin\}\$\{window\.location\.pathname\}`\n    : fallbackBase;\n  const inviteUrl = `\$\{baseUrl\}\?invite=\$\{encodeURIComponent\(inviteCode\)\}&add_friend=1`;''',
+              '  const inviteUrl = buildPersonalFriendInviteUrl(inviteCode, currentProfile?.id);',
+              text,
+              count=1
+          )
+
+          text = re.sub(
+              r'''  const fallbackBase = "https://lajewishtonight\.com/";\n  const baseUrl = \(window\.location\?\.origin && window\.location\?\.pathname\)\n    \? `\$\{window\.location\.origin\}\$\{window\.location\.pathname\}`\n    : fallbackBase;\n  const inviteUrl = `\$\{baseUrl\}\?add_friend=1&invite=\$\{encodeURIComponent\(inviteCode\)\}`;''',
+              '  const inviteUrl = buildPersonalFriendInviteUrl(inviteCode, currentProfile?.id);',
+              text,
+              count=1
+          )
+
+          text = text.replace(
+              '  const inviteUrl = `https://laj-tonight.vercel.app/?add_friend=1&invite=${encodeURIComponent(inviteCode)}`;',
+              '  const inviteUrl = buildPersonalFriendInviteUrl(inviteCode, currentProfile?.id);',
+              1
+          )
+
+          text = text.replace(
+              '      await navigator.share({ text: message, url: inviteUrl });',
+              '      await navigator.share({ text: message });',
+              1
+          )
+
+          materialize_fn = r'''
+async function materializeIncomingWhatsappInvite(inviterProfileId, inviteCode){
+  await ensureCurrentProfile();
+  const recipientId = String(currentProfile?.id || "");
+  const inviterId = String(inviterProfileId || "");
+  if (!isSupabaseUuid(recipientId) || !isSupabaseUuid(inviterId) || recipientId === inviterId) return false;
+
+  try{ await loadFriendBackendData(); }catch(_){ }
+
+  const existing = (friendRequestsCache || []).find(row => {
+    const from = requestFromProfileId(row);
+    const to = requestToProfileId(row);
+    return (from === inviterId && to === recipientId) || (from === recipientId && to === inviterId);
+  }) || null;
+
+  if (existing){
+    const status = String(existing.status || "pending");
+    if (status === "accepted"){
+      showToast("You’re already connected");
+      return true;
+    }
+    if (status === "pending"){
+      if (requestFromProfileId(existing) === inviterId){
+        showProfileView();
+        setTimeout(() => document.querySelector('.profile-requests-panel')?.scrollIntoView({ behavior:'smooth', block:'center' }), 120);
+        showToast("Friend invite ready — accept or ignore below");
+      } else {
+        showToast("A connection request is already pending");
+      }
+      return true;
+    }
+  }
+
+  try{
+    const client = await ensureSupabaseClient();
+    if (!client?.from) throw new Error("Supabase client unavailable");
+
+    const basePayload = {
+      from_profile_id: inviterId,
+      to_profile_id: recipientId,
+      status: "pending"
+    };
+    const extendedPayload = {
+      ...basePayload,
+      source: "whatsapp",
+      invite_code: inviteCode || null
+    };
+
+    let data = null;
+    let error = null;
+    ({ data, error } = await client.from("friend_requests").insert(extendedPayload).select("*").limit(1));
+    if (error){
+      console.warn("WhatsApp metadata columns unavailable; retrying standard friend request payload", error);
+      ({ data, error } = await client.from("friend_requests").insert(basePayload).select("*").limit(1));
+    }
+    if (error) throw error;
+
+    const stored = Array.isArray(data) && data[0] ? { ...data[0] } : { ...extendedPayload, id:`local_whatsapp_${Date.now()}`, created_at:new Date().toISOString() };
+    if (!stored.source) stored.source = "whatsapp";
+    if (!stored.invite_code && inviteCode) stored.invite_code = inviteCode;
+    friendRequestsCache = [stored, ...(friendRequestsCache || []).filter(row => String(row.id || "") !== String(stored.id || ""))];
+
+    await loadFriendBackendData();
+    renderNetworkTab();
+    if (currentProfile) renderProfileDashboard();
+
+    const inviter = profilesById[inviterId] || {};
+    const inviterName = profileDisplayName(inviter) || "Your friend";
+    pushNotificationCard({
+      id: `whatsapp_invite_opened_${stored.id || inviteCode}`,
+      type: "friend_request_received",
+      dedupeKey: `whatsapp_invite:${recipientId}:${stored.id || inviteCode}`,
+      title: "WhatsApp friend invite",
+      body: `${inviterName} invited you to connect. Accept or ignore the request.`
+    });
+
+    showProfileView();
+    setTimeout(() => document.querySelector('.profile-requests-panel')?.scrollIntoView({ behavior:'smooth', block:'center' }), 120);
+    showToast(`${inviterName} invited you — accept or ignore below`);
+    return true;
+  }catch(err){
+    console.error("Could not materialize incoming WhatsApp friend invite", err);
+    showToast("Could not open this friend invite yet. Please try again.");
+    return false;
+  }
+}
+
+'''
+          if 'async function materializeIncomingWhatsappInvite(' not in text:
+              marker = 'async function processPendingInviteFlow(){'
+              if marker not in text:
+                  raise SystemExit('processPendingInviteFlow marker not found')
+              text = text.replace(marker, materialize_fn + marker, 1)
+
+          replacement = r'''async function processPendingInviteFlow(){
+  if (inviteProcessing) return;
+  if (!currentProfile?.id) return;
+  const url = new URL(window.location.href);
+  const addFriend = url.searchParams.get("add_friend");
+  const invite = url.searchParams.get("invite");
+  const ref = url.searchParams.get("ref");
+  const stored = readPendingInviteData();
+  const targetFromStored = stored?.target_profile_id || null;
+  const inviteFromStored = stored?.invite_code || null;
+  const inviteCode = invite || inviteFromStored || null;
+  const targetProfileId = targetFromStored || (inviteCode ? await resolveInviteToProfileId(inviteCode) : null) || ref || null;
+
+  if (!addFriend && !stored) return;
+  if (!targetProfileId || String(targetProfileId) === String(currentProfile.id)){
+    clearPendingInviteData();
+    return;
+  }
+
+  inviteProcessing = true;
+  persistPendingInviteData({ target_profile_id: targetProfileId, invite_code: inviteCode });
+  try{
+    const ok = await materializeIncomingWhatsappInvite(targetProfileId, inviteCode);
+    if (ok){
+      clearPendingInviteData();
+      url.searchParams.delete("add_friend");
+      url.searchParams.delete("invite");
+      url.searchParams.delete("ref");
+      window.history.replaceState({}, "", url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : ""));
+    }
+  }finally{
+    inviteProcessing = false;
+  }
+}
+'''
+          pattern = re.compile(r'async function processPendingInviteFlow\(\)\{.*?\n\}\n\n\nfunction reconcileFriendNotifications', re.S)
+          if not pattern.search(text):
+              raise SystemExit('Could not locate complete processPendingInviteFlow block')
+          text = pattern.sub(replacement + '\n\nfunction reconcileFriendNotifications', text, count=1)
+
+          path.write_text(text, encoding='utf-8')
+          print('Patched canonical WhatsApp friend invite flow.')
+          PY
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name "LAJT Patch Bot"
+          git config user.email "lajevents.inbox@gmail.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Fix canonical WhatsApp friend invite flow"
+          git push
