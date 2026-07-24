@@ -3860,6 +3860,14 @@ html.runtime-webview .bottom {
 .profile-detail-row strong { color:var(--navy); font-weight:900; }
 .profile-org-chip-row { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
 .profile-org-chip { display:inline-flex; align-items:center; gap:5px; padding:6px 10px; border-radius:999px; background:#f0f4ff; color:#244c82; border:1px solid #d4defc; font-size:11px; font-weight:900; font-family:var(--sans); }
+.profile-org-picker { border:1px solid var(--line); border-radius:16px; background:#faf7f2; padding:10px; }
+.profile-org-picker-search { width:100%; border:1px solid var(--line); border-radius:11px; background:#fff; padding:10px 12px; font:inherit; margin-bottom:8px; }
+.profile-org-picker-list { display:grid; gap:10px; max-height:260px; overflow:auto; }
+.profile-org-category-title { color:var(--navy); font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.06em; margin:4px 0 6px; }
+.profile-org-options { display:flex; flex-wrap:wrap; gap:6px; }
+.profile-org-option { border:1px solid #d4defc; background:#fff; color:#244c82; border-radius:999px; padding:7px 10px; font:700 11px var(--sans); cursor:pointer; }
+.profile-org-option.selected { background:#244c82; border-color:#244c82; color:#fff; }
+.profile-org-picker-status { color:var(--muted); font-size:11px; line-height:1.4; margin-top:8px; }
 .profile-coming-soon-chip { background:#fff7e6; color:#805900; border-color:#f0d895; }
 .profile-dashboard-card { background:#fff; border:1px solid var(--line); border-radius:22px; padding:14px; box-shadow:var(--shadow-sm); margin:14px 0; }
 .profile-dashboard-card-title { font-family:var(--serif); color:var(--navy); font-size:21px; line-height:1.05; font-weight:400; margin:0 0 8px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
@@ -4801,9 +4809,12 @@ html,body{background:radial-gradient(circle at 28% -8%,rgba(200,164,93,.14),tran
               </div>
             </div>
             <div class="field">
-              <label for="orgSubscriptionsInput">Org subscriptions</label>
-              <input id="orgSubscriptionsInput" placeholder="Sinai ATID, Moishe House, The BLVD" />
-              <div class="profile-field-note">Visible now as profile interests. Follow/sync behavior can be wired later.</div>
+              <label for="orgSubscriptionsSearch">Organization subscriptions</label>
+              <div class="profile-org-picker">
+                <input class="profile-org-picker-search" id="orgSubscriptionsSearch" type="search" placeholder="Search organizations" autocomplete="off" />
+                <div class="profile-org-picker-list" id="orgSubscriptionsPicker" aria-live="polite"><div class="profile-org-picker-status">Loading organizations from LAJT events…</div></div>
+                <div class="profile-org-picker-status" id="orgSubscriptionsStatus">Choose organizations to receive a notification when they add a new event.</div>
+              </div>
             </div>
             <div class="field">
               <label for="photoInput">Upload profile photo</label>
@@ -5425,6 +5436,10 @@ let orgSyncInFlight = false;
 let orgFollowsLoadedFromSupabase = false;
 let orgFollowsLoadedProfileId = '';
 let orgFollowsLoadPromise = null;
+let profileOrganizationRegistry = [];
+let profileOrganizationSubscriptions = new Set();
+let profileOrganizationRegistryPromise = null;
+let profileOrganizationRegistryProfileId = '';
 let _feedSubTab = 'feed';
 let feedEvents = [];
 let filteredEvents = [];
@@ -7680,7 +7695,88 @@ function refreshNotifDot(){
 
 function profileCity(profile){ return String(profile?.city || profile?.location_city || profile?.profile_city || "").trim(); }
 function profileShul(profile){ return String(profile?.shul || profile?.synagogue || profile?.community || "").trim(); }
+async function loadProfileOrganizationRegistry(force = false){
+  if (profileOrganizationRegistryPromise) return profileOrganizationRegistryPromise;
+  const requestedProfileId = String(currentProfile?.id || '');
+  if (profileOrganizationRegistry.length && profileOrganizationRegistryProfileId === requestedProfileId && !force) { renderProfileOrganizationPicker(); return profileOrganizationRegistry; }
+  profileOrganizationRegistryPromise = (async () => {
+    try{
+      const client = await ensureSupabaseClient();
+      if (!client?.from) throw new Error("Supabase client unavailable");
+      const { data, error } = await client.from("organizations")
+        .select("id,name,slug,event_count,category_id,organization_categories(name,slug,sort_order)")
+        .eq("active", true).order("event_count", { ascending:false }).limit(1000);
+      if (error) throw error;
+      profileOrganizationRegistry = Array.isArray(data) ? data : [];
+      if (currentProfile?.id && isSupabaseUuid(currentProfile.id)) {
+        const subscriptions = await client.from("profile_organization_subscriptions")
+          .select("organization_id").eq("profile_id", currentProfile.id);
+        if (subscriptions.error) throw subscriptions.error;
+        profileOrganizationSubscriptions = new Set((subscriptions.data || []).map(row => String(row.organization_id)));
+      } else {
+        const rawSaved = currentProfile?.org_subscriptions || currentProfile?.orgSubscriptions || currentProfile?.orgs || [];
+        const savedNames = new Set((Array.isArray(rawSaved) ? rawSaved : String(rawSaved).split(/[;,]/)).map(value => String(value || '').trim()).filter(Boolean));
+        profileOrganizationSubscriptions = new Set(profileOrganizationRegistry.filter(org => savedNames.has(org.name)).map(org => String(org.id)));
+      }
+    }catch(err){
+      console.warn("Organization registry unavailable; using organizations derived from loaded events", err);
+      profileOrganizationRegistry = buildOrganizationsFromEvents(allEvents || []).map(org => ({ ...org, id:String(org.id), organization_categories:{ name:"Community Organizations", slug:"community", sort_order:90 } }));
+      const rawSaved = currentProfile?.org_subscriptions || currentProfile?.orgSubscriptions || currentProfile?.orgs || [];
+      const savedNames = new Set((Array.isArray(rawSaved) ? rawSaved : String(rawSaved).split(/[;,]/)).map(value => String(value || '').trim()).filter(Boolean));
+      profileOrganizationSubscriptions = new Set(profileOrganizationRegistry.filter(org => savedNames.has(org.name)).map(org => String(org.id)));
+    }finally{
+      profileOrganizationRegistryProfileId = requestedProfileId;
+      profileOrganizationRegistryPromise = null;
+      renderProfileOrganizationPicker();
+      renderProfileIdentityDetails();
+    }
+    return profileOrganizationRegistry;
+  })();
+  return profileOrganizationRegistryPromise;
+}
+function selectedProfileOrganizations(){
+  return profileOrganizationRegistry.filter(org => profileOrganizationSubscriptions.has(String(org.id)));
+}
+function toggleProfileOrganizationSubscription(id){
+  const key = String(id || "");
+  if (profileOrganizationSubscriptions.has(key)) profileOrganizationSubscriptions.delete(key);
+  else profileOrganizationSubscriptions.add(key);
+  renderProfileOrganizationPicker();
+  renderProfileIdentityDetails();
+}
+function renderProfileOrganizationPicker(){
+  const list = document.getElementById("orgSubscriptionsPicker");
+  if (!list) return;
+  const query = String(document.getElementById("orgSubscriptionsSearch")?.value || "").trim().toLowerCase();
+  const filtered = profileOrganizationRegistry.filter(org => !query || `${org.name || ""} ${org.organization_categories?.name || ""}`.toLowerCase().includes(query));
+  const groups = new Map();
+  filtered.forEach(org => {
+    const category = org.organization_categories?.name || "Community Organizations";
+    const order = Number(org.organization_categories?.sort_order || 100);
+    if (!groups.has(category)) groups.set(category, { order, organizations:[] });
+    groups.get(category).organizations.push(org);
+  });
+  list.innerHTML = groups.size ? Array.from(groups.entries()).sort((a,b) => a[1].order-b[1].order || a[0].localeCompare(b[0])).map(([category, group]) => `
+    <div><div class="profile-org-category-title">${escapeHtml(category)}</div><div class="profile-org-options">${group.organizations.map(org => {
+      const selected = profileOrganizationSubscriptions.has(String(org.id));
+      return `<button type="button" class="profile-org-option${selected ? " selected" : ""}" aria-pressed="${selected}" onclick="toggleProfileOrganizationSubscription('${escapeHtml(String(org.id))}')">${selected ? "✓ " : ""}${escapeHtml(org.name || "Organization")}</button>`;
+    }).join("")}</div></div>`).join("") : `<div class="profile-org-picker-status">${query ? "No organizations match your search." : "No organizations have been discovered from events yet."}</div>`;
+  const status = document.getElementById("orgSubscriptionsStatus");
+  if (status) status.textContent = `${profileOrganizationSubscriptions.size} selected · Notifications are created only for genuinely new events.`;
+}
+async function persistProfileOrganizationSubscriptions(){
+  if (!currentProfile?.id || !isSupabaseUuid(currentProfile.id)) return false;
+  const client = await ensureSupabaseClient();
+  if (!client?.rpc) return false;
+  const selected = new Set(Array.from(profileOrganizationSubscriptions));
+  await Promise.all(profileOrganizationRegistry.filter(org => isSupabaseUuid(org.id)).map(async org => {
+    const { error } = await client.rpc("set_organization_subscription", { p_organization_id:org.id, p_subscribed:selected.has(String(org.id)) });
+    if (error) throw error;
+  }));
+  return true;
+}
 function profileOrgSubscriptions(profile){
+  if (profile === currentProfile && profileOrganizationRegistry.length) return selectedProfileOrganizations().map(org => org.name).filter(Boolean);
   const raw = profile?.org_subscriptions || profile?.orgSubscriptions || profile?.orgs || "";
   if (Array.isArray(raw)) return raw.map(v => String(v || "").trim()).filter(Boolean);
   return String(raw || "").split(/[;,]/).map(v => v.trim()).filter(Boolean);
@@ -7695,7 +7791,7 @@ function renderProfileIdentityDetails(){
   const orgs = profileOrgSubscriptions(p);
   const orgHtml = orgs.length
     ? orgs.slice(0,6).map(org => `<span class="profile-org-chip">★ ${escapeHtml(org)}</span>`).join("")
-    : `<span class="profile-org-chip profile-coming-soon-chip">Org subscriptions coming soon</span>`;
+    : `<span class="profile-org-chip profile-coming-soon-chip">No organization subscriptions yet</span>`;
   const detailHtml = `
     <div class="profile-detail-row"><span class="profile-detail-icon">🏙️</span><span><strong>City:</strong> ${escapeHtml(city)}</span></div>
     <div class="profile-detail-row"><span class="profile-detail-icon">📍</span><span><strong>Neighborhood:</strong> ${escapeHtml(neighborhood)}</span></div>
@@ -7709,7 +7805,7 @@ function renderProfileIdentityDetails(){
       <div class="profile-social-strip">
         <div class="profile-social-pill">🗓️ RSVP identity</div>
         <div class="profile-social-pill">👥 Friend discovery</div>
-        <div class="profile-social-pill">⭐ Org follows soon</div>
+        <div class="profile-social-pill">⭐ Organization subscriptions</div>
       </div>`;
   }
 }
@@ -7721,7 +7817,7 @@ function refreshProfileUI(){
   document.getElementById("neighborhoodInput").value = p?.neighborhood || "";
   const cityInput = document.getElementById("cityInput"); if (cityInput) cityInput.value = profileCity(p);
   const shulInput = document.getElementById("shulInput"); if (shulInput) shulInput.value = profileShul(p);
-  const orgInput = document.getElementById("orgSubscriptionsInput"); if (orgInput) orgInput.value = profileOrgSubscriptions(p).join(", ");
+  loadProfileOrganizationRegistry();
   document.getElementById("photoInput").value = "";
   document.getElementById("bioInput").value = p?.bio || "";
   document.getElementById("profileHeadline").textContent = p ? "Your profile" : "Create your profile";
@@ -8076,7 +8172,7 @@ async function handleSaveProfile(){
   const neighborhood = document.getElementById("neighborhoodInput").value.trim();
   const city = (document.getElementById("cityInput")?.value || "").trim();
   const shul = (document.getElementById("shulInput")?.value || "").trim();
-  const org_subscriptions = (document.getElementById("orgSubscriptionsInput")?.value || "").split(/[;,]/).map(v => v.trim()).filter(Boolean);
+  const org_subscriptions = selectedProfileOrganizations().map(org => org.name).filter(Boolean);
   const photoFile = document.getElementById("photoInput").files[0];
   const bio = document.getElementById("bioInput").value.trim();
   if (!name){
@@ -8144,6 +8240,7 @@ async function handleSaveProfile(){
     if (!res.ok) throw new Error("Profile save failed");
     profile.synced = true;
     saveLocalProfile(profile);
+    await persistProfileOrganizationSubscriptions().catch(err => console.warn("Organization subscriptions could not be synced", err));
     refreshProfileUI();
     renderTonightTab();
     loadMemberCount();
@@ -9970,7 +10067,7 @@ async function loadEvents(){
     thisWeekEventsCache = upcomingOnly([...windows.thisWeek, ...windows.future, ...windows.nextTwoWeeks, ...windows.allSorted]).slice(0, 220);
     communityFeedFallbackNotice = '';
     syncEventGlobals();
-    scheduleOrganizationSync(allEvents);
+    // Organization discovery is performed atomically by the public.events database trigger.
   }
 
   if (statusText) statusText.textContent = "Loading live events…";
@@ -13993,6 +14090,7 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("editProfileBtn")?.addEventListener("click", openProfileEditor);
 
   document.getElementById("organizationsSearchInput")?.addEventListener("input", renderOrganizationsView);
+  document.getElementById("orgSubscriptionsSearch")?.addEventListener("input", renderProfileOrganizationPicker);
   document.querySelectorAll(".orgs-chip[data-org-filter]").forEach(btn => {
     btn.addEventListener("click", () => {
       activeOrgFilter = btn.dataset.orgFilter || "all";
