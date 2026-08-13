@@ -7725,6 +7725,7 @@ async function getAuthenticatedOrganizationSession(clientOverride){
   return { client, user };
 }
 async function loadProfileOrganizationRegistry(force = false){
+  const subscriptionReadVersion = typeof window.lajtOrganizationSubscriptionMutationVersion === "function" ? window.lajtOrganizationSubscriptionMutationVersion() : 0;
   if (profileOrganizationRegistryPromise){
     return profileOrganizationRegistryPromise;
   }
@@ -7802,7 +7803,7 @@ async function loadProfileOrganizationRegistry(force = false){
           .eq("profile_id",authenticatedProfileId);
 
         if (!subscriptions.error){
-          synchronizeOrganizationSubscriptionState(
+          (typeof window.lajtOrganizationSubscriptionMutationVersion !== "function" || subscriptionReadVersion === window.lajtOrganizationSubscriptionMutationVersion()) && synchronizeOrganizationSubscriptionState(
             (subscriptions.data || [])
               .map(row => row.organization_id)
           );
@@ -7811,7 +7812,7 @@ async function loadProfileOrganizationRegistry(force = false){
             "Organization subscription read failed",
             subscriptions.error
           );
-          synchronizeOrganizationSubscriptionState(
+          (typeof window.lajtOrganizationSubscriptionMutationVersion !== "function" || subscriptionReadVersion === window.lajtOrganizationSubscriptionMutationVersion()) && synchronizeOrganizationSubscriptionState(
             profileOrganizationSubscriptions
           );
         }
@@ -7832,7 +7833,7 @@ async function loadProfileOrganizationRegistry(force = false){
             .filter(Boolean)
         );
 
-        synchronizeOrganizationSubscriptionState(
+        (typeof window.lajtOrganizationSubscriptionMutationVersion !== "function" || subscriptionReadVersion === window.lajtOrganizationSubscriptionMutationVersion()) && synchronizeOrganizationSubscriptionState(
           profileOrganizationRegistry
             .filter(org => savedNames.has(org.name))
             .map(org => org.id)
@@ -7869,7 +7870,7 @@ async function loadProfileOrganizationRegistry(force = false){
           .map(String)
       );
 
-      synchronizeOrganizationSubscriptionState(
+      (typeof window.lajtOrganizationSubscriptionMutationVersion !== "function" || subscriptionReadVersion === window.lajtOrganizationSubscriptionMutationVersion()) && synchronizeOrganizationSubscriptionState(
         profileOrganizationRegistry
           .filter(org => savedNames.has(org.name))
           .map(org => org.id)
@@ -24917,18 +24918,19 @@ html{scrollbar-gutter:stable;}
 </script>
 
 <style id="profileOrganizationSubscriptionsStyles">
-.profile-org-subscriptions{margin:14px 0 16px}.pos-card{position:relative;overflow:hidden;background:linear-gradient(145deg,#fffdf9,#f7fbff);border:1px solid rgba(15,45,79,.12);border-radius:22px;padding:16px;box-shadow:0 12px 32px rgba(15,45,79,.08)}.pos-card:before{content:"";position:absolute;width:150px;height:150px;right:-70px;top:-75px;border-radius:50%;background:rgba(126,160,207,.12);pointer-events:none}.pos-head{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.pos-title{margin:0;color:var(--navy);font:400 21px/1.1 var(--serif)}.pos-copy{margin:6px 0 0;color:var(--muted);font:12px/1.45 var(--sans);max-width:290px}.pos-count{white-space:nowrap;border:1px solid #d4defc;background:#f0f4ff;color:#234f88;border-radius:999px;padding:6px 9px;font:800 11px var(--sans)}.pos-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}.pos-avatars{display:flex;min-width:0;align-items:center}.pos-avatar{width:42px;height:42px;margin-right:-8px;border:3px solid #fff;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#294f78,#7596bf);color:#fff;display:grid;place-items:center;font:800 12px var(--sans);box-shadow:0 3px 10px rgba(15,45,79,.14)}.pos-avatar img,.pom-logo img,.pod-logo img{width:100%;height:100%;object-fit:cover}.pos-names{margin:9px 0 0;color:#40546a;font:700 11px/1.4 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pos-manage,.pos-primary{min-height:44px;border:0;border-radius:13px;background:var(--navy);color:#fff;padding:0 15px;font:800 13px var(--sans);cursor:pointer}.pos-actions{display:flex;flex-direction:column;gap:8px;flex:0 0 auto;min-width:132px}.pos-add{min-height:42px;border:1.5px solid var(--navy);border-radius:13px;background:#fff;color:var(--navy);padding:0 13px;font:800 12px var(--sans);cursor:pointer}.pos-actions .pos-manage{width:100%}.pom-manage-intro{margin:12px 0 4px;padding:12px 13px;border:1px solid rgba(15,45,79,.1);border-radius:15px;background:#f6f9fc;color:#536272;font:11px/1.45 var(--sans)}.pom-manage-intro strong{display:block;margin-bottom:3px;color:var(--navy);font:800 12px var(--sans)}.pos-empty{position:relative;margin-top:14px;padding:15px;border:1px dashed rgba(15,45,79,.2);border-radius:17px;background:rgba(255,255,255,.7);display:grid;grid-template-columns:46px 1fr;gap:11px;align-items:center}.pos-empty-icon{width:44px;height:44px;border-radius:15px;background:#edf3fa;color:var(--navy);display:grid;place-items:center}.pos-empty strong{display:block;color:var(--navy);font:400 17px var(--serif)}.pos-empty p{margin:3px 0 10px;color:var(--muted);font:12px/1.35 var(--sans)}.pos-events{border-top:1px solid rgba(15,45,79,.09);margin-top:14px;padding-top:12px}.pos-events-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}.pos-events-head strong{color:var(--navy);font:800 12px var(--sans)}.pos-seeall{border:0;background:transparent;color:#315d91;font:800 11px var(--sans);cursor:pointer}.pos-event{width:100%;display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:9px;border:0;border-top:1px solid #eee7dc;background:transparent;padding:9px 0;text-align:left;cursor:pointer}.pos-event:first-of-type{border-top:0}.pos-date{border-radius:11px;background:#f5eee3;color:var(--navy);padding:6px 3px;text-align:center;font:800 9px/1.1 var(--sans);text-transform:uppercase}.pos-date b{display:block;font-size:15px}.pos-event-title{color:var(--navy);font:700 12px/1.3 var(--sans)}.pos-event-meta{color:var(--muted);font:10px/1.3 var(--sans);margin-top:2px}.profile-org-skeleton{height:150px;border-radius:22px;background:#fff;border:1px solid var(--line);padding:18px}.profile-org-skeleton span{display:block;height:12px;border-radius:8px;margin-bottom:13px;background:linear-gradient(90deg,#eee7dc,#faf8f4,#eee7dc);background-size:200% 100%;animation:posShimmer 1.4s infinite}.profile-org-skeleton span:nth-child(1){width:58%;height:20px}.profile-org-skeleton span:nth-child(2){width:85%}.profile-org-skeleton span:nth-child(3){width:42%;height:42px}@keyframes posShimmer{to{background-position:-200% 0}}
+.profile-org-subscriptions{margin:14px 0 16px}.pos-card{position:relative;overflow:hidden;background:linear-gradient(145deg,#fffdf9,#f7fbff);border:1px solid rgba(15,45,79,.12);border-radius:22px;padding:16px;box-shadow:0 12px 32px rgba(15,45,79,.08)}.pos-card:before{content:"";position:absolute;width:150px;height:150px;right:-70px;top:-75px;border-radius:50%;background:rgba(126,160,207,.12);pointer-events:none}.pos-head{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.pos-title{margin:0;color:var(--navy);font:400 21px/1.1 var(--serif)}.pos-copy{margin:6px 0 0;color:var(--muted);font:12px/1.45 var(--sans);max-width:290px}.pos-count{white-space:nowrap;border:1px solid #d4defc;background:#f0f4ff;color:#234f88;border-radius:999px;padding:6px 9px;font:800 11px var(--sans)}.pos-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}.pos-avatars{display:flex;min-width:0;align-items:center}.pos-avatar{width:42px;height:42px;margin-right:-8px;border:3px solid #fff;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#294f78,#7596bf);color:#fff;display:grid;place-items:center;font:800 12px var(--sans);box-shadow:0 3px 10px rgba(15,45,79,.14)}.pos-avatar img,.pom-logo img,.pod-logo img{width:100%;height:100%;object-fit:contain;background:#fff}.pos-names{margin:9px 0 0;color:#40546a;font:700 11px/1.4 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pos-manage,.pos-primary{min-height:44px;border:0;border-radius:13px;background:var(--navy);color:#fff;padding:0 15px;font:800 13px var(--sans);cursor:pointer}.pos-actions{display:flex;flex-direction:column;gap:8px;flex:0 0 auto;min-width:132px}.pos-add{min-height:42px;border:1.5px solid var(--navy);border-radius:13px;background:#fff;color:var(--navy);padding:0 13px;font:800 12px var(--sans);cursor:pointer}.pos-actions .pos-manage{width:100%}.pom-manage-intro{margin:12px 0 4px;padding:12px 13px;border:1px solid rgba(15,45,79,.1);border-radius:15px;background:#f6f9fc;color:#536272;font:11px/1.45 var(--sans)}.pom-manage-intro strong{display:block;margin-bottom:3px;color:var(--navy);font:800 12px var(--sans)}.pos-empty{position:relative;margin-top:14px;padding:15px;border:1px dashed rgba(15,45,79,.2);border-radius:17px;background:rgba(255,255,255,.7);display:grid;grid-template-columns:46px 1fr;gap:11px;align-items:center}.pos-empty-icon{width:44px;height:44px;border-radius:15px;background:#edf3fa;color:var(--navy);display:grid;place-items:center}.pos-empty strong{display:block;color:var(--navy);font:400 17px var(--serif)}.pos-empty p{margin:3px 0 10px;color:var(--muted);font:12px/1.35 var(--sans)}.pos-events{border-top:1px solid rgba(15,45,79,.09);margin-top:14px;padding-top:12px}.pos-events-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}.pos-events-head strong{color:var(--navy);font:800 12px var(--sans)}.pos-seeall{border:0;background:transparent;color:#315d91;font:800 11px var(--sans);cursor:pointer}.pos-event{width:100%;display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:9px;border:0;border-top:1px solid #eee7dc;background:transparent;padding:9px 0;text-align:left;cursor:pointer}.pos-event:first-of-type{border-top:0}.pos-date{border-radius:11px;background:#f5eee3;color:var(--navy);padding:6px 3px;text-align:center;font:800 9px/1.1 var(--sans);text-transform:uppercase}.pos-date b{display:block;font-size:15px}.pos-event-title{color:var(--navy);font:700 12px/1.3 var(--sans)}.pos-event-meta{color:var(--muted);font:10px/1.3 var(--sans);margin-top:2px}.profile-org-skeleton{height:150px;border-radius:22px;background:#fff;border:1px solid var(--line);padding:18px}.profile-org-skeleton span{display:block;height:12px;border-radius:8px;margin-bottom:13px;background:linear-gradient(90deg,#eee7dc,#faf8f4,#eee7dc);background-size:200% 100%;animation:posShimmer 1.4s infinite}.profile-org-skeleton span:nth-child(1){width:58%;height:20px}.profile-org-skeleton span:nth-child(2){width:85%}.profile-org-skeleton span:nth-child(3){width:42%;height:42px}@keyframes posShimmer{to{background-position:-200% 0}}
 .pom-overlay{position:fixed;inset:0;z-index:10050;background:rgba(7,22,39,.52);display:flex;align-items:flex-end;justify-content:center;padding:0}.pom-overlay[hidden]{display:none}.pom-sheet{position:relative;width:min(100%,720px);height:min(94dvh,900px);background:#fbf8f3;border-radius:24px 24px 0 0;box-shadow:0 -16px 55px rgba(4,18,33,.22);display:flex;flex-direction:column;overflow:hidden}.pom-header{display:flex;gap:11px;align-items:center;padding:14px 16px 10px;background:#fff;border-bottom:1px solid var(--line)}.pom-close{width:44px;height:44px;border:1px solid var(--line);border-radius:14px;background:#f8f3eb;color:var(--navy);font-size:22px;cursor:pointer}.pom-heading{min-width:0;flex:1}.pom-heading h2{margin:0;color:var(--navy);font:400 22px/1.1 var(--serif)}.pom-heading p{margin:3px 0 0;color:var(--muted);font:11px/1.3 var(--sans)}.pom-follow-count{border-radius:999px;background:#eef4fb;color:#234f88;padding:6px 9px;font:800 11px var(--sans)}.pom-tools{position:sticky;top:0;z-index:2;padding:10px 14px 8px;background:rgba(251,248,243,.96);backdrop-filter:blur(10px)}.pom-search{height:46px;border:1.5px solid var(--line2);border-radius:14px;background:#fff;display:flex;align-items:center;padding:0 12px;gap:9px}.pom-search:focus-within{border-color:var(--navy);box-shadow:0 0 0 3px rgba(15,45,79,.1)}.pom-search input{border:0;outline:0;min-width:0;flex:1;font:14px var(--sans);color:var(--navy);background:transparent}.pom-clear{border:0;background:#f0ebe2;color:var(--navy);width:30px;height:30px;border-radius:50%;cursor:pointer}.pom-chips{display:flex;gap:7px;overflow-x:auto;padding:9px 0 2px;scrollbar-width:none}.pom-chips::-webkit-scrollbar{display:none}.pom-chip{flex:0 0 auto;min-height:38px;padding:0 13px;border:1px solid var(--line2);border-radius:999px;background:#fff;color:#536272;font:700 12px var(--sans);cursor:pointer}.pom-chip.active{background:var(--navy);border-color:var(--navy);color:#fff}.pom-content{overflow-y:auto;overscroll-behavior:contain;padding:3px 14px calc(28px + env(safe-area-inset-bottom))}.pom-group-title{margin:13px 2px 7px;color:#667482;font:800 10px var(--sans);text-transform:uppercase;letter-spacing:.09em}.pom-row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:11px;align-items:start;background:#fff;border:1px solid var(--line);border-radius:17px;padding:12px;margin-bottom:9px;box-shadow:0 3px 12px rgba(15,45,79,.04);cursor:pointer}.pom-logo,.pod-logo{width:52px;height:52px;border-radius:16px;overflow:hidden;background:linear-gradient(135deg,#173b60,#7798be);color:#fff;display:grid;place-items:center;font:800 14px var(--sans)}.pom-name{color:var(--navy);font:800 14px/1.25 var(--sans)}.pom-meta{color:#687584;font:11px/1.3 var(--sans);margin-top:3px}.pom-desc{color:#687584;font:11px/1.35 var(--sans);margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.pom-follow{min-width:83px;min-height:40px;border:1.5px solid var(--navy);border-radius:12px;background:#fff;color:var(--navy);font:800 11px var(--sans);cursor:pointer}.pom-follow.following{background:#edf6f0;color:#17603a;border-color:#9bc7aa}.pom-follow:disabled{opacity:.58;cursor:wait}.pom-state{text-align:center;margin:22px 0;padding:24px 15px;border:1px dashed var(--line2);border-radius:18px;background:#fff;color:var(--muted);font:13px/1.5 var(--sans)}.pom-state strong{display:block;color:var(--navy);font:400 19px var(--serif);margin-bottom:5px}.pom-settings{background:#fff;border:1px solid var(--line);border-radius:17px;padding:14px;margin:18px 0}.pom-settings h3{margin:0;color:var(--navy);font:800 14px var(--sans)}.pom-settings p{margin:3px 0 10px;color:var(--muted);font:11px var(--sans)}.pom-pref{display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid #eee7dc;padding:12px 0;color:#4c5c6b;font:12px/1.35 var(--sans);cursor:pointer}.pom-pref-copy{min-width:0;flex:1}.pom-pref-copy strong{display:block;color:var(--navy);font:700 12px/1.3 var(--sans)}.pom-pref-copy small{display:block;margin-top:2px;color:var(--muted);font:10px/1.35 var(--sans)}.pom-pref input{position:absolute;opacity:0;pointer-events:none}.pom-toggle{position:relative;flex:0 0 auto;width:46px;height:28px;border-radius:999px;background:#d9dee4;box-shadow:inset 0 0 0 1px rgba(15,45,79,.08);transition:background .18s ease}.pom-toggle:after{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(15,45,79,.22);transition:transform .18s ease}.pom-pref input:checked+.pom-toggle{background:#1d6b49}.pom-pref input:checked+.pom-toggle:after{transform:translateX(18px)}.pom-pref input:focus-visible+.pom-toggle{outline:3px solid #7194bd;outline-offset:2px}.pod-backdrop[hidden]{display:none!important}.pod-backdrop{position:absolute;inset:0;background:rgba(7,22,39,.35);display:flex;align-items:flex-end}.pod-panel{width:100%;max-height:82%;overflow-y:auto;background:#fff;border-radius:22px 22px 0 0;padding:18px 17px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(7,22,39,.2)}.pod-head{display:flex;gap:12px;align-items:center}.pod-head-main{min-width:0;flex:1}.pod-head h3{margin:0;color:var(--navy);font:400 22px var(--serif)}.pod-links{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.pod-links a{border:1px solid var(--line);border-radius:999px;padding:8px 11px;color:#285883;text-decoration:none;font:800 11px var(--sans)}.pod-events{margin-top:14px}.pom-row:focus-visible,.pom-follow:focus-visible,.pom-close:focus-visible,.pom-chip:focus-visible,.pos-manage:focus-visible,.pos-primary:focus-visible{outline:3px solid #7194bd;outline-offset:2px}
 @media(min-width:760px){.pom-overlay{align-items:center;padding:24px}.pom-sheet{border-radius:24px;height:min(88vh,820px)}.pod-backdrop{align-items:center;justify-content:center;padding:25px}.pod-panel{max-width:590px;border-radius:22px;max-height:75vh}}@media(max-width:390px){.pom-row{grid-template-columns:46px minmax(0,1fr);padding:10px}.pom-logo{width:46px;height:46px}.pom-follow{grid-column:2;width:100%;margin-top:2px}.pos-card{padding:14px}.pos-summary{align-items:flex-end}.pos-actions{min-width:124px}}@media(prefers-reduced-motion:reduce){.profile-org-skeleton span{animation:none}.pom-sheet{scroll-behavior:auto}}
 </style>
 <div class="pom-overlay" id="organizationManagerOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="organizationManagerTitle">
  <div class="pom-sheet"><header class="pom-header"><button type="button" class="pom-close" aria-label="Close organizations" title="Close" onclick="closeOrganizationManager()">×</button><div class="pom-heading"><h2 id="organizationManagerTitle">Organizations</h2><p id="organizationManagerSubtitle">Follow communities to personalize your LA Jewish life.</p></div><span class="pom-follow-count" id="organizationManagerCount">0 following</span></header><div class="pom-tools" id="organizationManagerTools"><label class="pom-search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="organizationManagerSearch" type="search" placeholder="Search organizations" autocomplete="off" aria-label="Search organizations"><button class="pom-clear" id="organizationManagerClear" type="button" aria-label="Clear search" hidden>×</button></label><div class="pom-chips" id="organizationManagerChips" aria-label="Filter organizations"></div></div><div class="pom-content" id="organizationManagerContent" aria-live="polite"></div><div class="pod-backdrop" id="organizationDetails" hidden></div></div>
 </div>
-<script id="profileOrganizationSubscriptionsScript" data-org-follow-fix="add-manage-modes-v58">
+<script id="profileOrganizationSubscriptionsScript" data-org-follow-fix="hard-wired-optimistic-state-v59">
 (function(){
 'use strict';
-var state={organizations:[],categories:[],aliases:[],subscriptions:new Set(),events:[],loaded:false,loading:false,error:'',filter:'all',search:'',busy:new Set(),profileId:'',lastLoad:0,mode:'add'};
-var FILTERS=[['all','All'],['following','Following'],['chabad','Chabad'],['synagogues-shuls','Synagogues & Shuls'],['young-professionals','Young Professionals'],['campus-alumni','Campus & Alumni'],['community','Community'],['learning','Learning'],['israel-advocacy','Israel & Advocacy'],['arts-entertainment','Arts & Entertainment'],['volunteer','Volunteer'],['family','Family'],['other','Other']];
+/* LAJT ORGANIZATION SUBSCRIPTIONS — HARD-WIRED OPTIMISTIC STATE */
+var state={organizations:[],categories:[],aliases:[],subscriptions:new Set(),events:[],loaded:false,loading:false,error:'',filter:'all',search:'',busy:new Set(),profileId:'',lastLoad:0,mode:'add',mutationVersion:0,mutationByOrganization:new Map()};
+var FILTERS=[['all','All'],['following','Following'],['young-professionals','Young Professionals'],['synagogues-shuls','Synagogues & Shuls'],['chabad','Chabad'],['learning','Learning'],['community','Social / Community'],['campus-alumni','Campus & Alumni'],['israel-advocacy','Israel & Advocacy'],['arts-entertainment','Arts & Entertainment'],['volunteer','Volunteer'],['family','Family'],['other','Other']];
 var ORG_NOTIFICATION_PREFS_STORAGE_KEY='lajt_org_notification_preferences_v1';
 function organizationPreferenceStorageKey(){return ORG_NOTIFICATION_PREFS_STORAGE_KEY+':'+(profileId()||'guest')}
 function getOrganizationNotificationPreferences(){
@@ -25062,11 +25064,14 @@ function isDisplayOrganizationBusy(org){
   var key=String(org&&org._displayKey||org&&org.id||'');
   return state.busy.has(key)||organizationSubscriptionIds(org).some(function(id){return state.busy.has(String(id))})
 }
-function logo(org,cls){var url=org.logo_url||org.image_url;return '<span class="'+cls+'">'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" onerror="this.remove();this.parentNode.textContent=\''+esc(initials(org.name))+'\'">':esc(initials(org.name)))+'</span>'}
+function safeOrganizationUrl(value){var raw=String(value||'').trim();if(!raw)return null;try{var parsed=new URL(/^https?:\/\//i.test(raw)?raw:'https://'+raw);return /^https?:$/.test(parsed.protocol)?parsed:null}catch(_){return null}}
+function resolveOrganizationLogo(org){var direct=safeOrganizationUrl(org&&org.logo_url)||safeOrganizationUrl(org&&org.image_url);if(direct)return direct.href;var website=safeOrganizationUrl(org&&(org.website_url||org.website||org.domain));return website?'https://www.google.com/s2/favicons?domain_url='+encodeURIComponent(website.origin)+'&sz=128':null}
+function logo(org,cls){var url=resolveOrganizationLogo(org),fallback=initials(org.name);return '<span class="'+cls+'" data-org-logo-fallback="'+esc(fallback)+'">'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" onerror="this.hidden=true;this.parentNode.textContent=this.parentNode.dataset.orgLogoFallback">':esc(fallback))+'</span>'}
 async function client(){return await ensureSupabaseClient()}
 async function tableRows(name,select){var c=await client();var q=c.from(name).select(select||'*');var r=await q;if(r.error)throw r.error;return Array.isArray(r.data)?r.data:[]}
 async function loadOrganizations(force){
   if(state.loading)return;
+  var readVersion=state.mutationVersion;
 
   if(
     state.loaded &&
@@ -25162,7 +25167,7 @@ async function loadOrganizations(force){
           .select('organization_id')
           .eq('profile_id',authenticatedProfileId);
 
-        if(!sr.error){
+        if(!sr.error&&readVersion===state.mutationVersion){
           var ids=(sr.data||[]).map(
             function(x){
               return String(x.organization_id)
@@ -25209,6 +25214,7 @@ async function loadOrganizations(force){
 }
 async function loadOrganizationCategories(){if(!state.categories.length)state.categories=await tableRows('organization_categories','*');return state.categories}
 async function loadProfileOrganizationSubscriptions(){
+  var readVersion=state.mutationVersion;
   var authState =
     await getAuthenticatedOrganizationSession(
       await client()
@@ -25229,6 +25235,7 @@ async function loadProfileOrganizationSubscriptions(){
     .eq('profile_id',authenticatedProfileId);
 
   if(r.error)throw r.error;
+  if(readVersion!==state.mutationVersion)return r.data||[];
 
   var ids=(r.data||[]).map(function(x){
     return String(x.organization_id)
@@ -25310,7 +25317,7 @@ function renderCard(){
       +'</div></div><div class="pos-actions"><button class="pos-add" type="button" onclick="openOrganizationManager(\'add\')">Add organizations</button><button class="pos-manage" type="button" onclick="openOrganizationManager(\'manage\')">Manage</button></div></div>'
     : '<div class="pos-empty"><span class="pos-empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 12h6M9 16h6"/></svg></span><div><strong>Build your Jewish LA</strong><p>Follow organizations to personalize your events and updates.</p><button class="pos-primary" onclick="openOrganizationManager(\'add\')">Find organizations</button></div></div>';
 
-  mount.innerHTML='<div class="pos-card"><div class="pos-head"><div><h2 class="pos-title" id="profileOrganizationsTitle">Organizations You Follow</h2><p class="pos-copy">Personalize your feed and keep up with communities you care about.</p></div><span class="pos-count">'
+  mount.innerHTML='<div class="pos-card"><div class="pos-head"><div><h2 class="pos-title" id="profileOrganizationsTitle">Your Organizations</h2><p class="pos-copy">'+followed.length+' organization'+(followed.length===1?'':'s')+' followed</p></div><span class="pos-count">'
     +followed.length+' followed</span></div>'
     +body+eventHtml+'</div>'
 }
@@ -25327,10 +25334,12 @@ function rank(a,b){
   var af=isDisplayOrganizationFollowed(a)?1:0,bf=isDisplayOrganizationFollowed(b)?1:0;
   return bf-af-(Number(b.upcoming_event_count||b.event_count||0)-Number(a.upcoming_event_count||a.event_count||0))||String(a.name).localeCompare(String(b.name))
 }
+function updateVisibleSubscriptionButtons(org,key){var followed=isDisplayOrganizationFollowed(org),busy=isDisplayOrganizationBusy(org);document.querySelectorAll('[data-organization-subscribe="'+CSS.escape(String(key))+'"]').forEach(function(button){button.classList.toggle('following',followed);button.textContent=followed?'Subscribed ✓':'Subscribe';button.disabled=busy;button.setAttribute('aria-busy',busy?'true':'false');button.setAttribute('aria-pressed',String(followed));button.setAttribute('aria-label',(followed?'Unsubscribe from ':'Subscribe to ')+org.name)})}
+function subscriptionButton(org,key,busy){var followed=isDisplayOrganizationFollowed(org),name=String(org.name||'organization');return '<button type="button" data-organization-subscribe="'+esc(key)+'" class="pom-follow '+(followed?'following':'')+'" '+(busy?'disabled aria-busy="true"':'')+' aria-pressed="'+followed+'" aria-label="'+esc((followed?'Unsubscribe from ':'Subscribe to ')+name)+'" onclick="event.preventDefault();event.stopPropagation();return toggleOrganizationSubscription(\''+esc(key)+'\')">'+(followed?'Subscribed ✓':'Subscribe')+'</button>'}
 function row(org){
   var followed=isDisplayOrganizationFollowed(org),busy=isDisplayOrganizationBusy(org),key=String(org._displayKey||org.id);
   var meta=[categoryName(org),org.neighborhood||org.region,Number(org.upcoming_event_count||org.event_count||0)?Number(org.upcoming_event_count||org.event_count||0)+' events':''].filter(Boolean).join(' · ');
-  return'<article class="pom-row" tabindex="0" role="button" aria-label="View '+esc(org.name)+'" onclick="openOrganizationDetails(\''+esc(key)+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openOrganizationDetails(\''+esc(key)+'\')}">'+logo(org,'pom-logo')+'<div><div class="pom-name">'+esc(org.name)+'</div><div class="pom-meta">'+esc(meta)+'</div>'+(org.description?'<div class="pom-desc">'+esc(org.description)+'</div>':'')+'</div><button type="button" class="pom-follow '+(followed?'following':'')+'" '+(busy?'disabled':'')+' aria-pressed="'+followed+'" onclick="event.preventDefault();event.stopPropagation();return toggleOrganizationSubscription(\''+esc(key)+'\')">'+(busy?(followed?'✓ Following':'Saving…'):followed?'✓ Following':'Follow')+'</button></article>'
+  return'<article class="pom-row" tabindex="0" role="button" aria-label="View '+esc(org.name)+'" onclick="openOrganizationDetails(\''+esc(key)+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openOrganizationDetails(\''+esc(key)+'\')}">'+logo(org,'pom-logo')+'<div><div class="pom-name">'+esc(org.name)+'</div><div class="pom-meta">'+esc(meta)+'</div>'+(org.description?'<div class="pom-desc">'+esc(org.description)+'</div>':'')+'</div>'+subscriptionButton(org,key,busy)+'</article>'
 }
 function renderOrganizationManager(){
   var chips=document.getElementById('organizationManagerChips');
@@ -25382,8 +25391,8 @@ function renderOrganizationManager(){
   }
 
   tools.hidden=false;
-  if(title)title.textContent='Add organizations';
-  if(subtitle)subtitle.textContent='Follow more communities to personalize your LA Jewish life.';
+  if(title)title.textContent='Organizations';
+  if(subtitle)subtitle.textContent='Follow communities to personalize your Jewish LA.';
 
   chips.innerHTML=FILTERS.map(function(f){
     return '<button type="button" class="pom-chip '
@@ -25432,9 +25441,9 @@ function renderOrganizationManager(){
 }
 function settings(){
   var preferences=getOrganizationNotificationPreferences();
-  return'<section class="pom-settings"><h3>Organization updates</h3><p>Choose which updates you want from organizations you follow.</p><label class="pom-pref"><span class="pom-pref-copy"><strong>New events from organizations I follow</strong><small>Get notified when a followed organization adds an event.</small></span><input type="checkbox" '+(preferences.newEvents?'checked':'')+' onchange="setOrganizationNotificationPreference(\'newEvents\',this.checked)"><span class="pom-toggle" aria-hidden="true"></span></label><label class="pom-pref"><span class="pom-pref-copy"><strong>Event reminders from organizations I follow</strong><small>Receive a reminder when a followed organization event is coming up.</small></span><input type="checkbox" '+(preferences.eventReminders?'checked':'')+' onchange="setOrganizationNotificationPreference(\'eventReminders\',this.checked)"><span class="pom-toggle" aria-hidden="true"></span></label></section>'
+  return'<section class="pom-settings"><h3>Notification settings</h3><p>Choose which updates you want from organizations you follow.</p><label class="pom-pref"><span class="pom-pref-copy"><strong>New events from organizations I follow</strong><small>Get notified when a followed organization adds an event.</small></span><input type="checkbox" '+(preferences.newEvents?'checked':'')+' onchange="setOrganizationNotificationPreference(\'newEvents\',this.checked)"><span class="pom-toggle" aria-hidden="true"></span></label><label class="pom-pref"><span class="pom-pref-copy"><strong>Event reminders from organizations I follow</strong><small>Receive a reminder when a followed organization event is coming up.</small></span><input type="checkbox" '+(preferences.eventReminders?'checked':'')+' onchange="setOrganizationNotificationPreference(\'eventReminders\',this.checked)"><span class="pom-toggle" aria-hidden="true"></span></label></section>'
 }
-function renderAll(){renderCard();renderOrganizationManager()}
+function renderAll(){var content=document.getElementById('organizationManagerContent'),scroll=content?content.scrollTop:0;renderCard();renderOrganizationManager();if(content)content.scrollTop=scroll}
 async function toggleOrganizationSubscription(id){
   var org=buildDisplayOrganizations().find(
     function(item){
@@ -25476,6 +25485,8 @@ async function toggleOrganizationSubscription(id){
       : next.delete(String(rawId))
   });
 
+  var mutationVersion=++state.mutationVersion;
+  ids.forEach(function(rawId){state.mutationByOrganization.set(String(rawId),mutationVersion)});
   state.busy.add(key);
 
   if(
@@ -25490,6 +25501,7 @@ async function toggleOrganizationSubscription(id){
     state.subscriptions=next;
     renderAll()
   }
+  updateVisibleSubscriptionButtons(org,key);
 
   try{
     var persistentIds=ids.filter(function(rawId){
@@ -25500,15 +25512,13 @@ async function toggleOrganizationSubscription(id){
     });
 
     if(persistentIds.length){
-      var writes=persistentIds.map(function(rawId){
-        return promiseWithTimeout(
-          persistOrganizationSubscriptionChange(
-            String(rawId),
-            subscribed
-          ),
-          12000,
-          'Organization update timed out'
-        )
+      var writes=persistentIds.map(async function(rawId){
+        var lastError;
+        for(var attempt=0;attempt<2;attempt++){
+          try{return await promiseWithTimeout(persistOrganizationSubscriptionChange(String(rawId),subscribed),12000,'Organization update timed out')}
+          catch(error){lastError=error;if(error&&error.code==='AUTH_REQUIRED')break}
+        }
+        throw lastError||new Error('Organization update failed')
       });
 
       var results=await Promise.allSettled(writes);
@@ -25547,16 +25557,10 @@ async function toggleOrganizationSubscription(id){
         )
       })
   }catch(error){
-    if(
-      typeof synchronizeOrganizationSubscriptionState
-        ==='function'
-    ){
-      synchronizeOrganizationSubscriptionState(
-        before,
-        state.organizations
-      )
-    }else{
-      state.subscriptions=before
+    var isLatest=mutationVersion===state.mutationVersion&&ids.every(function(rawId){return state.mutationByOrganization.get(String(rawId))===mutationVersion});
+    if(isLatest){
+      if(typeof synchronizeOrganizationSubscriptionState==='function')synchronizeOrganizationSubscriptionState(before,state.organizations);
+      else state.subscriptions=before
     }
 
     console.warn(
@@ -25568,7 +25572,7 @@ async function toggleOrganizationSubscription(id){
       showToast(
         error&&error.code==='AUTH_REQUIRED'
           ? 'Sign in with Google to follow organizations.'
-          : 'Could not update organization. Please try again.'
+          : 'Couldn’t update subscription. Please try again.'
       )
     }
   }finally{
@@ -25635,7 +25639,7 @@ function openOrganizationDetails(id){
   var links=(org.website_url?'<a href="'+esc(org.website_url)+'" target="_blank" rel="noopener">Website ↗</a>':'')+(org.instagram_url?'<a href="'+esc(org.instagram_url)+'" target="_blank" rel="noopener">Instagram ↗</a>':'');
   var sourceIds=new Set((org._sourceIds||organizationSubscriptionIds(org)).map(String));
   var evs=state.events.filter(function(e){return sourceIds.has(String(e.organization_id||''))});
-  box.innerHTML='<div class="pod-panel" role="dialog" aria-label="'+esc(org.name)+'"><div class="pod-head">'+logo(org,'pod-logo')+'<div class="pod-head-main"><h3>'+esc(org.name)+'</h3><div class="pom-meta">'+esc([categoryName(org),org.neighborhood||org.region].filter(Boolean).join(' · '))+'</div></div><button type="button" class="pom-close" aria-label="Close details" onclick="closeOrganizationDetails()">×</button></div>'+(org.description?'<p class="pos-copy" style="max-width:none;font-size:13px">'+esc(org.description)+'</p>':'')+'<div class="pod-links">'+links+'</div><button type="button" class="pom-follow '+(followed?'following':'')+'" onclick="return toggleOrganizationSubscription(\''+esc(key)+'\')">'+(followed?'✓ Following':'Follow')+'</button>'+(evs.length?'<div class="pod-events"><div class="pom-group-title">Upcoming events</div>'+evs.slice(0,6).map(function(e){return'<button type="button" class="pos-event" onclick="closeOrganizationManager();openEventModal(\''+esc(e.id)+'\')"><span class="pos-date">'+esc(new Date(e.start_time).toLocaleString('en-US',{month:'short'}))+'<b>'+new Date(e.start_time).getDate()+'</b></span><span class="pos-event-title">'+esc(e.title)+'</span><span>›</span></button>'}).join('')+'</div>':'')+'</div>';
+  box.innerHTML='<div class="pod-panel" role="dialog" aria-label="'+esc(org.name)+'"><div class="pod-head">'+logo(org,'pod-logo')+'<div class="pod-head-main"><h3>'+esc(org.name)+'</h3><div class="pom-meta">'+esc([categoryName(org),org.neighborhood||org.region].filter(Boolean).join(' · '))+'</div></div><button type="button" class="pom-close" aria-label="Close details" onclick="closeOrganizationDetails()">×</button></div>'+(org.description?'<p class="pos-copy" style="max-width:none;font-size:13px">'+esc(org.description)+'</p>':'')+'<div class="pod-links">'+links+'</div>'+subscriptionButton(org,key,isDisplayOrganizationBusy(org))+(evs.length?'<div class="pod-events"><div class="pom-group-title">Upcoming events</div>'+evs.slice(0,6).map(function(e){return'<button type="button" class="pos-event" onclick="closeOrganizationManager();openEventModal(\''+esc(e.id)+'\')"><span class="pos-date">'+esc(new Date(e.start_time).toLocaleString('en-US',{month:'short'}))+'<b>'+new Date(e.start_time).getDate()+'</b></span><span class="pos-event-title">'+esc(e.title)+'</span><span>›</span></button>'}).join('')+'</div>':'')+'</div>';
   box.hidden=false;
   return false
 }
@@ -25645,7 +25649,7 @@ function setOrganizationFilter(k){
   state.filter=k;
   renderOrganizationManager()
 }
-window.getOrganizationNotificationPreferences=getOrganizationNotificationPreferences;window.setOrganizationNotificationPreference=setOrganizationNotificationPreference;window.lajtGetDisplayOrganizations=buildDisplayOrganizations;window.lajtGetFollowedDisplayOrganizations=function(){return buildDisplayOrganizations().filter(isDisplayOrganizationFollowed)};window.closeOrganizationDetails=closeOrganizationDetails;window.lajtSetOrganizationSubscriptionState=function(ids,registry){state.subscriptions=new Set(Array.from(ids||[]).map(String));if(Array.isArray(registry)&&registry.length){var byId=new Map(state.organizations.map(function(org){return[String(org.id),org]}));registry.forEach(function(org){if(org&&org.id&&!byId.has(String(org.id)))state.organizations.push(org)})}renderAll()};window.loadOrganizations=loadOrganizations;window.loadOrganizationCategories=loadOrganizationCategories;window.loadProfileOrganizationSubscriptions=loadProfileOrganizationSubscriptions;window.toggleOrganizationSubscription=toggleOrganizationSubscription;window.loadFollowedOrganizationEvents=loadFollowedOrganizationEvents;window.renderOrganizationSubscriptionsProfileCard=renderCard;window.renderOrganizationManager=renderOrganizationManager;window.openOrganizationDetails=openOrganizationDetails;window.openOrganizationManager=openOrganizationManager;window.closeOrganizationManager=closeOrganizationManager;window.setOrganizationFilter=setOrganizationFilter;
+window.getOrganizationNotificationPreferences=getOrganizationNotificationPreferences;window.setOrganizationNotificationPreference=setOrganizationNotificationPreference;window.lajtGetDisplayOrganizations=buildDisplayOrganizations;window.lajtGetFollowedDisplayOrganizations=function(){return buildDisplayOrganizations().filter(isDisplayOrganizationFollowed)};window.lajtOrganizationSubscriptionMutationVersion=function(){return state.mutationVersion};window.resolveOrganizationLogo=resolveOrganizationLogo;window.closeOrganizationDetails=closeOrganizationDetails;window.lajtSetOrganizationSubscriptionState=function(ids,registry,readVersion){if(readVersion!=null&&readVersion!==state.mutationVersion)return false;state.subscriptions=new Set(Array.from(ids||[]).map(String));if(Array.isArray(registry)&&registry.length){var byId=new Map(state.organizations.map(function(org){return[String(org.id),org]}));registry.forEach(function(org){if(org&&org.id&&!byId.has(String(org.id)))state.organizations.push(org)})}renderAll();return true};window.loadOrganizations=loadOrganizations;window.loadOrganizationCategories=loadOrganizationCategories;window.loadProfileOrganizationSubscriptions=loadProfileOrganizationSubscriptions;window.toggleOrganizationSubscription=toggleOrganizationSubscription;window.loadFollowedOrganizationEvents=loadFollowedOrganizationEvents;window.renderOrganizationSubscriptionsProfileCard=renderCard;window.renderOrganizationManager=renderOrganizationManager;window.openOrganizationDetails=openOrganizationDetails;window.openOrganizationManager=openOrganizationManager;window.closeOrganizationManager=closeOrganizationManager;window.setOrganizationFilter=setOrganizationFilter;
 var search=document.getElementById('organizationManagerSearch'),clear=document.getElementById('organizationManagerClear'),overlay=document.getElementById('organizationManagerOverlay');search.addEventListener('input',function(){if(state.mode!=='add')return;closeOrganizationDetails();state.search=this.value;clear.hidden=!this.value;renderOrganizationManager()});clear.addEventListener('click',function(){if(state.mode!=='add')return;closeOrganizationDetails();search.value='';state.search='';this.hidden=true;search.focus();renderOrganizationManager()});overlay.addEventListener('click',function(e){if(e.target===overlay)closeOrganizationManager()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!overlay.hidden)closeOrganizationManager()});
 var oldRender=window.renderProfileDashboard;if(typeof oldRender==='function')window.renderProfileDashboard=function(){var r=oldRender.apply(this,arguments);setTimeout(function(){loadOrganizations(false)},0);return r};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){renderCard();if(profileId())loadOrganizations(false)});else{renderCard();if(profileId())loadOrganizations(false)}
 })();
