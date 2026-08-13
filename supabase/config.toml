@@ -1,0 +1,6 @@
+project_id = "sigivdodtiewgscokdmk"
+
+[functions.backfill-organization-logos]
+# This is an administrative batch endpoint protected by the independently
+# rotated ORGANIZATION_LOGO_BACKFILL_SECRET header, not a user JWT.
+verify_jwt = false

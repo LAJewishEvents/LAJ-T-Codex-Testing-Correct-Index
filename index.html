@@ -9114,67 +9114,26 @@ function normalizeOrgId(name){
   return base || "community";
 }
 
-/* ── Org logo URL map (CDN / Wikipedia commons) ── */
-var ORG_LOGO_URLS = {
-  'chabad':               'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Chabad_logo.svg/240px-Chabad_logo.svg.png',
-  'chabad of westwood':   'https://www.chabadinla.com/templates/articlecmsmanager/images/logo.png',
-  'moishe house':         'https://moishehouse.org/wp-content/uploads/2023/01/MH-logo-primary-green.png',
-  'ikar':                 'https://www.ikar-la.org/wp-content/uploads/2019/01/ikar-logo.png',
-  'yjp':                  'https://yjpla.org/wp-content/uploads/2021/09/YJP-LA-logo.png',
-  'yjp la':               'https://yjpla.org/wp-content/uploads/2021/09/YJP-LA-logo.png',
-  'hillel':               'https://hillel.org/wp-content/themes/hillel/images/hillel-logo.png',
-  'hillel at ucla':       'https://hillelucla.org/wp-content/uploads/2020/05/hillel-logo.png',
-  'aish':                 'https://aish.com/wp-content/uploads/2020/07/Aish-Logo.png',
-  'sinai temple':         'https://www.sinaitemple.org/wp-content/uploads/2019/01/sinai-logo.png',
-  "beit t'shuvah":       'https://beittshuvah.org/wp-content/uploads/2020/01/BT-logo.png',
-  'young israel':         'https://youngisrael.org/wp-content/uploads/2019/07/young-israel-logo.png',
-  'jcc':                  'https://www.jccla.org/wp-content/uploads/2020/01/jcc-logo.png',
-  'jcc of greater la':    'https://www.jccla.org/wp-content/uploads/2020/01/jcc-logo.png',
-  'jewish federation':    'https://www.jewishla.org/wp-content/uploads/2020/01/federation-logo.png',
-  'moishe house la':      'https://moishehouse.org/wp-content/uploads/2023/01/MH-logo-primary-green.png',
-  'pico shul':            'https://www.picoshul.com/wp-content/uploads/2019/01/pico-shul-logo.png',
-  'jewish free loan':     'https://jfla.org/wp-content/uploads/2019/01/jfla-logo.png',
-  'neveh shalom':         'https://nevehshalom.org/wp-content/uploads/2019/01/ns-logo.png',
-  'anshe emes':           'https://ansheemes.com/wp-content/uploads/2020/01/anshe-emes-logo.png',
-  'wilshire boulevard temple': 'https://www.wbtla.org/wp-content/uploads/2019/01/wbt-logo.png',
-  'temple israel':        'https://www.tioh.org/wp-content/uploads/2019/01/ti-logo.png',
-  'leo baeck temple':     'https://www.leobaeck.org/wp-content/uploads/2019/01/lb-logo.png',
-  'valley beth shalom':   'https://www.vbs.org/wp-content/uploads/2020/01/vbs-logo.png',
-  'milken':               'https://www.milkencommunityschools.org/wp-content/uploads/2020/01/milken-logo.png',
-};
-
-function getOrgLogoUrl(orgName) {
-  if (!orgName) return null;
-  var lower = String(orgName).toLowerCase().trim();
-  // Exact match first
-  if (ORG_LOGO_URLS[lower]) return ORG_LOGO_URLS[lower];
-  // Partial match
-  for (var key in ORG_LOGO_URLS) {
-    if (lower.includes(key) || key.includes(lower.split(' ')[0])) {
-      return ORG_LOGO_URLS[key];
-    }
-  }
-  return null;
-}
-
-/* Patch orgLogoText to also attach image when rendering */
-function orgPlaceholderLogoUrl(org){
-  var label = encodeURIComponent(String((org && (org.logoText || org.name)) || 'LA').slice(0,3).toUpperCase());
-  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14385a"/><stop offset="1" stop-color="#2d5d9f"/></linearGradient></defs><rect width="120" height="120" rx="60" fill="url(#g)"/><circle cx="86" cy="32" r="28" fill="#e8c26a" opacity=".20"/><circle cx="30" cy="90" r="34" fill="#ffffff" opacity=".08"/><text x="60" y="70" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800" fill="#fffaf0">' + label + '</text></svg>';
-  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
-}
+/* Organization logos come only from the durable Supabase logo_url cache. */
 function renderOrgLogoHtml(org, width, height) {
   var w = width || 56;
   var h = height || 56;
-  var placeholder = orgPlaceholderLogoUrl(org);
-  var style = 'width:' + w + 'px;height:' + h + 'px;border-radius:50%;overflow:hidden;display:grid;place-items:center;flex-shrink:0;background:#fff;';
+  var logoUrl = org && org.logo_url;
+  var fallback = orgLogoText(org && org.name);
+  var style = 'width:' + w + 'px;height:' + h + 'px;border-radius:50%;overflow:hidden;display:grid;place-items:center;flex-shrink:0;background:#fff;color:#fff;font-weight:800;';
   return '<div class="orgs-logo" style="' + style + '">'
-    + '<img src="' + placeholder + '" alt="' + (org.name || '') + '" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" decoding="async">'
+    + (logoUrl
+      ? '<img src="' + escapeHtml(logoUrl) + '" alt="" style="width:100%;height:100%;object-fit:contain;padding:5px;display:block;background:#fff;box-sizing:border-box" loading="lazy" decoding="async" onerror="this.remove();this.parentNode.textContent=\'' + escapeHtml(fallback) + '\';this.parentNode.style.background=\'#14385a\'">'
+      : '<span aria-hidden="true">' + escapeHtml(fallback) + '</span>')
     + '</div>';
 }
 
 function orgLogoText(name){
-  return String(name || "Community").split(/\s+/).filter(Boolean).map(part => part[0]).join("").slice(0,2).toUpperCase() || "LA";
+  const clean = String(name || "").normalize("NFKC").replace(/[‘’'"“”]/g, "").trim();
+  const tokens = clean.match(/\+?\d+|[A-Za-z0-9]+/g) || [];
+  if (tokens[0] && /^\+\d/.test(tokens[0])) return tokens[0].slice(0,2).toUpperCase();
+  const meaningful = tokens.filter(token => !/^(the|on|of|and|for|at|a|an)$/i.test(token));
+  return meaningful.slice(0,2).map(token => token[0]).join("").toUpperCase().slice(0,2) || "LA";
 }
 function deriveOrgRegion(events){
   const counts = {};
@@ -9198,6 +9157,24 @@ function orgCategoryTagsForEvent(event){
 }
 function orgSlugFromName(name){
   return normalizeOrgId(name);
+}
+var organizationLogoRegistry=new Map(),organizationLogoRegistryLoading=false,organizationLogoRegistryLoaded=false;
+function organizationBrandKey(name){return String(name||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9+]+/gi,' ').trim().replace(/\s+/g,' ').toLowerCase()}
+async function loadOrganizationLogoRegistry(){
+  if(organizationLogoRegistryLoaded||organizationLogoRegistryLoading)return;
+  organizationLogoRegistryLoading=true;
+  try{
+    const client=await ensureSupabaseClient();
+    const result=await client.from('organizations').select('name,normalized_name,logo_url').not('logo_url','is',null);
+    if(result.error)throw result.error;
+    (result.data||[]).forEach(row=>{
+      organizationLogoRegistry.set(organizationBrandKey(row.normalized_name||row.name),row);
+      organizationLogoRegistry.set(organizationBrandKey(row.name),row);
+    });
+    organizationLogoRegistryLoaded=true;
+  }catch(error){console.warn('Organization logo registry unavailable',error)}
+  finally{organizationLogoRegistryLoading=false}
+  if(!document.getElementById('organizationsView')?.classList.contains('hidden'))renderOrganizationsView();
 }
 function buildOrganizationsFromEvents(events){
   const groups = new Map();
@@ -9224,6 +9201,7 @@ function buildOrganizationsFromEvents(events){
       .map(event => safeTimeMs(event?.start_time, 0))
       .filter(Boolean)
       .sort((a,b) => b - a)[0] || now;
+    const cachedBrand=organizationLogoRegistry.get(organizationBrandKey(group.normalizedName))||organizationLogoRegistry.get(organizationBrandKey(group.name))||{};
     return {
       id: group.id,
       normalizedName: group.normalizedName,
@@ -9231,6 +9209,8 @@ function buildOrganizationsFromEvents(events){
       name: group.name,
       region,
       categoryTags,
+      logo_url: cachedBrand.logo_url || null,
+      website_url: cachedBrand.website_url || null,
       logoText: orgLogoText(group.name),
       eventCount: group.events.length,
       events: group.events.slice().sort((a,b) => safeTimeMs(a?.start_time, Number.MAX_SAFE_INTEGER) - safeTimeMs(b?.start_time, Number.MAX_SAFE_INTEGER)),
@@ -9267,7 +9247,12 @@ function mergeOrganizations(primary, secondary){
   (primary || []).concat(secondary || []).forEach(org => {
     const key = String(org?.id || normalizeOrgId(org?.name || "")).trim();
     if (!key) return;
-    if (!merged.has(key)) merged.set(key, { ...org, id: key, logoText: org?.logoText || orgLogoText(org?.name), events: org?.events || [], upcomingEvents: org?.upcomingEvents || [] });
+    const prepared = { ...org, id: key, logoText: org?.logoText || orgLogoText(org?.name), events: org?.events || [], upcomingEvents: org?.upcomingEvents || [] };
+    if (!merged.has(key)) merged.set(key, prepared);
+    else {
+      const existing = merged.get(key);
+      merged.set(key, { ...prepared, ...existing, logo_url: existing.logo_url || prepared.logo_url || null, website_url: existing.website_url || prepared.website_url || null });
+    }
   });
   return Array.from(merged.values());
 }
@@ -9282,6 +9267,8 @@ function backendOrganizationToLocal(row){
     name,
     region: row?.region || "LA Wide",
     categoryTags,
+    logo_url: row?.logo_url || null,
+    website_url: row?.website_url || null,
     logoText: orgLogoText(name),
     eventCount: Number(row?.event_count || 0),
     events: [],
@@ -9654,6 +9641,7 @@ function renderFeaturedOrganizationCard(org){
   </div>`;
 }
 function renderOrganizationsViewUnsafe(){
+  loadOrganizationLogoRegistry();
   const source = (allEvents && allEvents.length) ? allEvents : readEventsSnapshot();
   const popularEl = document.getElementById("popularOrganizationsList");
   const upcomingEl = document.getElementById("orgUpcomingList");
@@ -24991,7 +24979,7 @@ function scheduleFollowedOrganizationReminders(){
 }
 function esc(v){return typeof escapeHtml==='function'?escapeHtml(String(v==null?'':v)):String(v==null?'':v).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})}
 function profileId(){return String((typeof currentProfile!=='undefined'&&currentProfile&&currentProfile.id)||'')}
-function initials(name){var a=String(name||'Organization').trim().split(/\s+/).filter(Boolean);return ((a[0]||'O')[0]+(a.length>1?a[a.length-1][0]:'')).toUpperCase()}
+function initials(name){var clean=String(name||'').normalize('NFKC').replace(/[‘’'"“”]/g,'').trim(),tokens=clean.match(/\+?\d+|[A-Za-z0-9]+/g)||[];if(tokens[0]&&/^\+\d/.test(tokens[0]))return tokens[0].slice(0,2).toUpperCase();var meaningful=tokens.filter(function(token){return!/^(the|on|of|and|for|at|a|an)$/i.test(token)});return meaningful.slice(0,2).map(function(token){return token[0]}).join('').toUpperCase().slice(0,2)||'LA'}
 function category(org){return state.categories.find(function(c){return String(c.id)===String(org.category_id)})||null}
 function categoryName(org){var c=category(org);return c&&(c.name||c.label)||org.category_name||'Community'}
 function slug(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/&/g,' and ').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
@@ -25065,7 +25053,7 @@ function isDisplayOrganizationBusy(org){
   return state.busy.has(key)||organizationSubscriptionIds(org).some(function(id){return state.busy.has(String(id))})
 }
 function safeOrganizationUrl(value){var raw=String(value||'').trim();if(!raw)return null;try{var parsed=new URL(/^https?:\/\//i.test(raw)?raw:'https://'+raw);return /^https?:$/.test(parsed.protocol)?parsed:null}catch(_){return null}}
-function resolveOrganizationLogo(org){var direct=safeOrganizationUrl(org&&org.logo_url)||safeOrganizationUrl(org&&org.image_url);if(direct)return direct.href;var website=safeOrganizationUrl(org&&(org.website_url||org.website||org.domain));return website?'https://www.google.com/s2/favicons?domain_url='+encodeURIComponent(website.origin)+'&sz=128':null}
+function resolveOrganizationLogo(org){var cached=safeOrganizationUrl(org&&org.logo_url);return cached?cached.href:null}
 function logo(org,cls){var url=resolveOrganizationLogo(org),fallback=initials(org.name);return '<span class="'+cls+'" data-org-logo-fallback="'+esc(fallback)+'">'+(url?'<img src="'+esc(url)+'" alt="" loading="lazy" onerror="this.hidden=true;this.parentNode.textContent=this.parentNode.dataset.orgLogoFallback">':esc(fallback))+'</span>'}
 async function client(){return await ensureSupabaseClient()}
 async function tableRows(name,select){var c=await client();var q=c.from(name).select(select||'*');var r=await q;if(r.error)throw r.error;return Array.isArray(r.data)?r.data:[]}
